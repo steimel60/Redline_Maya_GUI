@@ -1,0 +1,10 @@
+carPaintShader:Paint_Shader:Shader
+blackShader:Black_Shader:Shader
+chromeShader:chromeShader:Shader
+orangeShader:Orange_Shader:Shader
+redShader:Red_Shader:Shader
+rubberShader:Rubber_Shader:Shader
+windowShader:Window_Shader:Shader
+rimShader:Rim_Shader:Shader
+brakeShader:Brake_Shader:Shader
+woodShader:Wood_Shader:Shader

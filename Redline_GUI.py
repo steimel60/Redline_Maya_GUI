@@ -13,14 +13,12 @@ from shiboken2 import wrapInstance
 
 SCRIPT_NAME = "Redline Forensic Studio - Maya Tools"
 
-
 # ----------------------------------------------------------------------------------------------------------------------
 # Returns an instance of Maya's main window
 # ----------------------------------------------------------------------------------------------------------------------
 def maya_main_window():
     main_window_ptr = mui.MQtUtil.mainWindow()
     return wrapInstance(int(main_window_ptr), QWidget)
-
 
 class MainUI(QDialog):
     # Set up file references
@@ -45,6 +43,7 @@ class MainUI(QDialog):
 
         # Set up the window
         # self.setWindowFlags(Qt.Tool)
+        self.setFixedWidth(600)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(250, -1)
         self.setWindowTitle(SCRIPT_NAME)
@@ -81,10 +80,19 @@ class MainUI(QDialog):
         pass  # I hate PyCharm
         # endregion
 
+    #--------------------------------------------------------------------------------------------------------------
+    #                                   Make the Buttons
+    #--------------------------------------------------------------------------------------------------------------
     def create_controls(self):
         UI_ELEMENT_HEIGHT = 30
         UI_ELEMENT_WIDTH = 150
 
+        ##### Banner #####
+        self.banner = QLabel()
+        self.pixmap = QPixmap(self.icon_dir + '/banner.jpg')
+        self.pixmap = self.pixmap.scaled(600, 1000, Qt.KeepAspectRatio, Qt.FastTransformation)
+        self.banner.setPixmap(self.pixmap)
+        self.banner.resize(self.pixmap.width(), self.pixmap.height())
         ##### Tab Bar #####
         self.tabWidget = QTabWidget()
         self.tab1 = QWidget()
@@ -93,7 +101,6 @@ class MainUI(QDialog):
         self.tabWidget.addTab(self.tab2, 'Site Tools')
 
         ################################################## VEHICLE TOOL BUTTONS ########################################################################
-
         ##### Studio Dropdown #####
         self.choose_studio_button = QComboBox(self)
         studio_list = []
@@ -126,6 +133,12 @@ class MainUI(QDialog):
         self.load_vehicle_button = QPushButton(QIcon(self.icon_dir + "/load.png"), "Load Vehicle")
         self.load_vehicle_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.load_vehicle_button.setMinimumWidth(UI_ELEMENT_WIDTH)
+
+        ##### Vehicle Specs Image #####
+        self.specs_icon = QLabel()
+        self.specsmap = QPixmap(self.icon_dir + '/dxf.png')
+        self.specsmap = self.specsmap.scaled(70, 90, Qt.KeepAspectRatio, Qt.FastTransformation)
+        self.specs_icon.setPixmap(self.specsmap)
 
         ##### Vehicle Specs Text Bar #####
         self.choose_vehiclespec_edit = QLineEdit()
@@ -211,9 +224,15 @@ class MainUI(QDialog):
 
     def create_layout(self):
         main_layout = QVBoxLayout()
-        main_layout.setSpacing(3)
+        #main_layout.setSpacing(3)
         vehicleTool_layout = QVBoxLayout()
         siteTool_layout = QVBoxLayout()
+
+        self.setStyleSheet("""QTabWidget {background-color: rgb(100,102,117);}
+                            QPushButton {background-color: rgb(87,87,87);}
+                            QGroupBox {background-color: rgb(72,71,76);}
+                            QComboBox {background-color: rgb(87,87,87); }
+                            """)
 
         ##############################################
         ######       Vehicle Section            ######
@@ -226,7 +245,7 @@ class MainUI(QDialog):
         studio_layout.addWidget(self.load_studio_button)
         studio_group.setLayout(studio_layout)
         vehicleTool_layout.addWidget(studio_group)
-        vehicleTool_layout.insertSpacing(-1, 10)
+        #vehicleTool_layout.insertSpacing(-1, 10)
 
         ##### Vehicle GUI Section #####
         load_group = QGroupBox("Vehicle")
@@ -237,11 +256,12 @@ class MainUI(QDialog):
         load_vehicle_layout.addWidget(self.load_vehicle_button, 0, 5, 1, 3)
         load_vehicle_layout.addWidget(self.choose_vehiclespec_edit, 1, 1, 1, 3)
         load_vehicle_layout.addWidget(self.choose_vehiclespec_button, 1, 0)
+        load_vehicle_layout.addWidget(self.specs_icon, 1, 4)
         load_vehicle_layout.addWidget(self.load_vehiclespec_button, 1, 5, 1, 3)
         load_group.setLayout(load_vehicle_layout)
         vehicleTool_layout.addWidget(load_group)
-        vehicleTool_layout.insertSpacing(-1, 1)
-        vehicleTool_layout.insertSpacing(-1, 10)
+        #vehicleTool_layout.insertSpacing(-1, 1)
+        #vehicleTool_layout.insertSpacing(-1, 10)
 
         ##### Spellbook GUI Section #####
         spell_group = QGroupBox("Spellbook")
@@ -250,8 +270,8 @@ class MainUI(QDialog):
         spell_layout.addWidget(self.apply_spellbook_button)
         spell_group.setLayout(spell_layout)
         vehicleTool_layout.addWidget(spell_group)
-        vehicleTool_layout.insertSpacing(-1, 1)
-        vehicleTool_layout.insertSpacing(-1, 10)
+        #vehicleTool_layout.insertSpacing(-1, 1)
+        #vehicleTool_layout.insertSpacing(-1, 10)
 
         ##### Rotation GUI Section #####
         rotation_group = QGroupBox("Rotation")
@@ -263,7 +283,7 @@ class MainUI(QDialog):
         rotation_layout.addWidget(self.hv_rotate_button, 1, 0, 1, 3)
         rotation_group.setLayout(rotation_layout)
         vehicleTool_layout.addWidget(rotation_group)
-        vehicleTool_layout.insertSpacing(-1, 10)
+        #vehicleTool_layout.insertSpacing(-1, 10)
 
         ##### Extra Tools GUI Section #####
         tools_group = QGroupBox("Extra Tools")
@@ -273,7 +293,7 @@ class MainUI(QDialog):
         tools_layout.addWidget(self.make_windows_transparent_button)
         tools_group.setLayout(tools_layout)
         vehicleTool_layout.addWidget(tools_group)
-        vehicleTool_layout.insertSpacing(-1, 10)
+        #vehicleTool_layout.insertSpacing(-1, 10)
 
         ##### Save Button #####
         #vehicleTool_layout.addWidget(self.thumb_button)
@@ -296,6 +316,7 @@ class MainUI(QDialog):
         ##### Set Main Layout #####
         self.tab1.setLayout(vehicleTool_layout)
         self.tab2.setLayout(siteTool_layout)
+        main_layout.addWidget(self.banner)
         main_layout.addWidget(self.tabWidget)
         self.setLayout(main_layout)
 
@@ -328,6 +349,7 @@ class MainUI(QDialog):
         self.save_button.clicked.connect(self.save)
 
         #-------------------------------------- Site Section ------------------------------------------------#
+        ##### Locator Group #####
         self.choose_locator_button.clicked.connect(self.choose_locator)
         self.load_locator_button.clicked.connect(self.load_locator)
 
@@ -708,7 +730,6 @@ class MainUI(QDialog):
 
     def save(self):
         cmds.SaveSceneAs(o=True)
-
 
 # Dev code to automatically close old windows when running
 try:

@@ -29,6 +29,8 @@ class MainUI(QDialog):
     studio_dir = os.path.expanduser("~/maya/scripts/magic-shade/studios")
     pref_path = os.path.expanduser("~/maya/scripts/magic-shade/prefs")
     arnold_studio_path = os.path.expanduser("~/maya/scripts/magic-shade/Arnold_Studio_V3.mb")
+    thumbs_dir = os.path.expanduser("~/maya/projects/default/scenes/.mayaSwatches")
+    save_path = os.path.expanduser("~/maya/projects/default/scenes/")
     user_profile = os.environ['USERPROFILE']
     desktop_dir = user_profile + '\\Desktop'
     last_file_pref = "last_vehicular_spellbook"
@@ -81,6 +83,7 @@ class MainUI(QDialog):
 
     def create_controls(self):
         UI_ELEMENT_HEIGHT = 30
+        UI_ELEMENT_WIDTH = 150
 
         ##### Tab Bar #####
         self.tabWidget = QTabWidget()
@@ -107,11 +110,13 @@ class MainUI(QDialog):
         ##### Studio Load Button #####
         self.load_studio_button = QPushButton(QIcon(self.icon_dir + "/template.png"), "Load Studio")
         self.load_studio_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.load_studio_button.setMinimumWidth(UI_ELEMENT_WIDTH)
 
         ##### Vehicle Text Bar #####
         self.choose_vehicle_edit = QLineEdit()
         self.choose_vehicle_edit.setPlaceholderText("Vehicle File")
         self.choose_vehicle_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.choose_vehicle_edit.setMinimumWidth(UI_ELEMENT_WIDTH)
 
         ##### Vehicle Folder Button #####
         self.choose_vehicle_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
@@ -120,19 +125,23 @@ class MainUI(QDialog):
         ##### Load Vehicle Button #####
         self.load_vehicle_button = QPushButton(QIcon(self.icon_dir + "/load.png"), "Load Vehicle")
         self.load_vehicle_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.load_vehicle_button.setMinimumWidth(UI_ELEMENT_WIDTH)
 
         ##### Vehicle Specs Text Bar #####
         self.choose_vehiclespec_edit = QLineEdit()
         self.choose_vehiclespec_edit.setPlaceholderText("Vehicle Specs")
         self.choose_vehiclespec_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.choose_vehiclespec_edit.setMinimumWidth(UI_ELEMENT_WIDTH)
 
         ##### Vehicle Specs Folder Button #####
         self.choose_vehiclespec_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
         self.choose_vehiclespec_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        #self.choose_vehiclespec_button.setMinimumWidth(UI_ELEMENT_WIDTH)
 
         ##### Load Specs Button #####
         self.load_vehiclespec_button = QPushButton(QIcon(self.icon_dir + "/load.png"), "Load Vehicle Specs")
         self.load_vehiclespec_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.load_vehiclespec_button.setMinimumWidth(UI_ELEMENT_WIDTH)
 
         ##### Don't Scale Switch #####
         self.post_arnold_button = QCheckBox('No Scaling', self)
@@ -182,6 +191,10 @@ class MainUI(QDialog):
         self.save_button = QPushButton(QIcon(self.icon_dir + "/save_as.png"), "Save As...")
         self.save_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
+        ##### Thumbnail Capture #####
+        self.thumb_button = QPushButton('Capture Thumbnail')
+        self.thumb_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
         ################################################### SITE TOOL BUTTONS #######################################################################################
         ##### XYZ Text Bar #####
         self.choose_locator_edit = QLineEdit()
@@ -219,12 +232,12 @@ class MainUI(QDialog):
         load_group = QGroupBox("Vehicle")
         load_vehicle_layout = QGridLayout()
         load_vehicle_layout.addWidget(self.choose_vehicle_button, 0, 0)
-        load_vehicle_layout.addWidget(self.choose_vehicle_edit, 0, 1)
-        load_vehicle_layout.addWidget(self.post_arnold_button, 1, 0)
-        load_vehicle_layout.addWidget(self.load_vehicle_button, 1, 1)
-        load_vehicle_layout.addWidget(self.choose_vehiclespec_edit, 2, 1)
-        load_vehicle_layout.addWidget(self.choose_vehiclespec_button, 2, 0)
-        load_vehicle_layout.addWidget(self.load_vehiclespec_button, 3, 0, 1, 2)
+        load_vehicle_layout.addWidget(self.choose_vehicle_edit, 0, 1, 1, 3)
+        load_vehicle_layout.addWidget(self.post_arnold_button, 0, 4)
+        load_vehicle_layout.addWidget(self.load_vehicle_button, 0, 5, 1, 3)
+        load_vehicle_layout.addWidget(self.choose_vehiclespec_edit, 1, 1, 1, 3)
+        load_vehicle_layout.addWidget(self.choose_vehiclespec_button, 1, 0)
+        load_vehicle_layout.addWidget(self.load_vehiclespec_button, 1, 5, 1, 3)
         load_group.setLayout(load_vehicle_layout)
         vehicleTool_layout.addWidget(load_group)
         vehicleTool_layout.insertSpacing(-1, 1)
@@ -243,11 +256,11 @@ class MainUI(QDialog):
         ##### Rotation GUI Section #####
         rotation_group = QGroupBox("Rotation")
         rotation_layout = QGridLayout()
-        rotation_layout.addWidget(self.xyz_selection, 0, 0)
-        rotation_layout.addWidget(self.left_arrow_button, 0, 1)
-        rotation_layout.addWidget(self.right_arrow_button, 0, 2)
-        rotation_layout.addWidget(self.quick_rotate_button, 1, 0, 1, 3)
-        rotation_layout.addWidget(self.hv_rotate_button, 2, 0, 1, 3)
+        rotation_layout.addWidget(self.xyz_selection, 2, 0)
+        rotation_layout.addWidget(self.left_arrow_button, 2, 1)
+        rotation_layout.addWidget(self.right_arrow_button, 2, 2)
+        rotation_layout.addWidget(self.quick_rotate_button, 0, 0, 1, 3)
+        rotation_layout.addWidget(self.hv_rotate_button, 1, 0, 1, 3)
         rotation_group.setLayout(rotation_layout)
         vehicleTool_layout.addWidget(rotation_group)
         vehicleTool_layout.insertSpacing(-1, 10)
@@ -261,6 +274,9 @@ class MainUI(QDialog):
         tools_group.setLayout(tools_layout)
         vehicleTool_layout.addWidget(tools_group)
         vehicleTool_layout.insertSpacing(-1, 10)
+
+        ##### Save Button #####
+        #vehicleTool_layout.addWidget(self.thumb_button)
         vehicleTool_layout.addWidget(self.save_button)
 
         ##############################################
@@ -287,21 +303,31 @@ class MainUI(QDialog):
     # Connect button to button functions
     #---------------------------------------------------------------------------------------------------------------
     def make_connections(self):
+        #--------------------------------- Vehicle Section -------------------------------------------------#
+        ##### Studio Group #####
         self.load_studio_button.clicked.connect(self.load_studio)
+        ##### Vehicle Group #####
         self.choose_vehicle_button.clicked.connect(self.choose_vehicle)
         self.load_vehicle_button.clicked.connect(self.load_vehicle)
         self.choose_vehiclespec_button.clicked.connect(self.choose_vehiclespec)
         self.load_vehiclespec_button.clicked.connect(self.load_vehiclespec)
         self.post_arnold_button.stateChanged.connect(self.dont_shrink_bool)
+        ##### Spellbook Group #####
         self.apply_spellbook_button.clicked.connect(self.apply_spellbook)
+        ##### Rotation Group #####
         self.left_arrow_button.clicked.connect(self.neg_rotation)
         self.right_arrow_button.clicked.connect(self.pos_rotation)
         self.quick_rotate_button.clicked.connect(self.quick_rotate)
         self.hv_rotate_button.clicked.connect(self.hv_rotate)
+        ##### Extra Tools #####
         self.remove_tires_button.clicked.connect(self.remove_tires)
         self.remove_license_plate_button.clicked.connect(self.remove_license_plate)
         self.make_windows_transparent_button.clicked.connect(self.make_windows_transparent)
+        ##### Save Group #####
+        self.thumb_button.clicked.connect(self.get_thumb)
         self.save_button.clicked.connect(self.save)
+
+        #-------------------------------------- Site Section ------------------------------------------------#
         self.choose_locator_button.clicked.connect(self.choose_locator)
         self.load_locator_button.clicked.connect(self.load_locator)
 
@@ -348,6 +374,10 @@ class MainUI(QDialog):
                 #print('shrink!')
                 cmds.scale(0.0328, 0.0328, 0.0328, absolute=True, pivot=(0, 0, 0))
             cmds.select(deselect=True)
+            asset_match = re.search('.*/([a-zA-Z_0-9\(\)]*).*\.m[ab]', vehicle_path)
+            if asset_match != None:
+                asset = asset_match.group(1)
+                cmds.file(rename=asset)
         else:
             warning_box = QMessageBox(QMessageBox.Warning, "No Vehicle Found", "No vehicle file found at the specified path.")
             warning_box.exec_()
@@ -603,6 +633,16 @@ class MainUI(QDialog):
                 cmds.spaceLocator(p=[x,y,z])
 
         f.close()
+
+    def get_thumb(self):
+        filename, file_extension = os.path.splitext(self.choose_vehicle_edit.text())
+        cmds.SaveSceneAsOptions()
+        print(window)
+        #cmds.thumbnailCaptureComponent(capture=True)
+        #cmds.thumbnailCaptureComponent(save=self.thumbs_dir + '_Done')
+        #cmds.thumbnailCaptureComponent(delete=True)
+        #cmds.thumbnailCaptureComponent(q=True, previewPath=True)
+
     # --------------------------------------------------------------------------------------------------------------
     # Writes the current file path to preferences
     # --------------------------------------------------------------------------------------------------------------
@@ -667,13 +707,7 @@ class MainUI(QDialog):
         cmds.select(selection)
 
     def save(self):
-        filename, file_extension = os.path.splitext(self.choose_vehicle_edit.text())
-        save_as_filename = QFileDialog.getSaveFileName(None, "", filename + "_Arnold", "Maya Binary (*.mb)")[0]
-        if save_as_filename == "":
-            return
-
-        cmds.file(rename=save_as_filename)
-        cmds.file(save=True, type="mayaBinary")
+        cmds.SaveSceneAs(o=True)
 
 
 # Dev code to automatically close old windows when running

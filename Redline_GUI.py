@@ -32,8 +32,8 @@ class MainUI(QDialog):
     user_profile = os.environ['USERPROFILE']
     desktop_dir = user_profile + '\\Desktop'
     last_file_pref = "last_vehicular_spellbook"
-    vehicle_library_dir = "//server1/DV_Templates/Media_Templates/3D Vehicle Library/Vehicles"
-    vehiclespec_library_dir = "R:/OneDrive - deltav/redline/Asset Library/3D Vehicle Library"
+    vehicle_library_dir = user_profile + "/deltav/Jason Young - Asset Library/3D Vehicle Library/"
+    vehiclespec_library_dir = user_profile + "/deltav/Jason Young - Asset Library/3D Vehicle Library/"
 
     # --------------------------------------------------------------------------------------------------------------
     # Initializes variables, window, and UI elements
@@ -54,6 +54,7 @@ class MainUI(QDialog):
         self.create_layout()  # Initializes the internal window layout
         self.make_connections()
         self.dont_shrink = False
+        self.asset = None
 
         # If we have a last-opened file saved in preferences, automatically open that file. Otherwise, just open
         # a new, empty file
@@ -151,6 +152,10 @@ class MainUI(QDialog):
         self.choose_vehiclespec_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
         #self.choose_vehiclespec_button.setMinimumWidth(UI_ELEMENT_WIDTH)
 
+        ##### Do Everything Button #####
+        self.do_everything_button = QPushButton(QIcon(self.icon_dir + "/wizzardHat.png"),"Magic VC Button")
+        self.do_everything_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
         ##### Load Specs Button #####
         self.load_vehiclespec_button = QPushButton(QIcon(self.icon_dir + "/load.png"), "Load Vehicle Specs")
         self.load_vehiclespec_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -204,6 +209,10 @@ class MainUI(QDialog):
         self.save_button = QPushButton(QIcon(self.icon_dir + "/save_as.png"), "Save As...")
         self.save_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
+        ##### Export Button #####
+        self.export_obj = QPushButton(QIcon(self.icon_dir + "/export.png"),"Export OBJ")
+        self.export_obj.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
         ##### Thumbnail Capture #####
         self.thumb_button = QPushButton('Capture Thumbnail')
         self.thumb_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -224,7 +233,6 @@ class MainUI(QDialog):
 
     def create_layout(self):
         main_layout = QVBoxLayout()
-        #main_layout.setSpacing(3)
         vehicleTool_layout = QVBoxLayout()
         siteTool_layout = QVBoxLayout()
 
@@ -232,6 +240,7 @@ class MainUI(QDialog):
                             QPushButton {background-color: rgb(87,87,87);}
                             QGroupBox {background-color: rgb(72,71,76);}
                             QComboBox {background-color: rgb(87,87,87); }
+                            QComboBox QAbstractItemView {background-color: rgb(72,71,76); selection-background-color : rgb(100,102,117)}
                             """)
 
         ##############################################
@@ -258,10 +267,9 @@ class MainUI(QDialog):
         load_vehicle_layout.addWidget(self.choose_vehiclespec_button, 1, 0)
         load_vehicle_layout.addWidget(self.specs_icon, 1, 4)
         load_vehicle_layout.addWidget(self.load_vehiclespec_button, 1, 5, 1, 3)
+        load_vehicle_layout.addWidget(self.do_everything_button, 2, 0, 1, 8)
         load_group.setLayout(load_vehicle_layout)
         vehicleTool_layout.addWidget(load_group)
-        #vehicleTool_layout.insertSpacing(-1, 1)
-        #vehicleTool_layout.insertSpacing(-1, 10)
 
         ##### Spellbook GUI Section #####
         spell_group = QGroupBox("Spellbook")
@@ -270,8 +278,6 @@ class MainUI(QDialog):
         spell_layout.addWidget(self.apply_spellbook_button)
         spell_group.setLayout(spell_layout)
         vehicleTool_layout.addWidget(spell_group)
-        #vehicleTool_layout.insertSpacing(-1, 1)
-        #vehicleTool_layout.insertSpacing(-1, 10)
 
         ##### Rotation GUI Section #####
         rotation_group = QGroupBox("Rotation")
@@ -295,10 +301,6 @@ class MainUI(QDialog):
         vehicleTool_layout.addWidget(tools_group)
         #vehicleTool_layout.insertSpacing(-1, 10)
 
-        ##### Save Button #####
-        #vehicleTool_layout.addWidget(self.thumb_button)
-        vehicleTool_layout.addWidget(self.save_button)
-
         ##############################################
         ######          Site Section            ######
         ##############################################
@@ -312,12 +314,19 @@ class MainUI(QDialog):
         locator_group.setLayout(locator_layout)
         siteTool_layout.addWidget(locator_group)
 
+        ##### Save Section #####
+        save_group = QGroupBox("File Management")
+        save_layout = QVBoxLayout()
+        save_layout.addWidget(self.save_button)
+        save_layout.addWidget(self.export_obj)
+        save_group.setLayout(save_layout)
 
         ##### Set Main Layout #####
         self.tab1.setLayout(vehicleTool_layout)
         self.tab2.setLayout(siteTool_layout)
         main_layout.addWidget(self.banner)
         main_layout.addWidget(self.tabWidget)
+        main_layout.addWidget(save_group)
         self.setLayout(main_layout)
 
     #---------------------------------------------------------------------------------------------------------------
@@ -333,6 +342,7 @@ class MainUI(QDialog):
         self.choose_vehiclespec_button.clicked.connect(self.choose_vehiclespec)
         self.load_vehiclespec_button.clicked.connect(self.load_vehiclespec)
         self.post_arnold_button.stateChanged.connect(self.dont_shrink_bool)
+        self.do_everything_button.clicked.connect(self.auto_vc)
         ##### Spellbook Group #####
         self.apply_spellbook_button.clicked.connect(self.apply_spellbook)
         ##### Rotation Group #####
@@ -347,6 +357,7 @@ class MainUI(QDialog):
         ##### Save Group #####
         self.thumb_button.clicked.connect(self.get_thumb)
         self.save_button.clicked.connect(self.save)
+        self.export_obj.clicked.connect(self.export)
 
         #-------------------------------------- Site Section ------------------------------------------------#
         ##### Locator Group #####
@@ -398,8 +409,8 @@ class MainUI(QDialog):
             cmds.select(deselect=True)
             asset_match = re.search('.*/([a-zA-Z_0-9\(\)]*).*\.m[ab]', vehicle_path)
             if asset_match != None:
-                asset = asset_match.group(1)
-                cmds.file(rename=asset)
+                self.asset = asset_match.group(1)
+                cmds.file(rename=self.asset)
         else:
             warning_box = QMessageBox(QMessageBox.Warning, "No Vehicle Found", "No vehicle file found at the specified path.")
             warning_box.exec_()
@@ -665,6 +676,16 @@ class MainUI(QDialog):
         #cmds.thumbnailCaptureComponent(delete=True)
         #cmds.thumbnailCaptureComponent(q=True, previewPath=True)
 
+    def auto_vc(self):
+        self.quick_rotate()
+        self.auto_apply_spellbook()
+        self.remove_tires()
+        self.remove_license_plate()
+
+    def export(self):
+        cmds.select(all=True)
+        cmds.file(self.desktop_dir + '\\' + self.asset + '_OBJ', type='OBJexport', es=True, sh=True, force=True)
+
     # --------------------------------------------------------------------------------------------------------------
     # Writes the current file path to preferences
     # --------------------------------------------------------------------------------------------------------------
@@ -730,6 +751,47 @@ class MainUI(QDialog):
 
     def save(self):
         cmds.SaveSceneAs(o=True)
+
+    def auto_apply_spellbook(self):
+        # Applies choosen spellbook
+        is_arnold = False
+        arnold_list = cmds.ls('*Arnold*')
+        if len(arnold_list) > 0:
+            is_arnold = True
+
+        if is_arnold:
+            spellbook_path = self.spellbook_dir + '\\' + 'Arn2Blinn.spb'
+            cmds.select(all=True)
+            cmds.rotate(0, 0, -90, r=True, p=[0,0,0])
+            cmds.select(deselect=True)
+            cmds.delete('*aiSkyDomeLight*')
+
+        else:
+            spellbook_path = self.spellbook_dir + '\\' + 'Hum2Blinn.spb'
+            cmds.select(deselect=True)
+
+        #spellbook_path =
+        if os.path.isfile(spellbook_path):
+            selection = cmds.ls(selection=True)
+            cmds.select(deselect=True)
+            with open(spellbook_path) as f:
+                data = f.read().splitlines()
+                for spell in data:
+                    spell_split = spell.split(":")
+                    original = spell_split[0]
+                    replacement = spell_split[1]
+                    spell_type = spell_split[2]
+
+                    # print("Replacing " + original + " " + spell_type + " with " + replacement)
+                    if spell_type == "Shader":
+                        cmds.hyperShade(objects=original)
+                    elif spell_type == "Object":
+                        cmds.select(original, replace=True)
+                    else:
+                        print('Error applying spellbook')
+                    cmds.hyperShade(assign=replacement)
+                    cmds.select(deselect=True)
+            cmds.select(selection)
 
 # Dev code to automatically close old windows when running
 try:

@@ -98,8 +98,10 @@ class MainUI(QDialog):
         self.tabWidget = QTabWidget()
         self.tab1 = QWidget()
         self.tab2 = QWidget()
+        self.tab3 = QWidget()
         self.tabWidget.addTab(self.tab1, 'Vehicle Tools')
         self.tabWidget.addTab(self.tab2, 'Site Tools')
+        self.tabWidget.addTab(self.tab3, 'Point Cloud Tools')
 
         ################################################## VEHICLE TOOL BUTTONS ########################################################################
         ##### Studio Dropdown #####
@@ -231,10 +233,35 @@ class MainUI(QDialog):
         self.load_locator_button = QPushButton(QIcon(self.icon_dir + "/load.png"), "Load Locators")
         self.load_locator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
+        ##################################################### Point Cloud Buttons ####################################################################################
+        ##### Point CLoud Text Bar #####
+        self.choose_xyzfile_edit = QLineEdit()
+        self.choose_xyzfile_edit.setPlaceholderText("XYZ File")
+        self.choose_xyzfile_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Point CLoud Folder Button #####
+        self.choose_xyzfile_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
+        self.choose_xyzfile_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Load Point CLoud Button #####
+        self.load_xyzfile_button = QPushButton(QIcon(self.icon_dir + "/load.png"), "Load Point Cloud")
+        self.load_xyzfile_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Density Dropdown #####
+        self.choose_density_button = QComboBox(self)
+        self.density_list = ['Very Low', 'Low', 'Medium', 'High', 'Dangerously High']
+        for item in self.density_list:
+            self.choose_density_button.addItem(item)
+        self.density_label = QLabel()
+        self.density_label.setText('Density Settings:')
+        self.density_label.setAlignment(Qt.AlignCenter)
+        self.density_current = self.density_list[self.choose_density_button.currentIndex()]
+
     def create_layout(self):
         main_layout = QVBoxLayout()
         vehicleTool_layout = QVBoxLayout()
         siteTool_layout = QVBoxLayout()
+        pcTool_layout = QVBoxLayout()
 
         self.setStyleSheet("""QTabWidget {background-color: rgb(100,102,117);}
                             QPushButton {background-color: rgb(87,87,87);}
@@ -314,6 +341,25 @@ class MainUI(QDialog):
         locator_group.setLayout(locator_layout)
         siteTool_layout.addWidget(locator_group)
 
+        ##############################################
+        ######      Point Cloud Section         ######
+        ##############################################
+
+        ##### Load Section #####
+        pcload_group = QGroupBox("Load Point Cloud")
+        pcload_layout = QGridLayout()
+        pcload_layout.addWidget(self.choose_xyzfile_button, 0, 0)
+        pcload_layout.addWidget(self.choose_xyzfile_edit, 0, 1, 1, 2)
+        pcload_layout.addWidget(self.density_label, 1, 0)
+        pcload_layout.addWidget(self.choose_density_button, 1, 1, 1, 2)
+        pcload_layout.addWidget(self.load_xyzfile_button, 2, 0, 1, 3)
+        pcload_group.setLayout(pcload_layout)
+        pcTool_layout.addWidget(pcload_group)
+
+        ##############################################
+        ######          Save Section            ######
+        ##############################################
+
         ##### Save Section #####
         save_group = QGroupBox("File Management")
         save_layout = QVBoxLayout()
@@ -324,6 +370,7 @@ class MainUI(QDialog):
         ##### Set Main Layout #####
         self.tab1.setLayout(vehicleTool_layout)
         self.tab2.setLayout(siteTool_layout)
+        self.tab3.setLayout(pcTool_layout)
         main_layout.addWidget(self.banner)
         main_layout.addWidget(self.tabWidget)
         main_layout.addWidget(save_group)
@@ -363,6 +410,11 @@ class MainUI(QDialog):
         ##### Locator Group #####
         self.choose_locator_button.clicked.connect(self.choose_locator)
         self.load_locator_button.clicked.connect(self.load_locator)
+
+        #------------------------------------- Point Cloud Section ------------------------------------------#
+        ##### Load Group #####
+        self.choose_xyzfile_button.clicked.connect(self.choose_xyzfile)
+        self.load_xyzfile_button.clicked.connect(self.load_xyzfile)
 
     #---------------------------------------------------------------------------------------------------------------
     # Button Functions
@@ -664,6 +716,48 @@ class MainUI(QDialog):
                 z = xyz[z_loc]
                 #print(z)
                 cmds.spaceLocator(p=[x,y,z])
+
+        f.close()
+
+    def choose_xyzfile(self):
+        # Set locator Path
+        file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "XYZ Files (*.xyz);;Text Files (*.txt);;All Files (*.*)")[0]
+        if file_path == "": # If they cancel the dialog
+            return # Then just don't open anything
+        self.choose_xyzfile_edit.setText(file_path)
+
+    def load_xyzfile(self):
+        filename = self.choose_xyzfile_edit.text()
+        f = open(filename, 'r')
+        full = f.readlines()
+
+        intensity = self.choose_density_button.currentIndex()
+        pointTotal = len(full)
+        goalTotal = 10000 + intensity*4000
+        stepSize = pointTotal // goalTotal
+
+        for i in range(0,goalTotal):
+            full[i*stepSize] = full[i*stepSize].rstrip()
+            full[i*stepSize] = full[i*stepSize].split(' ')
+
+            x = full[i*stepSize][0]
+            y = full[i*stepSize][1]
+            z = full[i*stepSize][2]
+
+            r = float(full[i*stepSize][3])/255
+            g = float(full[i*stepSize][4])/255
+            b = float(full[i*stepSize][5])/255
+
+            particleName = 'particle' + str(i)
+            particleColor = [r,g,b]
+
+            print('Loading particle ' + str(i) + ' of ' + str(goalTotal))
+            cmds.particle(n=particleName, p=[x, y, z])
+
+            cmds.select(particleName + 'Shape')
+            cmds.addAttr(k=True, ln='colorRed', dv=r, at='float')
+            cmds.addAttr(k=True, ln='colorGreen', dv=g, at='float')
+            cmds.addAttr(k=True, ln='colorBlue', dv=b, at='float')
 
         f.close()
 

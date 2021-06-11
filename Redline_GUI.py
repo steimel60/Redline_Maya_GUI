@@ -10,6 +10,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from shiboken2 import wrapInstance
+import math
 
 SCRIPT_NAME = "Redline Forensic Studio - Maya Tools"
 
@@ -249,7 +250,7 @@ class MainUI(QDialog):
 
         ##### Density Dropdown #####
         self.choose_density_button = QComboBox(self)
-        self.density_list = ['Very Low', 'Low', 'Medium', 'High', 'Dangerously High']
+        self.density_list = ['Entire File','High','Medium','Low','Very Low']
         for item in self.density_list:
             self.choose_density_button.addItem(item)
         self.density_label = QLabel()
@@ -261,7 +262,7 @@ class MainUI(QDialog):
         main_layout = QVBoxLayout()
         vehicleTool_layout = QVBoxLayout()
         siteTool_layout = QVBoxLayout()
-        pcTool_layout = QVBoxLayout()
+        self.pcTool_layout = QVBoxLayout()
 
         self.setStyleSheet("""QTabWidget {background-color: rgb(100,102,117);}
                             QPushButton {background-color: rgb(87,87,87);}
@@ -354,7 +355,7 @@ class MainUI(QDialog):
         pcload_layout.addWidget(self.choose_density_button, 1, 1, 1, 2)
         pcload_layout.addWidget(self.load_xyzfile_button, 2, 0, 1, 3)
         pcload_group.setLayout(pcload_layout)
-        pcTool_layout.addWidget(pcload_group)
+        self.pcTool_layout.addWidget(pcload_group)
 
         ##############################################
         ######          Save Section            ######
@@ -370,7 +371,7 @@ class MainUI(QDialog):
         ##### Set Main Layout #####
         self.tab1.setLayout(vehicleTool_layout)
         self.tab2.setLayout(siteTool_layout)
-        self.tab3.setLayout(pcTool_layout)
+        self.tab3.setLayout(self.pcTool_layout)
         main_layout.addWidget(self.banner)
         main_layout.addWidget(self.tabWidget)
         main_layout.addWidget(save_group)
@@ -727,39 +728,126 @@ class MainUI(QDialog):
         self.choose_xyzfile_edit.setText(file_path)
 
     def load_xyzfile(self):
+        progress_group = QGroupBox("Loading Bar")
+        progressBox = QVBoxLayout()
+        load_label = QLabel()
+        load_label.setText('Initiaing Files')
+        self.progress = QProgressBar(self)
+        progressBox.addWidget(load_label)
+        progressBox.addWidget(self.progress)
+        progress_group.setLayout(progressBox)
+        self.pcTool_layout.addWidget(progress_group)
+        progress_group.setVisible(True)
+
+        #self.progress.setGeometry(200, 80, 250, 20)
+        load_value = 0
         filename = self.choose_xyzfile_edit.text()
         f = open(filename, 'r')
         full = f.readlines()
+        f.close()
 
-        intensity = self.choose_density_button.currentIndex()
+        intensity = self.choose_density_button.currentIndex() + 1
         pointTotal = len(full)
-        goalTotal = 10000 + intensity*4000
-        stepSize = pointTotal // goalTotal
+        stepSize = intensity
 
-        for i in range(0,goalTotal):
-            full[i*stepSize] = full[i*stepSize].rstrip()
-            full[i*stepSize] = full[i*stepSize].split(' ')
+        x_min = None
+        y_min = None
+        z_min = None
+        mins = [x_min, y_min, z_min]
 
-            x = full[i*stepSize][0]
-            y = full[i*stepSize][1]
-            z = full[i*stepSize][2]
+        xVertice = None
+        yVertice = None
+        zVertice = None
+        vertices = [xVertice, yVertice, zVertice]
 
-            r = float(full[i*stepSize][3])/255
-            g = float(full[i*stepSize][4])/255
-            b = float(full[i*stepSize][5])/255
+        cmds.evaluator(n='dynamics', c='disablingNodes=dynamics')
+        cmds.evaluator(n='dynamics', c='handledNodes=none')
+        cmds.evaluator(n='dynamics', c='action=none')
 
-            particleName = 'particle' + str(i)
+        load_label.setText('Reading in ' + str(pointTotal//stepSize) + ' scans')
+        particleList = []
+        colorList = []
+        for i in range(0, pointTotal, stepSize):
+            full[i] = full[i].rstrip()
+            full[i] = full[i].split(' ')
+
+            for j in range(0,3):
+                if mins[j] == None:
+                    mins[j] = float(full[i][j])
+                    vertices[j] = [float(full[i][0]), float(full[i][1]), float(full[i][2])]
+                else:
+                    if mins[j] > float(full[i][j]):
+                        mins[j] = float(full[i][j])
+                        vertices[j] = [float(full[i][0]), float(full[i][1]), float(full[i][2])]
+
+            x = float(full[i][0])
+            y = float(full[i][1])
+            z = float(full[i][2])
+
+            r = float(full[i][3])/255
+            g = float(full[i][4])/255
+            b = float(full[i][5])/255
+
+            particle = (x, y, z)
             particleColor = [r,g,b]
 
-            print('Loading particle ' + str(i) + ' of ' + str(goalTotal))
-            cmds.particle(n=particleName, p=[x, y, z])
+            particleList.append(particle)
+            colorList.append(particleColor)
 
-            cmds.select(particleName + 'Shape')
-            cmds.addAttr(k=True, ln='colorRed', dv=r, at='float')
-            cmds.addAttr(k=True, ln='colorGreen', dv=g, at='float')
-            cmds.addAttr(k=True, ln='colorBlue', dv=b, at='float')
+            load_value = max((i / pointTotal)*60, 0)
+            self.progress.setValue(load_value)
+            self.progress.setVisible(True)
 
-        f.close()
+        load_label.setText('Setting Points in to Particle Object')
+        self.progress.setValue(load_value)
+        load_label.setVisible(True)
+        pointCloud, pointCloudShape = cmds.particle()
+        cmds.emit(object=pointCloud, pos=particleList)
+
+        load_label.setText('Applying Colors')
+        load_value += 15
+        self.progress.setValue(load_value)
+        self.progress.setVisible(True)
+        cmds.select(pointCloudShape)
+        cmds.addAttr(ln='rgbPP', dt='vectorArray')
+        cmds.setAttr(pointCloudShape+'.rgbPP', len(colorList), *colorList, type='vectorArray')
+
+        cmds.select(pointCloud)
+        load_label.setText('Moving to origin')
+        load_value += 15
+        self.progress.setValue(load_value)
+        self.progress.setVisible(True)
+        cmds.move(-mins[0], -mins[1], -mins[2])
+        cmds.select(deselect=True)
+        for point in vertices:
+            point[0] -= mins[0]
+            point[1] -= mins[1]
+            point[2] -= mins[2]
+
+        degrees = float(math.degrees((math.asin(vertices[0][1]/vertices[1][0]))))
+        load_label.setText('Rotating ' + str(degrees) + ' degrees')
+        load_value += 3
+        self.progress.setValue(load_value)
+        self.progress.setVisible(True)
+        cmds.select(pointCloud)
+        cmds.rotate(0,0, degrees, r=True, p=vertices[0])
+        cmds.select(deselect=True)
+
+        load_label.setText('Finalizing')
+        load_value += 3
+        self.progress.setValue(load_value)
+        self.progress.setVisible(True)
+        cmds.select(pointCloud)
+        cmds.move(0, -vertices[0][1], 0, r=True)
+        cmds.select(deselect=True)
+
+        cmds.select(pointCloud)
+        cmds.rotate(-90,0, 0, r=True, p=[0,0,0])
+        cmds.select(deselect=True)
+        load_value += 3
+        self.progress.setValue(load_value)
+        self.progress.setVisible(True)
+        progress_group.setVisible(False)
 
     def get_thumb(self):
         filename, file_extension = os.path.splitext(self.choose_vehicle_edit.text())

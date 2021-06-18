@@ -1,13 +1,16 @@
-import fileinput, os, sys, glob, re, math
+import fileinput
+import os
+import sys
+import glob
+import re
 
 import maya.OpenMayaUI as mui
 import maya.cmds as cmds
-import maya.mel as mel
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from shiboken2 import wrapInstance
-
+import math
 
 SCRIPT_NAME = "Redline Forensic Studio - Maya Tools"
 
@@ -758,12 +761,12 @@ class MainUI(QDialog):
 
         filename = self.choose_xyzfile_edit.text()
         intensity = self.choose_density_button.currentIndex()
-        stepSize = intensity*intensity + 1
+        stepSize = intensity + 1
 
         f = open(filename, 'r')
         full = [line.rstrip().split(' ') for line in f.readlines()[::stepSize]]
         particleList, colorList = [(float(pos[0]), float(pos[1]), float(pos[2])) for pos in full], [(float(color[3])/255, float(color[4])/255, float(color[5])/255) for color in full]
-        xmin, ymin, zmin = min([float(x[0]) for x in particleList]), min([float(y[1]) for y in particleList]), min([float(z[2]) for z in particleList])
+        xmin, ymin, zmin = min([float(x[0]) for x in full]), min([float(y[1]) for y in full]), min([float(z[0]) for z in full])
         f.close()
 
         load_label.setText('Creating Point Cloud')
@@ -775,8 +778,7 @@ class MainUI(QDialog):
         cmds.evaluator(n='dynamics', c='handledNodes=none')
         cmds.evaluator(n='dynamics', c='action=none')
 
-        pointCloud, pointCloudShape = cmds.particle()
-        cmds.emit(object=pointCloud, pos=particleList)
+        pointCloud, pointCloudShape = cmds.nParticle(p=particleList)
 
         load_label.setText('Applying Colors')
         load_value += 35
@@ -784,13 +786,7 @@ class MainUI(QDialog):
         progress_group.setVisible(True)
         cmds.select(pointCloudShape)
         cmds.addAttr(ln='rgbPP', dt='vectorArray')
-
         cmds.setAttr(pointCloudShape+'.rgbPP', len(colorList), *colorList, type='vectorArray')
-        mel.eval('createRenderNodeCB -asUtility "" "particleSamplerInfo" ""')
-        shader = cmds.shadingNode('lambert', asShader=True)
-        cmds.connectAttr('particleSamplerInfo1.rgbPP', shader + '.color')
-        cmds.connectAttr(shader + '.outColor','initialParticleSE.surfaceShader', f=True)
-
 
         cmds.select(pointCloud)
         cmds.xform(cp=True)
@@ -798,7 +794,7 @@ class MainUI(QDialog):
         load_value += 20
         self.progress.setValue(load_value)
         self.progress.setVisible(True)
-        cmds.move(-xmin, -ymin, -zmin)
+        cmds.move(-xmin, -ymin, -zmin, rpr=True)
         cmds.select(deselect=True)
 
         cmds.select(pointCloud)

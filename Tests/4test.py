@@ -8,9 +8,11 @@ f = open(filename, 'r')
 full = [line.rstrip().split(' ') for line in f.readlines()[::1000]]
 points, colors, normals = [om.MPoint(float(pos[0]), float(pos[1]), float(pos[2])) for pos in full], [om.MPoint(float(pos[3])/255, float(pos[4])/255, float(pos[5])/255) for pos in full], [om.MPoint(float(pos[6]), float(pos[7]), float(pos[8])) for pos in full]
 f.close()
+
 ### Create OBJs
 obj = om.MObject()
-node = om.MDagModifier.createNode('mesh', obj)
+meshID = om.MTypeId(296)
+node = om.MDagModifier.createNode(meshID, obj)
 print("Creating Mesh")
 mesh = om.MFnMesh(node)
 

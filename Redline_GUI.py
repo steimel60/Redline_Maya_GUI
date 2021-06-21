@@ -806,6 +806,7 @@ class MainUI(QDialog):
         self.choose_xyzfile_edit.setText(file_path)
 
     def load_xyzfile(self):
+        #Make Load Bar appear
         progress_group = QGroupBox("Loading Bar")
         progressBox = QVBoxLayout()
         load_label = QLabel()
@@ -816,6 +817,7 @@ class MainUI(QDialog):
         progress_group.setLayout(progressBox)
         self.pcTool_layout.addWidget(progress_group)
 
+        #Does nothing but updates load bar
         load_label.setText('Reading File')
         load_value = 0
         for i in range(0,5):
@@ -823,6 +825,7 @@ class MainUI(QDialog):
             self.progress.setValue(load_value)
             progress_group.setVisible(True)
 
+        #Load file and get data
         filename = self.choose_xyzfile_edit.text()
         intensity = self.choose_density_button.currentIndex()
         stepSize = intensity*intensity + 1
@@ -833,6 +836,7 @@ class MainUI(QDialog):
         xmin, ymin, zmin = min([float(x[0]) for x in particleList]), min([float(y[1]) for y in particleList]), min([float(z[2]) for z in particleList])
         f.close()
 
+        #Disable Dynamics and create Point Cloud
         load_label.setText('Creating Point Cloud')
         load_value += 35
         self.progress.setValue(load_value)
@@ -845,6 +849,7 @@ class MainUI(QDialog):
         pointCloud, pointCloudShape = cmds.particle()
         cmds.emit(object=pointCloud, pos=particleList)
 
+        #Apply Colors
         load_label.setText('Applying Colors')
         load_value += 35
         self.progress.setValue(load_value)
@@ -858,7 +863,7 @@ class MainUI(QDialog):
         cmds.connectAttr('particleSamplerInfo1.rgbPP', shader + '.color')
         cmds.connectAttr(shader + '.outColor','initialParticleSE.surfaceShader', f=True)
 
-
+        #Move to origin
         cmds.select(pointCloud)
         cmds.xform(cp=True)
         load_label.setText('Moving to origin')
@@ -868,6 +873,7 @@ class MainUI(QDialog):
         cmds.move(-xmin, -ymin, -zmin)
         cmds.select(deselect=True)
 
+        #rotate for Maya
         cmds.select(pointCloud)
         cmds.rotate(-90,0, 0, r=True, p=[0,0,0])
         cmds.select(deselect=True)
@@ -886,6 +892,7 @@ class MainUI(QDialog):
         #cmds.thumbnailCaptureComponent(q=True, previewPath=True)
 
     def auto_vc(self):
+        #Do everything
         self.quick_rotate()
         self.auto_apply_spellbook()
         self.remove_tires()
@@ -896,7 +903,7 @@ class MainUI(QDialog):
         cmds.file(self.desktop_dir + '\\' + self.asset + '_OBJ', type='OBJexport', es=True, sh=True, force=True)
 
     def cable_gui(self):
-        #func = CableMaker.createCustomWorkspaceControlCable()
+        #Opens GUI for easy cable creation
         if cmds.window("Cable Maker", exists =True):
             cmds.deleteUI("Cable Maker")
         cmds.workspaceControl("Cable Maker", retain=False, floating=True)
@@ -915,15 +922,18 @@ class MainUI(QDialog):
         self.choose_vLocator_edit.setText(file_path)
 
     def convertVCData(self):
+        #Get File Path
         filename = self.choose_vcData_edit.text()
         f = open(filename, "r")
         lines = f.readlines()
         f.close()
 
+        #Clean CSV
         lines = [line.split(',') for line in lines]
         for i in range(0,len(lines)):
             lines[i] = [item.strip() for item in lines[i] if item != '' and item != '\n']
 
+        #Get Vehicle List
         vehicles = []
         vehicleIndices = []
         for i in range(0,len(lines)-1):
@@ -933,6 +943,7 @@ class MainUI(QDialog):
 
         frameTotal = vehicleIndices[1] - vehicleIndices[0]
 
+        #Create MOV Files
         for i in range(0,len(vehicles)):
             name = str(vehicles[i])
             f = open(self.desktop_dir + '/' + name + '.mov', 'w')
@@ -944,6 +955,7 @@ class MainUI(QDialog):
             f.close()
 
     def vehicleLocator(self):
+        #Init Scene
         fps = self.fps_edit.currentText()
         cmds.playbackOptions(min='0sec')
         cmds.playbackOptions(ast='0sec')
@@ -952,13 +964,15 @@ class MainUI(QDialog):
 
         filename = self.choose_vLocator_edit.text()
 
+        #Get Asset Name for Locator
         try:
             assetMatch = re.search('/*([a-zA-Z0-9-_]*)\.mov', filename)
             asset = assetMatch.group(1) + '_Locator'
         except:
-            print('No Match')
+            print("Couldn't retrieve asset name")
             asset = 'vehicleLocator'
 
+        #Set up locator with vehicle attributes
         locator = cmds.spaceLocator(p=(0,0,0), n=asset)
         cmds.addAttr(ln='Time', at='float')
         cmds.setAttr(locator[0]+'.Time', k=True)
@@ -995,6 +1009,7 @@ class MainUI(QDialog):
         cmds.addAttr(ln='brake', at='float')
         cmds.setAttr(locator[0]+'.brake', k=True)
 
+        #Connect Attr to expressions
         locName = locator[0]
 
         cmds.expression(s=locator[0]+".translateX="+locator[0]+".CGx", o=locator[0], ae=True, n='translateX')
@@ -1010,6 +1025,7 @@ class MainUI(QDialog):
         if ($diff < 0)""" +'{'+f'{locName}.brake=1;'+
         '}'+f'else {locName}.brake = 0;', o=locator[0], ae=True, n='brakeAndVel')
 
+        #Load Attr from MOV file
         cmds.movIn(locName + '.Time', locName + '.Distance', locName + '.Velocity', locName + '.Xrot', locName + '.Yrot', locName + '.Zrot', locName + '.vni', locName + '.vnz', locName + '.Steer', locName + '.CGx', locName + '.CGy', locName + '.CGz', locName + ".Xrad", locName + '.Yrad', locName + '.Zrad', locName + '.lastV', locName + '.brake', f=filename)
 
     # --------------------------------------------------------------------------------------------------------------

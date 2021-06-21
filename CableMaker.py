@@ -189,7 +189,7 @@ def createCustomWorkspaceControlCable(*args):
 
 
 
-mc.workspaceControl("Cable Maker", retain=False, floating=True, uiScript="createCustomWorkspaceControlCable()");
+#mc.workspaceControl("Cable Maker", retain=False, floating=True, uiScript="createCustomWorkspaceControlCable()");
 
 
 

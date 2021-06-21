@@ -8,6 +8,9 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from shiboken2 import wrapInstance
 
+ms_dir = os.path.expanduser("~/maya/scripts/magic-shade")
+sys.path.append(ms_dir)
+from CableMaker import *
 
 SCRIPT_NAME = "Redline Forensic Studio - Maya Tools"
 
@@ -235,6 +238,36 @@ class MainUI(QDialog):
         self.open_cable_button = QPushButton("Open Cable Creator")
         self.open_cable_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
+        ##### Vehicle Locator Buttons #####
+        self.choose_vcData_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
+        self.choose_vcData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.choose_vcData_edit = QLineEdit()
+        self.choose_vcData_edit.setPlaceholderText("Virtual Crash Data File")
+        self.choose_vcData_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.convert_vcData_button = QPushButton("Convert VC Data")
+        self.convert_vcData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.choose_vLocator_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
+        self.choose_vLocator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.choose_vLocator_edit = QLineEdit()
+        self.choose_vLocator_edit.setPlaceholderText("Vehicle Locator File")
+        self.choose_vLocator_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.create_vLocator_button = QPushButton("Create Vehicle Locator")
+        self.create_vLocator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.fps_edit = QComboBox(self)
+        fps_list = ['24','30','100']
+        for fps in fps_list:
+            self.fps_edit.addItem(fps)
+        self.fps_edit.setCurrentIndex(2)
+        self.fps_label = QLabel()
+        self.fps_label.setText('FPS:')
+        self.fps_label.setMaximumWidth(35)
+
         ##################################################### Point Cloud Buttons ####################################################################################
         ##### Point CLoud Text Bar #####
         self.choose_xyzfile_edit = QLineEdit()
@@ -258,6 +291,9 @@ class MainUI(QDialog):
         self.density_label.setText('Density Settings:')
         self.density_label.setAlignment(Qt.AlignCenter)
         self.density_current = self.density_list[self.choose_density_button.currentIndex()]
+
+        ##################################################### Animation and Rigging ####################################################################################
+
 
     def create_layout(self):
         main_layout = QVBoxLayout()
@@ -350,6 +386,20 @@ class MainUI(QDialog):
         cable_group.setLayout(cable_layout)
         siteTool_layout.addWidget(cable_group)
 
+        ##### Vehicle Locator #####
+        rig_group = QGroupBox("Vehicle Locators")
+        rig_layout = QGridLayout()
+        rig_layout.addWidget(self.choose_vcData_button,0,0)
+        rig_layout.addWidget(self.choose_vcData_edit,0,1,1,4)
+        rig_layout.addWidget(self.convert_vcData_button,0,5,1,2)
+        rig_layout.addWidget(self.choose_vLocator_button, 1, 0)
+        rig_layout.addWidget(self.choose_vLocator_edit, 1, 1, 1, 4)
+        rig_layout.addWidget(self.fps_label, 1, 5)
+        rig_layout.addWidget(self.fps_edit, 1, 6)
+        rig_layout.addWidget(self.create_vLocator_button, 2, 0, 1, 7)
+        rig_group.setLayout(rig_layout)
+        siteTool_layout.addWidget(rig_group)
+
         ##############################################
         ######      Point Cloud Section         ######
         ##############################################
@@ -422,6 +472,12 @@ class MainUI(QDialog):
 
         ##### Cable Group #####
         self.open_cable_button.clicked.connect(self.cable_gui)
+
+        ##### Vechicle Locator #####
+        self.choose_vcData_button.clicked.connect(self.loadVCData)
+        self.convert_vcData_button.clicked.connect(self.convertVCData)
+        self.choose_vLocator_button.clicked.connect(self.loadvLocator)
+        self.create_vLocator_button.clicked.connect(self.vehicleLocator)
 
         #------------------------------------- Point Cloud Section ------------------------------------------#
         ##### Load Group #####
@@ -829,7 +885,120 @@ class MainUI(QDialog):
         cmds.file(self.desktop_dir + '\\' + self.asset + '_OBJ', type='OBJexport', es=True, sh=True, force=True)
 
     def cable_gui(self):
-        exec(open(self.ms_dir + '/CableMaker.py').read())
+        #func = CableMaker.createCustomWorkspaceControlCable()
+        if cmds.window("Cable Maker", exists =True):
+            cmds.deleteUI("Cable Maker")
+        cmds.workspaceControl("Cable Maker", retain=False, floating=True)
+        createCustomWorkspaceControlCable()
+
+    def loadVCData(self):
+        file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "CSV Files (*.csv);;All Files (*.*)")[0]
+        if file_path == "":  # If they cancel the dialog
+            return  # Then just don't open anything
+        self.choose_vcData_edit.setText(file_path)
+
+    def loadvLocator(self):
+        file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "MOV Files (*.mov);;All Files (*.*)")[0]
+        if file_path == "":  # If they cancel the dialog
+            return  # Then just don't open anything
+        self.choose_vLocator_edit.setText(file_path)
+
+    def convertVCData(self):
+        filename = self.choose_vcData_edit.text()
+
+        f = open(filename, "r")
+        lines = f.readlines()
+        f.close()
+
+        lines = [line.split(',') for line in lines]
+        for i in range(0,len(lines)):
+            lines[i] = [item.strip() for item in lines[i] if item != '' and item != '\n']
+
+
+        vehicles = []
+        vehicleIndices = []
+        for i in range(0,len(lines)-1):
+            if 'time [ s]' in lines[i+1]:
+                vehicles.append(lines[i][0])
+                vehicleIndices.append(i)
+
+        for i in range(0,len(vehicles)-1):
+            name = str(vehicles[i])
+            f = open(self.desktop_dir + '/' + name + '.mov', 'w')
+            for j in range(2, vehicleIndices[i+1] - vehicleIndices[i]):
+                for k in range(0,len(lines[vehicleIndices[i] + j])):
+                    f.write(lines[vehicleIndices[i] + j][k] + ' ')
+                f.write('\n')
+            f.close()
+
+    def vehicleLocator(self):
+        fps = self.fps_edit.currentText()
+        cmds.playbackOptions(min='0sec')
+        cmds.playbackOptions(ast='0sec')
+        cmds.currentUnit(time=fps+'fps')
+        cmds.currentTime(0)
+
+        filename = self.choose_vLocator_edit.text()
+
+        try:
+            assetMatch = re.search('/*([a-zA-Z0-9-_]*)\.mov', filename)
+            asset = assetMatch.group(1) + '_Locator'
+        except:
+            print('No Match')
+            asset = 'vehicleLocator'
+
+        locator = cmds.spaceLocator(p=(0,0,0), n=asset)
+        cmds.addAttr(ln='Time', at='float')
+        cmds.setAttr(locator[0]+'.Time', k=True)
+        cmds.addAttr(ln='Distance', at='float')
+        cmds.setAttr(locator[0]+'.Distance', k=True)
+        cmds.addAttr(ln='Velocity', at='float')
+        cmds.setAttr(locator[0]+'.Velocity', k=True)
+        cmds.addAttr(ln='Xrot', at='float')
+        cmds.setAttr(locator[0]+'.Xrot', k=True)
+        cmds.addAttr(ln='Yrot', at='float')
+        cmds.setAttr(locator[0]+'.Yrot', k=True)
+        cmds.addAttr(ln='Zrot', at='float')
+        cmds.setAttr(locator[0]+'.Zrot', k=True)
+        cmds.addAttr(ln='vni', at='float')
+        cmds.setAttr(locator[0]+'.vni', k=True)
+        cmds.addAttr(ln='vnz', at='float')
+        cmds.setAttr(locator[0]+'.vnz', k=True)
+        cmds.addAttr(ln='Steer', at='float')
+        cmds.setAttr(locator[0]+'.Steer', k=True)
+        cmds.addAttr(ln='CGx', at='float')
+        cmds.setAttr(locator[0]+'.CGx', k=True)
+        cmds.addAttr(ln='CGy', at='float')
+        cmds.setAttr(locator[0]+'.CGy', k=True)
+        cmds.addAttr(ln='CGz', at='float')
+        cmds.setAttr(locator[0]+'.CGz', k=True)
+        cmds.addAttr(ln='Xrad', at='float')
+        cmds.setAttr(locator[0]+'.Xrad', k=True)
+        cmds.addAttr(ln='Yrad', at='float')
+        cmds.setAttr(locator[0]+'.Yrad', k=True)
+        cmds.addAttr(ln='Zrad', at='float')
+        cmds.setAttr(locator[0]+'.Zrad', k=True)
+        cmds.addAttr(ln='lastV', at='float')
+        cmds.setAttr(locator[0]+'.lastV', k=True)
+        cmds.addAttr(ln='brake', at='float')
+        cmds.setAttr(locator[0]+'.brake', k=True)
+
+        locName = locator[0]
+
+        cmds.expression(s=locator[0]+".translateX="+locator[0]+".CGx", o=locator[0], ae=True, n='translateX')
+        cmds.expression(s=locator[0]+".translateY="+locator[0]+".CGy", o=locator[0], ae=True, n='translateY')
+        cmds.expression(s=locator[0]+".translateZ="+locator[0]+".CGz", o=locator[0], ae=True, n='translateZ')
+
+        cmds.expression(s=locator[0]+".rotateX="+locator[0]+".Xrot", o=locator[0], ae=True, n='rotX', uc='angularOnly')
+        cmds.expression(s=locator[0]+".rotateY="+locator[0]+".Yrot", o=locator[0], ae=True, n='rotY', uc='angularOnly')
+        cmds.expression(s=locator[0]+".rotateZ="+locator[0]+".Zrot", o=locator[0], ae=True, n='rotZ', uc='angularOnly')
+
+        cmds.expression(s=locator[0]+f""".lastV=`getAttr -time (frame-1)  {locName}.Velocity`;
+        float $diff =  {locName}.Velocity-{locName}.lastV ;
+        if ($diff < 0)""" +'{'+f'{locName}.brake=1;'+
+        '}'+f'else {locName}.brake = 0;', o=locator[0], ae=True, n='brakeAndVel')
+
+        cmds.movIn(locName + '.Time', locName + '.Distance', locName + '.Velocity', locName + '.Xrot', locName + '.Yrot', locName + '.Zrot', locName + '.vni', locName + '.vnz', locName + '.Steer', locName + '.CGx', locName + '.CGy', locName + '.CGz', locName + ".Xrad", locName + '.Yrad', locName + '.Zrad', locName + '.lastV', locName + '.brake', f=filename)
 
     # --------------------------------------------------------------------------------------------------------------
     # Writes the current file path to preferences

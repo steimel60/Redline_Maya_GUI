@@ -905,7 +905,6 @@ class MainUI(QDialog):
 
     def convertVCData(self):
         filename = self.choose_vcData_edit.text()
-
         f = open(filename, "r")
         lines = f.readlines()
         f.close()
@@ -914,7 +913,6 @@ class MainUI(QDialog):
         for i in range(0,len(lines)):
             lines[i] = [item.strip() for item in lines[i] if item != '' and item != '\n']
 
-
         vehicles = []
         vehicleIndices = []
         for i in range(0,len(lines)-1):
@@ -922,13 +920,16 @@ class MainUI(QDialog):
                 vehicles.append(lines[i][0])
                 vehicleIndices.append(i)
 
-        for i in range(0,len(vehicles)-1):
+        frameTotal = vehicleIndices[1] - vehicleIndices[0]
+
+        for i in range(0,len(vehicles)):
             name = str(vehicles[i])
             f = open(self.desktop_dir + '/' + name + '.mov', 'w')
-            for j in range(2, vehicleIndices[i+1] - vehicleIndices[i]):
+            for j in range(2, frameTotal):
                 for k in range(0,len(lines[vehicleIndices[i] + j])):
                     f.write(lines[vehicleIndices[i] + j][k] + ' ')
                 f.write('\n')
+
             f.close()
 
     def vehicleLocator(self):

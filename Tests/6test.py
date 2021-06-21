@@ -1,8 +1,17 @@
-import re
+import pymesh
+import numpy as np
 
-dir = r'C:\Users\DylanSteimel\Desktop\GMC.mov'
-
-assetMatch = re.search('/*([a-zA-Z0-9-_]*)\.mov', dir)
-asset = assetMatch.group(1)
-print(asset)
-print(assetMatch)
+vertices = np.array([
+ [0.0, 0.0],
+ [1.0, 0.0],
+ [1.0, 1.0],
+ [0.0, 1.0],
+ ]);
+tri = pymesh.triangle();
+tri.points = vertices;
+tri.max_area = 0.05;
+tri.split_boundary = False;
+tri.verbosity = 0;
+tri.run(); # Execute triangle.
+mesh = tri.mesh;
+print(mesh)

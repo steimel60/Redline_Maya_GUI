@@ -966,7 +966,7 @@ class MainUI(QDialog):
 
         #Get Asset Name for Locator
         try:
-            assetMatch = re.search('/*([a-zA-Z0-9-_]*)\.mov', filename)
+            assetMatch = re.search('/*([a-zA-Z0-9-_ ]*)\.mov', filename)
             asset = assetMatch.group(1) + '_Locator'
         except:
             print("Couldn't retrieve asset name")
@@ -1027,6 +1027,9 @@ class MainUI(QDialog):
 
         #Load Attr from MOV file
         cmds.movIn(locName + '.Time', locName + '.Distance', locName + '.Velocity', locName + '.Xrot', locName + '.Yrot', locName + '.Zrot', locName + '.vni', locName + '.vnz', locName + '.Steer', locName + '.CGx', locName + '.CGy', locName + '.CGz', locName + ".Xrad", locName + '.Yrad', locName + '.Zrad', locName + '.lastV', locName + '.brake', f=filename)
+
+        #Add to group
+        cmds.group(locName, n=locName+'_group')
 
     # --------------------------------------------------------------------------------------------------------------
     # Writes the current file path to preferences

@@ -101,9 +101,11 @@ class MainUI(QDialog):
         self.tab1 = QWidget()
         self.tab2 = QWidget()
         self.tab3 = QWidget()
+        self.tab4 = QWidget()
         self.tabWidget.addTab(self.tab1, 'Vehicle Tools')
         self.tabWidget.addTab(self.tab2, 'Site Tools')
         self.tabWidget.addTab(self.tab3, 'Point Cloud Tools')
+        self.tabWidget.addTab(self.tab4, 'Virtual Crash Tools')
 
         ################################################## VEHICLE TOOL BUTTONS ########################################################################
         ##### Studio Dropdown #####
@@ -261,9 +263,11 @@ class MainUI(QDialog):
 
         self.fps_edit = QComboBox(self)
         fps_list = ['24','30','100']
-        for fps in fps_list:
-            self.fps_edit.addItem(fps)
-        self.fps_edit.setCurrentIndex(2)
+        for i in range(0,len(fps_list)):
+            self.fps_edit.addItem(fps_list[i])
+            if fps_list[i] == '100':
+                hundredIndex = i
+        self.fps_edit.setCurrentIndex(hundredIndex)
         self.fps_label = QLabel()
         self.fps_label.setText('FPS:')
         self.fps_label.setMaximumWidth(35)
@@ -299,6 +303,7 @@ class MainUI(QDialog):
         main_layout = QVBoxLayout()
         vehicleTool_layout = QVBoxLayout()
         siteTool_layout = QVBoxLayout()
+        vCrashTool_layout = QVBoxLayout()
         self.pcTool_layout = QVBoxLayout()
 
         self.setStyleSheet("""QTabWidget {background-color: rgb(100,102,117);}
@@ -386,19 +391,7 @@ class MainUI(QDialog):
         cable_group.setLayout(cable_layout)
         siteTool_layout.addWidget(cable_group)
 
-        ##### Vehicle Locator #####
-        rig_group = QGroupBox("Vehicle Locators")
-        rig_layout = QGridLayout()
-        rig_layout.addWidget(self.choose_vcData_button,0,0)
-        rig_layout.addWidget(self.choose_vcData_edit,0,1,1,4)
-        rig_layout.addWidget(self.convert_vcData_button,0,5,1,2)
-        rig_layout.addWidget(self.choose_vLocator_button, 1, 0)
-        rig_layout.addWidget(self.choose_vLocator_edit, 1, 1, 1, 4)
-        rig_layout.addWidget(self.fps_label, 1, 5)
-        rig_layout.addWidget(self.fps_edit, 1, 6)
-        rig_layout.addWidget(self.create_vLocator_button, 2, 0, 1, 7)
-        rig_group.setLayout(rig_layout)
-        siteTool_layout.addWidget(rig_group)
+
 
         ##############################################
         ######      Point Cloud Section         ######
@@ -416,6 +409,23 @@ class MainUI(QDialog):
         self.pcTool_layout.addWidget(pcload_group)
 
         ##############################################
+        ######           VC Section             ######
+        ##############################################
+        ##### Vehicle Locator #####
+        rig_group = QGroupBox("Vehicle Locators")
+        rig_layout = QGridLayout()
+        rig_layout.addWidget(self.choose_vcData_button,0,0)
+        rig_layout.addWidget(self.choose_vcData_edit,0,1,1,4)
+        rig_layout.addWidget(self.convert_vcData_button,0,5,1,2)
+        rig_layout.addWidget(self.choose_vLocator_button, 1, 0)
+        rig_layout.addWidget(self.choose_vLocator_edit, 1, 1, 1, 4)
+        rig_layout.addWidget(self.fps_label, 1, 5)
+        rig_layout.addWidget(self.fps_edit, 1, 6)
+        rig_layout.addWidget(self.create_vLocator_button, 2, 0, 1, 7)
+        rig_group.setLayout(rig_layout)
+        vCrashTool_layout.addWidget(rig_group)
+
+        ##############################################
         ######          Save Section            ######
         ##############################################
 
@@ -430,6 +440,7 @@ class MainUI(QDialog):
         self.tab1.setLayout(vehicleTool_layout)
         self.tab2.setLayout(siteTool_layout)
         self.tab3.setLayout(self.pcTool_layout)
+        self.tab4.setLayout(vCrashTool_layout)
         main_layout.addWidget(self.banner)
         main_layout.addWidget(self.tabWidget)
         main_layout.addWidget(save_group)

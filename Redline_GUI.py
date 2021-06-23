@@ -240,6 +240,43 @@ class MainUI(QDialog):
         self.open_cable_button = QPushButton("Open Cable Creator")
         self.open_cable_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
+
+
+        ##################################################### Point Cloud Buttons ####################################################################################
+        ##### Point CLoud Text Bar #####
+        self.choose_xyzfile_edit = QLineEdit()
+        self.choose_xyzfile_edit.setPlaceholderText("XYZ File")
+        self.choose_xyzfile_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Point CLoud Folder Button #####
+        self.choose_xyzfile_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
+        self.choose_xyzfile_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Load Point CLoud Button #####
+        self.load_xyzfile_button = QPushButton(QIcon(self.icon_dir + "/load.png"), "Load Point Cloud")
+        self.load_xyzfile_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Density Dropdown #####
+        self.choose_density_button = QComboBox(self)
+        self.density_list = ['Entire File','High','Medium','Low','Very Low']
+        for item in self.density_list:
+            self.choose_density_button.addItem(item)
+        self.density_label = QLabel()
+        self.density_label.setText('Density Settings:')
+        self.density_label.setAlignment(Qt.AlignCenter)
+        self.density_current = self.density_list[self.choose_density_button.currentIndex()]
+
+        ##################################################### VC and Rigging ####################################################################################
+        ##### Rig Buttons #####
+        self.choose_rig_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
+        self.choose_rig_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.choose_rig_edit = QLineEdit()
+        self.choose_rig_edit.setPlaceholderText("Rig File")
+        self.choose_rig_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.loadRig_button = QPushButton("Load Rig")
+        self.loadRig_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
         ##### Vehicle Locator Buttons #####
         self.choose_vcData_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
         self.choose_vcData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -272,31 +309,32 @@ class MainUI(QDialog):
         self.fps_label.setText('FPS:')
         self.fps_label.setMaximumWidth(35)
 
-        ##################################################### Point Cloud Buttons ####################################################################################
-        ##### Point CLoud Text Bar #####
-        self.choose_xyzfile_edit = QLineEdit()
-        self.choose_xyzfile_edit.setPlaceholderText("XYZ File")
-        self.choose_xyzfile_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.rigMatch_dropdown = QComboBox(self)
+        rigs = cmds.ls('*_driveControl', r=True)
+        for rig in rigs:
+            self.rigMatch_dropdown.addItem(rig)
+        self.vLocatorMatch_dropdown = QComboBox(self)
+        locators = cmds.ls('*_Locator')
+        for locator in locators:
+            self.vLocatorMatch_dropdown.addItem(locator)
+        self.pairRig2Locator_button = QPushButton('Pair Rig to Locator')
+        self.pairRig2Locator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
-        ##### Point CLoud Folder Button #####
-        self.choose_xyzfile_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
-        self.choose_xyzfile_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.constraintList_dropdown = QComboBox(self)
+        constraints = cmds.ls('*driveControl_parentConstraint*', r=True)
+        for constraint in constraints:
+            self.constraintList_dropdown.addItem(constraint)
 
-        ##### Load Point CLoud Button #####
-        self.load_xyzfile_button = QPushButton(QIcon(self.icon_dir + "/load.png"), "Load Point Cloud")
-        self.load_xyzfile_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
-
-        ##### Density Dropdown #####
-        self.choose_density_button = QComboBox(self)
-        self.density_list = ['Entire File','High','Medium','Low','Very Low']
-        for item in self.density_list:
-            self.choose_density_button.addItem(item)
-        self.density_label = QLabel()
-        self.density_label.setText('Density Settings:')
-        self.density_label.setAlignment(Qt.AlignCenter)
-        self.density_current = self.density_list[self.choose_density_button.currentIndex()]
-
-        ##################################################### Animation and Rigging ####################################################################################
+        self.parentX = QLineEdit()
+        self.parentX.setMaximumWidth(70)
+        self.parentX.setMinimumWidth(70)
+        self.parentY = QLineEdit()
+        self.parentY.setMaximumWidth(70)
+        self.parentY.setMinimumWidth(70)
+        self.parentZ = QLineEdit()
+        self.parentZ.setMaximumWidth(70)
+        self.parentZ.setMinimumWidth(70)
+        self.rotateOnConst_button = QPushButton('Rotate on Constraint')
 
 
     def create_layout(self):
@@ -411,19 +449,35 @@ class MainUI(QDialog):
         ##############################################
         ######           VC Section             ######
         ##############################################
+
         ##### Vehicle Locator #####
-        rig_group = QGroupBox("Vehicle Locators")
-        rig_layout = QGridLayout()
-        rig_layout.addWidget(self.choose_vcData_button,0,0)
-        rig_layout.addWidget(self.choose_vcData_edit,0,1,1,4)
-        rig_layout.addWidget(self.convert_vcData_button,0,5,1,2)
-        rig_layout.addWidget(self.choose_vLocator_button, 1, 0)
-        rig_layout.addWidget(self.choose_vLocator_edit, 1, 1, 1, 4)
-        rig_layout.addWidget(self.fps_label, 1, 5)
-        rig_layout.addWidget(self.fps_edit, 1, 6)
-        rig_layout.addWidget(self.create_vLocator_button, 2, 0, 1, 7)
-        rig_group.setLayout(rig_layout)
-        vCrashTool_layout.addWidget(rig_group)
+        vLocator_group = QGroupBox("Vehicle Rigging")
+        vLocator_layout = QGridLayout()
+
+        vLocator_layout.addWidget(self.choose_rig_button,0,0)
+        vLocator_layout.addWidget(self.choose_rig_edit,0,1,1,4)
+        vLocator_layout.addWidget(self.loadRig_button,0,5,1,2)
+
+        vLocator_layout.addWidget(self.choose_vcData_button,1,0)
+        vLocator_layout.addWidget(self.choose_vcData_edit,1,1,1,4)
+        vLocator_layout.addWidget(self.convert_vcData_button,1,5,1,2)
+        vLocator_layout.addWidget(self.choose_vLocator_button, 2, 0)
+        vLocator_layout.addWidget(self.choose_vLocator_edit, 2, 1, 1, 4)
+        vLocator_layout.addWidget(self.fps_label, 2, 5)
+        vLocator_layout.addWidget(self.fps_edit, 2, 6)
+        vLocator_layout.addWidget(self.create_vLocator_button, 3, 0, 1, 7)
+
+        vLocator_layout.addWidget(self.vLocatorMatch_dropdown, 4,0,1,2)
+        vLocator_layout.addWidget(self.rigMatch_dropdown, 4,2,1,2)
+        vLocator_layout.addWidget(self.pairRig2Locator_button,4,4,1,3)
+
+        vLocator_layout.addWidget(self.constraintList_dropdown,5,0,1,2)
+        vLocator_layout.addWidget(self.parentX,5,2)
+        vLocator_layout.addWidget(self.parentY,5,3)
+        vLocator_layout.addWidget(self.parentZ,5,4)
+        vLocator_layout.addWidget(self.rotateOnConst_button,5,5,1,2)
+        vLocator_group.setLayout(vLocator_layout)
+        vCrashTool_layout.addWidget(vLocator_group)
 
         ##############################################
         ######          Save Section            ######
@@ -484,17 +538,21 @@ class MainUI(QDialog):
         ##### Cable Group #####
         self.open_cable_button.clicked.connect(self.cable_gui)
 
-        ##### Vechicle Locator #####
-        self.choose_vcData_button.clicked.connect(self.loadVCData)
-        self.convert_vcData_button.clicked.connect(self.convertVCData)
-        self.choose_vLocator_button.clicked.connect(self.loadvLocator)
-        self.create_vLocator_button.clicked.connect(self.vehicleLocator)
-
         #------------------------------------- Point Cloud Section ------------------------------------------#
         ##### Load Group #####
         self.choose_xyzfile_button.clicked.connect(self.choose_xyzfile)
         self.load_xyzfile_button.clicked.connect(self.load_xyzfile)
 
+        #--------------------------------------  VC Section  ------------------------------------------------#
+        ##### Vechicle Locator #####
+        self.choose_rig_button.clicked.connect(self.choose_rig)
+        self.loadRig_button.clicked.connect(self.load_rig)
+        self.choose_vcData_button.clicked.connect(self.loadVCData)
+        self.convert_vcData_button.clicked.connect(self.convertVCData)
+        self.choose_vLocator_button.clicked.connect(self.loadvLocator)
+        self.create_vLocator_button.clicked.connect(self.vehicleLocator)
+        self.pairRig2Locator_button.clicked.connect(self.pairRig2Locator)
+        self.rotateOnConst_button.clicked.connect(self.rotateOnConst)
     #---------------------------------------------------------------------------------------------------------------
     # Button Functions
     #---------------------------------------------------------------------------------------------------------------
@@ -909,6 +967,26 @@ class MainUI(QDialog):
         cmds.workspaceControl("Cable Maker", retain=False, floating=True)
         createCustomWorkspaceControlCable()
 
+    def choose_rig(self):
+        # Set locator Path
+        file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "Maya Files (*.mb *.ma);;All Files (*.*)")[0]
+        if file_path == "": # If they cancel the dialog
+            return # Then just don't open anything
+        self.choose_rig_edit.setText(file_path)
+
+    def load_rig(self):
+        filename = self.choose_rig_edit.text()
+        cmds.file(filename, i=True)
+        try:
+            assetMatch = re.search('/*([a-zA-Z0-9-_ ]*)\.m[ab]', filename)
+            asset = assetMatch.group(1) + '_driveControl'
+        except:
+            print("Couldn't retrieve asset name")
+            asset = 'driveControl'
+        dc = cmds.ls('*drive_ctrl', r=True)
+        cmds.rename(dc, asset)
+        self.rigMatch_dropdown.addItem(asset)
+
     def loadVCData(self):
         file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "CSV Files (*.csv);;All Files (*.*)")[0]
         if file_path == "":  # If they cancel the dialog
@@ -1029,7 +1107,29 @@ class MainUI(QDialog):
         cmds.movIn(locName + '.Time', locName + '.Distance', locName + '.Velocity', locName + '.Xrot', locName + '.Yrot', locName + '.Zrot', locName + '.vni', locName + '.vnz', locName + '.Steer', locName + '.CGx', locName + '.CGy', locName + '.CGz', locName + ".Xrad", locName + '.Yrad', locName + '.Zrad', locName + '.lastV', locName + '.brake', f=filename)
 
         #Add to group
-        cmds.group(locName, n=locName+'_group')
+        grp = cmds.group(locName, n=locName+'_group')
+        cmds.rotate('-90deg',0,0,grp,pivot=(0,0,0))
+        self.vLocatorMatch_dropdown.addItem(locName)
+
+    def pairRig2Locator(self):
+        locName = self.vLocatorMatch_dropdown.currentText()
+        rigName = self.rigMatch_dropdown.currentText()
+        constraint = cmds.parentConstraint(locName, rigName)
+        self.constraintList_dropdown.addItem(constraint[0])
+        self.parentX.setText('90')
+        self.parentY.setText('0')
+        self.parentZ.setText('90')
+        self.constraintList_dropdown.setCurrentIndex(self.constraintList_dropdown.count() - 1)
+        self.rotateOnConst()
+
+    def rotateOnConst(self):
+        const = self.constraintList_dropdown.currentText()
+        if self.parentX.text() != '':
+            cmds.setAttr(const + '.target[0].targetOffsetRotateX', int(self.parentX.text()))
+        if self.parentY.text() != '':
+            cmds.setAttr(const + '.target[0].targetOffsetRotateY', int(self.parentY.text()))
+        if self.parentZ.text() != '':
+            cmds.setAttr(const + '.target[0].targetOffsetRotateZ', int(self.parentZ.text()))
 
     # --------------------------------------------------------------------------------------------------------------
     # Writes the current file path to preferences

@@ -309,6 +309,7 @@ class MainUI(QDialog):
         self.fps_label.setText('FPS:')
         self.fps_label.setMaximumWidth(35)
 
+        ##### Make Constraints #####
         self.rigMatch_dropdown = QComboBox(self)
         rigs = cmds.ls('*_driveControl', r=True)
         for rig in rigs:
@@ -335,7 +336,6 @@ class MainUI(QDialog):
         self.parentZ.setMaximumWidth(70)
         self.parentZ.setMinimumWidth(70)
         self.rotateOnConst_button = QPushButton('Rotate on Constraint')
-
 
     def create_layout(self):
         main_layout = QVBoxLayout()

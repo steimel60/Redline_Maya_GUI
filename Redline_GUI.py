@@ -277,6 +277,16 @@ class MainUI(QDialog):
 
         self.loadRig_button = QPushButton("Load Rig")
         self.loadRig_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.choose_mesh_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
+        self.choose_mesh_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.choose_mesh_edit = QLineEdit()
+        self.choose_mesh_edit.setPlaceholderText("Mesh File")
+        self.choose_mesh_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.loadMesh_button = QPushButton("Load Mesh")
+        self.loadMesh_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
         ##### Vehicle Locator Buttons #####
         self.choose_vcData_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
         self.choose_vcData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -292,7 +302,7 @@ class MainUI(QDialog):
         self.choose_vLocator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.choose_vLocator_edit = QLineEdit()
-        self.choose_vLocator_edit.setPlaceholderText("Vehicle Locator File")
+        self.choose_vLocator_edit.setPlaceholderText("Vehicle Locator .MOV File")
         self.choose_vLocator_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.create_vLocator_button = QPushButton("Create Vehicle Locator")
@@ -327,15 +337,38 @@ class MainUI(QDialog):
             self.constraintList_dropdown.addItem(constraint)
 
         self.parentX = QLineEdit()
+        self.parentX.setPlaceholderText("X")
         self.parentX.setMaximumWidth(70)
         self.parentX.setMinimumWidth(70)
+        self.parentX.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.parentY = QLineEdit()
+        self.parentY.setPlaceholderText("Y")
         self.parentY.setMaximumWidth(70)
         self.parentY.setMinimumWidth(70)
+        self.parentY.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.parentZ = QLineEdit()
+        self.parentZ.setPlaceholderText("Z")
         self.parentZ.setMaximumWidth(70)
         self.parentZ.setMinimumWidth(70)
+        self.parentZ.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.rotateOnConst_button = QPushButton('Rotate on Constraint')
+        self.rotateOnConst_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### CoG Height Adjustment #####
+        self.cgHeight_dropdown = QComboBox(self)
+        constraints = cmds.ls('*driveControl_parentConstraint*', r=True)
+        for constraint in constraints:
+            self.cgHeight_dropdown.addItem(constraint)
+        self.cgHeight_edit = QLineEdit()
+        self.cgHeight_edit.setPlaceholderText('CoG Height')
+        self.cgHeight_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.cgHeight_button = QPushButton('Adjust Height')
+        self.cgHeight_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+
+        ##### Wheel Constraint #####
+        self.wheelConstr_button = QPushButton('Constrain wheels to mesh')
+
 
     def create_layout(self):
         main_layout = QVBoxLayout()
@@ -450,34 +483,53 @@ class MainUI(QDialog):
         ######           VC Section             ######
         ##############################################
 
-        ##### Vehicle Locator #####
+        ##### File Management #####
+        files_group = QGroupBox("File Management")
+        files_layout = QGridLayout()
+
+        files_layout.addWidget(self.choose_rig_button,0,0)
+        files_layout.addWidget(self.choose_rig_edit,0,1,1,4)
+        files_layout.addWidget(self.loadRig_button,0,5,1,2)
+
+        files_layout.addWidget(self.choose_mesh_button,1,0)
+        files_layout.addWidget(self.choose_mesh_edit,1,1,1,4)
+        files_layout.addWidget(self.loadMesh_button,1,5,1,2)
+
+        files_layout.addWidget(self.choose_vcData_button,2,0)
+        files_layout.addWidget(self.choose_vcData_edit,2,1,1,4)
+        files_layout.addWidget(self.convert_vcData_button,2,5,1,2)
+
+        files_layout.addWidget(self.choose_vLocator_button, 3, 0)
+        files_layout.addWidget(self.choose_vLocator_edit, 3, 1, 1, 4)
+        files_layout.addWidget(self.fps_label, 3, 5)
+        files_layout.addWidget(self.fps_edit, 3, 6)
+        files_layout.addWidget(self.create_vLocator_button, 4, 0, 1, 7)
+        files_group.setLayout(files_layout)
+        vCrashTool_layout.addWidget(files_group)
+
+        ##### Vehicle Rigging #####
         vLocator_group = QGroupBox("Vehicle Rigging")
         vLocator_layout = QGridLayout()
 
-        vLocator_layout.addWidget(self.choose_rig_button,0,0)
-        vLocator_layout.addWidget(self.choose_rig_edit,0,1,1,4)
-        vLocator_layout.addWidget(self.loadRig_button,0,5,1,2)
+        vLocator_layout.addWidget(self.vLocatorMatch_dropdown, 0,0,1,2)
+        vLocator_layout.addWidget(self.rigMatch_dropdown, 0,2,1,2)
+        vLocator_layout.addWidget(self.pairRig2Locator_button,0,4,1,3)
 
-        vLocator_layout.addWidget(self.choose_vcData_button,1,0)
-        vLocator_layout.addWidget(self.choose_vcData_edit,1,1,1,4)
-        vLocator_layout.addWidget(self.convert_vcData_button,1,5,1,2)
-        vLocator_layout.addWidget(self.choose_vLocator_button, 2, 0)
-        vLocator_layout.addWidget(self.choose_vLocator_edit, 2, 1, 1, 4)
-        vLocator_layout.addWidget(self.fps_label, 2, 5)
-        vLocator_layout.addWidget(self.fps_edit, 2, 6)
-        vLocator_layout.addWidget(self.create_vLocator_button, 3, 0, 1, 7)
+        vLocator_layout.addWidget(self.constraintList_dropdown,1,0,1,2)
+        vLocator_layout.addWidget(self.parentX,1,2)
+        vLocator_layout.addWidget(self.parentY,1,3)
+        vLocator_layout.addWidget(self.parentZ,1,4)
+        vLocator_layout.addWidget(self.rotateOnConst_button,1,5,1,2)
 
-        vLocator_layout.addWidget(self.vLocatorMatch_dropdown, 4,0,1,2)
-        vLocator_layout.addWidget(self.rigMatch_dropdown, 4,2,1,2)
-        vLocator_layout.addWidget(self.pairRig2Locator_button,4,4,1,3)
+        vLocator_layout.addWidget(self.cgHeight_dropdown,2,0,1,2)
+        vLocator_layout.addWidget(self.cgHeight_edit,2,2,1,3)
+        vLocator_layout.addWidget(self.cgHeight_button,2,5,1,2)
 
-        vLocator_layout.addWidget(self.constraintList_dropdown,5,0,1,2)
-        vLocator_layout.addWidget(self.parentX,5,2)
-        vLocator_layout.addWidget(self.parentY,5,3)
-        vLocator_layout.addWidget(self.parentZ,5,4)
-        vLocator_layout.addWidget(self.rotateOnConst_button,5,5,1,2)
+        vLocator_layout.addWidget(self.wheelConstr_button, 3,0,1,7)
         vLocator_group.setLayout(vLocator_layout)
         vCrashTool_layout.addWidget(vLocator_group)
+
+
 
         ##############################################
         ######          Save Section            ######
@@ -547,12 +599,16 @@ class MainUI(QDialog):
         ##### Vechicle Locator #####
         self.choose_rig_button.clicked.connect(self.choose_rig)
         self.loadRig_button.clicked.connect(self.load_rig)
+        self.choose_mesh_button.clicked.connect(self.choose_mesh)
+        self.loadMesh_button.clicked.connect(self.load_mesh)
         self.choose_vcData_button.clicked.connect(self.loadVCData)
         self.convert_vcData_button.clicked.connect(self.convertVCData)
         self.choose_vLocator_button.clicked.connect(self.loadvLocator)
         self.create_vLocator_button.clicked.connect(self.vehicleLocator)
         self.pairRig2Locator_button.clicked.connect(self.pairRig2Locator)
         self.rotateOnConst_button.clicked.connect(self.rotateOnConst)
+        self.cgHeight_button.clicked.connect(self.cgHeightAdjust)
+        self.wheelConstr_button.clicked.connect(self.wheelConst)
     #---------------------------------------------------------------------------------------------------------------
     # Button Functions
     #---------------------------------------------------------------------------------------------------------------
@@ -922,14 +978,14 @@ class MainUI(QDialog):
         cmds.connectAttr(shader + '.outColor','initialParticleSE.surfaceShader', f=True)
 
         #Move to origin
-        cmds.select(pointCloud)
-        cmds.xform(cp=True)
-        load_label.setText('Moving to origin')
-        load_value += 20
-        self.progress.setValue(load_value)
-        self.progress.setVisible(True)
-        cmds.move(-xmin, -ymin, -zmin)
-        cmds.select(deselect=True)
+        #cmds.select(pointCloud)
+        #cmds.xform(cp=True)
+        #load_label.setText('Moving to origin')
+        #load_value += 20
+        #self.progress.setValue(load_value)
+        #self.progress.setVisible(True)
+        #cmds.move(-xmin, -ymin, -zmin)
+        #cmds.select(deselect=True)
 
         #rotate for Maya
         cmds.select(pointCloud)
@@ -968,7 +1024,7 @@ class MainUI(QDialog):
         createCustomWorkspaceControlCable()
 
     def choose_rig(self):
-        # Set locator Path
+        # Set Rig Path
         file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "Maya Files (*.mb *.ma);;All Files (*.*)")[0]
         if file_path == "": # If they cancel the dialog
             return # Then just don't open anything
@@ -986,6 +1042,17 @@ class MainUI(QDialog):
         dc = cmds.ls('*drive_ctrl', r=True)
         cmds.rename(dc, asset)
         self.rigMatch_dropdown.addItem(asset)
+
+    def choose_mesh(self):
+        # Set Mesh Path
+        file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "OBJ Files (*.obj);;All Files (*.*)")[0]
+        if file_path == "": # If they cancel the dialog
+            return # Then just don't open anything
+        self.choose_mesh_edit.setText(file_path)
+
+    def load_mesh(self):
+        filename = self.choose_mesh_edit.text()
+        cmds.file(filename, i=True)
 
     def loadVCData(self):
         file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "CSV Files (*.csv);;All Files (*.*)")[0]
@@ -1116,10 +1183,12 @@ class MainUI(QDialog):
         rigName = self.rigMatch_dropdown.currentText()
         constraint = cmds.parentConstraint(locName, rigName)
         self.constraintList_dropdown.addItem(constraint[0])
+        self.cgHeight_dropdown.addItem(constraint[0])
         self.parentX.setText('90')
         self.parentY.setText('0')
         self.parentZ.setText('90')
         self.constraintList_dropdown.setCurrentIndex(self.constraintList_dropdown.count() - 1)
+        self.cgHeight_dropdown.setCurrentIndex(self.constraintList_dropdown.count() - 1)
         self.rotateOnConst()
 
     def rotateOnConst(self):
@@ -1130,6 +1199,20 @@ class MainUI(QDialog):
             cmds.setAttr(const + '.target[0].targetOffsetRotateY', int(self.parentY.text()))
         if self.parentZ.text() != '':
             cmds.setAttr(const + '.target[0].targetOffsetRotateZ', int(self.parentZ.text()))
+
+    def cgHeightAdjust(self):
+        obj = self.cgHeight_dropdown.currentText()
+        height = self.cgHeight_edit.text()
+        height = float(height)
+
+        cmds.setAttr(obj + '.target[0].targetOffsetTranslateZ', -height)
+
+    def wheelConst(self):
+        mesh = cmds.ls('*polySurf*',type='transform', r=True)
+        wheelCtrls = cmds.ls('*wheel_ctrl', r=True)
+
+        for ctrl in wheelCtrls:
+            cmds.geometryConstraint(mesh[0],ctrl)
 
     # --------------------------------------------------------------------------------------------------------------
     # Writes the current file path to preferences

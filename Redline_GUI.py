@@ -219,10 +219,6 @@ class MainUI(QDialog):
         self.export_obj = QPushButton(QIcon(self.icon_dir + "/export.png"),"Export OBJ")
         self.export_obj.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
-        ##### Thumbnail Capture #####
-        self.thumb_button = QPushButton('Capture Thumbnail')
-        self.thumb_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
-
         ################################################### SITE TOOL BUTTONS #######################################################################################
         ##### XYZ Text Bar #####
         self.choose_locator_edit = QLineEdit()
@@ -578,7 +574,6 @@ class MainUI(QDialog):
         self.remove_license_plate_button.clicked.connect(self.remove_license_plate)
         self.make_windows_transparent_button.clicked.connect(self.make_windows_transparent)
         ##### Save Group #####
-        self.thumb_button.clicked.connect(self.get_thumb)
         self.save_button.clicked.connect(self.save)
         self.export_obj.clicked.connect(self.export)
 

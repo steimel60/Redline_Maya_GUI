@@ -944,10 +944,17 @@ class MainUI(QDialog):
         intensity = self.choose_density_button.currentIndex()
         stepSize = intensity*intensity + 1
 
+        try:
+            assetMatch = re.search('/*([a-zA-Z0-9-_ ]*)\.xyz', filename)
+            asset = assetMatch.group(1) + '_PointCloud'
+        except:
+            print("Couldn't retrieve asset name")
+            asset = 'PointCloud'
+
         f = open(filename, 'r')
         full = [line.rstrip().split(' ') for line in f.readlines()[::stepSize]]
         particleList, colorList = [(float(pos[0]), float(pos[1]), float(pos[2])) for pos in full], [(float(color[3])/255, float(color[4])/255, float(color[5])/255) for color in full]
-        xmin, ymin, zmin = min([float(x[0]) for x in particleList]), min([float(y[1]) for y in particleList]), min([float(z[2]) for z in particleList])
+        #xmin, ymin, zmin = min([float(x[0]) for x in particleList]), min([float(y[1]) for y in particleList]), min([float(z[2]) for z in particleList])
         f.close()
 
         #Disable Dynamics and create Point Cloud
@@ -960,7 +967,7 @@ class MainUI(QDialog):
         cmds.evaluator(n='dynamics', c='handledNodes=none')
         cmds.evaluator(n='dynamics', c='action=none')
 
-        pointCloud, pointCloudShape = cmds.particle()
+        pointCloud, pointCloudShape = cmds.particle(n=asset)
         cmds.emit(object=pointCloud, pos=particleList)
 
         #Apply Colors
@@ -972,20 +979,17 @@ class MainUI(QDialog):
         cmds.addAttr(ln='rgbPP', dt='vectorArray')
 
         cmds.setAttr(pointCloudShape+'.rgbPP', len(colorList), *colorList, type='vectorArray')
+        cmds.setAttr(pointCloudShape+'.isDynamic', 0)
+        cmds.setAttr(pointCloudShape+'.forcesInWorld',0)
+        cmds.setAttr(pointCloudShape+'.emissionInWorld', 0)
         mel.eval('createRenderNodeCB -asUtility "" "particleSamplerInfo" ""')
         shader = cmds.shadingNode('lambert', asShader=True)
         cmds.connectAttr('particleSamplerInfo1.rgbPP', shader + '.color')
         cmds.connectAttr(shader + '.outColor','initialParticleSE.surfaceShader', f=True)
 
-        #Move to origin
-        #cmds.select(pointCloud)
-        #cmds.xform(cp=True)
-        #load_label.setText('Moving to origin')
-        #load_value += 20
-        #self.progress.setValue(load_value)
-        #self.progress.setVisible(True)
-        #cmds.move(-xmin, -ymin, -zmin)
-        #cmds.select(deselect=True)
+        load_value += 20
+        self.progress.setValue(load_value)
+        self.progress.setVisible(True)
 
         #rotate for Maya
         cmds.select(pointCloud)
@@ -995,15 +999,6 @@ class MainUI(QDialog):
         self.progress.setValue(load_value)
         self.progress.setVisible(True)
         progress_group.setVisible(False)
-
-    def get_thumb(self):
-        filename, file_extension = os.path.splitext(self.choose_vehicle_edit.text())
-        cmds.SaveSceneAsOptions()
-        print(window)
-        #cmds.thumbnailCaptureComponent(capture=True)
-        #cmds.thumbnailCaptureComponent(save=self.thumbs_dir + '_Done')
-        #cmds.thumbnailCaptureComponent(delete=True)
-        #cmds.thumbnailCaptureComponent(q=True, previewPath=True)
 
     def auto_vc(self):
         #Do everything

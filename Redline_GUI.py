@@ -942,6 +942,17 @@ class MainUI(QDialog):
         try:
             assetMatch = re.search('/*([a-zA-Z0-9-_ ]*)\.xyz', filename)
             asset = assetMatch.group(1) + '_PointCloud'
+            clouds = cmds.ls('*_PointCloud*')
+            if asset in clouds:
+                nameTaken=True
+                i=1
+            while nameTaken:
+                temp = asset+str(i)
+                if temp not in clouds:
+                    asset = temp
+                    nameTaken = False
+                else:
+                    i += 1
         except:
             print("Couldn't retrieve asset name")
             asset = 'PointCloud'

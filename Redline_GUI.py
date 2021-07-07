@@ -1185,8 +1185,8 @@ class MainUI(QDialog):
         cmds.setAttr(locator[0]+'.vni', k=True)
         cmds.addAttr(ln='vnz', at='float')
         cmds.setAttr(locator[0]+'.vnz', k=True)
-        cmds.addAttr(ln='Steer', at='float')
-        cmds.setAttr(locator[0]+'.Steer', k=True)
+        cmds.addAttr(ln='steer', at='float')
+        cmds.setAttr(locator[0]+'.steer', k=True)
         cmds.addAttr(ln='CGx', at='float')
         cmds.setAttr(locator[0]+'.CGx', k=True)
         cmds.addAttr(ln='CGy', at='float')
@@ -1221,7 +1221,7 @@ class MainUI(QDialog):
         '}'+f'else {locName}.brake = 0;', o=locator[0], ae=True, n='brakeAndVel')
 
         #Load Attr from MOV file
-        cmds.movIn(locName + '.Time', locName + '.Distance', locName + '.Velocity', locName + '.Xrot', locName + '.Yrot', locName + '.Zrot', locName + '.vni', locName + '.vnz', locName + '.Steer', locName + '.CGx', locName + '.CGy', locName + '.CGz', locName + ".Xrad", locName + '.Yrad', locName + '.Zrad', locName + '.lastV', locName + '.brake', f=filename)
+        cmds.movIn(locName + '.Time', locName + '.Distance', locName + '.Velocity', locName + '.Xrot', locName + '.Yrot', locName + '.Zrot', locName + '.vni', locName + '.vnz', locName + '.steer', locName + '.CGx', locName + '.CGy', locName + '.CGz', locName + ".Xrad", locName + '.Yrad', locName + '.Zrad', locName + '.lastV', locName + '.brake', f=filename)
 
         #Add to group
         grp = cmds.group(locName, n=locName+'_group')
@@ -1239,6 +1239,9 @@ class MainUI(QDialog):
         self.parentZ.setText('90')
         self.constraintList_dropdown.setCurrentIndex(self.constraintList_dropdown.count() - 1)
         self.cgHeight_dropdown.setCurrentIndex(self.constraintList_dropdown.count() - 1)
+
+        cmds.connectAttr(locName+'.steer',rigName+'.steer')
+        
         self.rotateOnConst()
 
     def rotateOnConst(self):

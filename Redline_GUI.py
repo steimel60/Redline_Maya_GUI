@@ -364,7 +364,28 @@ class MainUI(QDialog):
 
         ##### Wheel Constraint #####
         self.wheelConstr_button = QPushButton('Constrain wheels to mesh')
+        self.wheelConstr_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
+        ##### Bake Button #####
+        self.bakeButton = QPushButton('Bake Root Joint')
+        self.bakeButton.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.joint_dropdown = QComboBox(self)
+        self.joints = cmds.ls('*root_jt', r=True)
+        for joint in self.joints:
+            self.joint_dropdown.addItem(joint)
+        self.bakeStart_label = QLabel()
+        self.bakeStart_label.setText('Start Frame:')
+        self.bakeStart_edit = QLineEdit()
+        self.bakeStart_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.bakeStart_edit.setPlaceholderText('Ex:  0')
+        self.bakeStop_label = QLabel()
+        self.bakeStop_label.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.bakeStop_label.setText('Stop Frame:')
+        self.bakeStop_edit = QLineEdit()
+        self.bakeStop_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.bakeStop_edit.setPlaceholderText('Ex:  2500')
+        self.exportFBX_button = QPushButton('Export Selected Root Joint Animation')
+        self.exportFBX_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
     def create_layout(self):
         main_layout = QVBoxLayout()
@@ -525,6 +546,20 @@ class MainUI(QDialog):
         vLocator_group.setLayout(vLocator_layout)
         vCrashTool_layout.addWidget(vLocator_group)
 
+        ##### Bake Section #####
+        bake_group = QGroupBox("Joint Bake")
+        bake_layout = QGridLayout()
+
+        bake_layout.addWidget(self.joint_dropdown, 0,0,1,4)
+        bake_layout.addWidget(self.bakeStart_label,1,0)
+        bake_layout.addWidget(self.bakeStart_edit,1,1)
+        bake_layout.addWidget(self.bakeStop_label,1,2)
+        bake_layout.addWidget(self.bakeStop_edit,1,3)
+        bake_layout.addWidget(self.bakeButton,2,0,1,4)
+        bake_layout.addWidget(self.exportFBX_button,3,0,1,4)
+
+        bake_group.setLayout(bake_layout)
+        vCrashTool_layout.addWidget(bake_group)
 
 
         ##############################################
@@ -604,6 +639,9 @@ class MainUI(QDialog):
         self.rotateOnConst_button.clicked.connect(self.rotateOnConst)
         self.cgHeight_button.clicked.connect(self.cgHeightAdjust)
         self.wheelConstr_button.clicked.connect(self.wheelConst)
+        ##### Bake Joint #####
+        self.bakeButton.clicked.connect(self.bake)
+        self.exportFBX_button.clicked.connect(self.exportFBX)
     #---------------------------------------------------------------------------------------------------------------
     # Button Functions
     #---------------------------------------------------------------------------------------------------------------
@@ -1017,6 +1055,12 @@ class MainUI(QDialog):
         cmds.select(all=True)
         cmds.file(self.desktop_dir + '\\' + self.asset + '_OBJ', type='OBJexport', es=True, sh=True, force=True)
 
+    def exportFBX(self):
+        root = self.joint_dropdown.currentText()
+
+        cmds.select(root)
+        cmds.file(self.desktop_dir + '\\' + root[6:] + '_FBX', type='FBX export', es=True, pr=True, force=True)
+
     def cable_gui(self):
         #Opens GUI for easy cable creation
         if cmds.window("Cable Maker", exists =True):
@@ -1036,13 +1080,18 @@ class MainUI(QDialog):
         cmds.file(filename, i=True)
         try:
             assetMatch = re.search('/*([a-zA-Z0-9-_ ]*)\.m[ab]', filename)
-            asset = assetMatch.group(1) + '_driveControl'
+            asset = assetMatch.group(1)
         except:
             print("Couldn't retrieve asset name")
-            asset = 'driveControl'
+            asset = 'asset'
         dc = cmds.ls('*drive_ctrl', r=True)
-        cmds.rename(dc, asset)
-        self.rigMatch_dropdown.addItem(asset)
+        dc = cmds.rename(dc, asset + '_driveControl')
+        self.rigMatch_dropdown.addItem(dc)
+        roots = cmds.ls('*root_jt', r=True)
+        #root = cmds.rename(root, asset+'_root_jt')
+        for root in roots:
+            if root not in self.joints:
+                self.joint_dropdown.addItem(root)
 
     def choose_mesh(self):
         # Set Mesh Path
@@ -1214,6 +1263,14 @@ class MainUI(QDialog):
 
         for ctrl in wheelCtrls:
             cmds.geometryConstraint(mesh[0],ctrl)
+
+    def bake(self):
+        start = self.bakeStart_edit.text()
+        stop = self.bakeStop_edit.text()
+        root = self.joint_dropdown.currentText()
+
+        #cmds.reorder(root, r=-3)
+        cmds.bakeResults(root, hi='below', shape=True, sm=True, time=(start,stop))
 
     # --------------------------------------------------------------------------------------------------------------
     # Writes the current file path to preferences

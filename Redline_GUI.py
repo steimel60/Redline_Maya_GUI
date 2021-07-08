@@ -361,6 +361,9 @@ class MainUI(QDialog):
         self.cgHeight_button = QPushButton('Adjust Height')
         self.cgHeight_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
+        ##### Save Pre-Bake #####
+        self.preBakeSave_button = QPushButton('Save Pre-Baked File')
+        self.preBakeSave_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Wheel Constraint #####
         self.wheelConstr_button = QPushButton('Constrain wheels to mesh')
@@ -504,17 +507,17 @@ class MainUI(QDialog):
         files_group = QGroupBox("File Management")
         files_layout = QGridLayout()
 
-        files_layout.addWidget(self.choose_rig_button,0,0)
-        files_layout.addWidget(self.choose_rig_edit,0,1,1,4)
-        files_layout.addWidget(self.loadRig_button,0,5,1,2)
+        files_layout.addWidget(self.choose_vcData_button,0,0)
+        files_layout.addWidget(self.choose_vcData_edit,0,1,1,4)
+        files_layout.addWidget(self.convert_vcData_button,0,5,1,2)
 
-        files_layout.addWidget(self.choose_mesh_button,1,0)
-        files_layout.addWidget(self.choose_mesh_edit,1,1,1,4)
-        files_layout.addWidget(self.loadMesh_button,1,5,1,2)
+        files_layout.addWidget(self.choose_rig_button,1,0)
+        files_layout.addWidget(self.choose_rig_edit,1,1,1,4)
+        files_layout.addWidget(self.loadRig_button,1,5,1,2)
 
-        files_layout.addWidget(self.choose_vcData_button,2,0)
-        files_layout.addWidget(self.choose_vcData_edit,2,1,1,4)
-        files_layout.addWidget(self.convert_vcData_button,2,5,1,2)
+        files_layout.addWidget(self.choose_mesh_button,2,0)
+        files_layout.addWidget(self.choose_mesh_edit,2,1,1,4)
+        files_layout.addWidget(self.loadMesh_button,2,5,1,2)
 
         files_layout.addWidget(self.choose_vLocator_button, 3, 0)
         files_layout.addWidget(self.choose_vLocator_edit, 3, 1, 1, 4)
@@ -542,7 +545,9 @@ class MainUI(QDialog):
         vLocator_layout.addWidget(self.cgHeight_edit,2,2,1,3)
         vLocator_layout.addWidget(self.cgHeight_button,2,5,1,2)
 
-        vLocator_layout.addWidget(self.wheelConstr_button, 3,0,1,7)
+        vLocator_layout.addWidget(self.preBakeSave_button, 3,0,1,7)
+
+        vLocator_layout.addWidget(self.wheelConstr_button, 4,0,1,7)
         vLocator_group.setLayout(vLocator_layout)
         vCrashTool_layout.addWidget(vLocator_group)
 
@@ -638,6 +643,7 @@ class MainUI(QDialog):
         self.pairRig2Locator_button.clicked.connect(self.pairRig2Locator)
         self.rotateOnConst_button.clicked.connect(self.rotateOnConst)
         self.cgHeight_button.clicked.connect(self.cgHeightAdjust)
+        self.preBakeSave_button.clicked.connect(self.save)
         self.wheelConstr_button.clicked.connect(self.wheelConst)
         ##### Bake Joint #####
         self.bakeButton.clicked.connect(self.bake)
@@ -984,16 +990,28 @@ class MainUI(QDialog):
             if asset in clouds:
                 nameTaken=True
                 i=1
-            while nameTaken:
-                temp = asset+str(i)
-                if temp not in clouds:
-                    asset = temp
-                    nameTaken = False
-                else:
-                    i += 1
+                while nameTaken:
+                    temp = asset+str(i)
+                    if temp not in clouds:
+                        asset = temp
+                        nameTaken = False
+                    else:
+                        i += 1
         except:
             print("Couldn't retrieve asset name")
             asset = 'PointCloud'
+            clouds = cmds.ls('*PointCloud*')
+            if asset in clouds:
+                nameTaken=True
+                i=1
+                while nameTaken:
+                    temp = asset+str(i)
+                    if temp not in clouds:
+                        asset = temp
+                        nameTaken = False
+                    else:
+                        i += 1
+
 
         f = open(filename, 'r')
         full = [line.rstrip().split(' ') for line in f.readlines()[::stepSize]]
@@ -1241,7 +1259,7 @@ class MainUI(QDialog):
         self.cgHeight_dropdown.setCurrentIndex(self.constraintList_dropdown.count() - 1)
 
         cmds.connectAttr(locName+'.steer',rigName+'.steer')
-        
+
         self.rotateOnConst()
 
     def rotateOnConst(self):

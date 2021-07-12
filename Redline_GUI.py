@@ -263,7 +263,7 @@ class MainUI(QDialog):
         self.density_current = self.density_list[self.choose_density_button.currentIndex()]
 
         ##################################################### VC and Rigging ####################################################################################
-        ##### Rig Buttons #####
+        ##### File Management Buttons #####
         self.choose_rig_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
         self.choose_rig_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
@@ -278,10 +278,10 @@ class MainUI(QDialog):
         self.choose_mesh_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.choose_mesh_edit = QLineEdit()
-        self.choose_mesh_edit.setPlaceholderText("Mesh File")
+        self.choose_mesh_edit.setPlaceholderText("Ground Proxy File")
         self.choose_mesh_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
-        self.loadMesh_button = QPushButton("Load Mesh")
+        self.loadMesh_button = QPushButton("Ground Proxy")
         self.loadMesh_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
         ##### Vehicle Locator Buttons #####
         self.choose_vcData_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
@@ -360,6 +360,21 @@ class MainUI(QDialog):
         self.cgHeight_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.cgHeight_button = QPushButton('Adjust Height')
         self.cgHeight_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Light Rigging #####
+        self.lightLocator_dropdown = QComboBox(self)
+        locators = cmds.ls('*_Locator')
+        for locator in locators:
+            self.lightLocator_dropdown.addItem(locator)
+        self.lightName_edit = QLineEdit()
+        self.lightName_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.lightName_edit.setPlaceholderText('Light Name')
+        self.lightIntensity = QLineEdit()
+        self.lightIntensity.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.lightIntensity.setPlaceholderText('Intensity')
+        self.pairLight_button = QPushButton('Pair Light to Locator')
+        self.pairLight_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
 
         ##### Save Pre-Bake #####
         self.preBakeSave_button = QPushButton('Save Pre-Baked File')
@@ -545,9 +560,14 @@ class MainUI(QDialog):
         vLocator_layout.addWidget(self.cgHeight_edit,2,2,1,3)
         vLocator_layout.addWidget(self.cgHeight_button,2,5,1,2)
 
-        vLocator_layout.addWidget(self.preBakeSave_button, 3,0,1,7)
+        vLocator_layout.addWidget(self.lightLocator_dropdown,3,0,1,2)
+        vLocator_layout.addWidget(self.lightName_edit,3,2,1,2)
+        vLocator_layout.addWidget(self.lightIntensity,3,4)
+        vLocator_layout.addWidget(self.pairLight_button,3,5,1,2)
 
-        vLocator_layout.addWidget(self.wheelConstr_button, 4,0,1,7)
+        vLocator_layout.addWidget(self.preBakeSave_button, 4,0,1,7)
+
+        vLocator_layout.addWidget(self.wheelConstr_button, 5,0,1,7)
         vLocator_group.setLayout(vLocator_layout)
         vCrashTool_layout.addWidget(vLocator_group)
 
@@ -643,6 +663,7 @@ class MainUI(QDialog):
         self.pairRig2Locator_button.clicked.connect(self.pairRig2Locator)
         self.rotateOnConst_button.clicked.connect(self.rotateOnConst)
         self.cgHeight_button.clicked.connect(self.cgHeightAdjust)
+        self.pairLight_button.clicked.connect(self.pairLight2Brakes)
         self.preBakeSave_button.clicked.connect(self.save)
         self.wheelConstr_button.clicked.connect(self.wheelConst)
         ##### Bake Joint #####
@@ -1245,6 +1266,7 @@ class MainUI(QDialog):
         grp = cmds.group(locName, n=locName+'_group')
         cmds.rotate('-90deg',0,0,grp,pivot=(0,0,0))
         self.vLocatorMatch_dropdown.addItem(locName)
+        self.lightLocator_dropdown.addItem(locName)
 
     def pairRig2Locator(self):
         locName = self.vLocatorMatch_dropdown.currentText()
@@ -1261,6 +1283,13 @@ class MainUI(QDialog):
         cmds.connectAttr(locName+'.steer',rigName+'.steer')
 
         self.rotateOnConst()
+
+    def pairLight2Brakes(self):
+        locator = self.lightLocator_dropdown.currentText()
+        light = self.lightName_edit.text()
+        intensity = self.lightIntensity.text()
+
+        cmds.expression(s=f'{light}.intensity = {locator}.brake * {intensity};')
 
     def rotateOnConst(self):
         const = self.constraintList_dropdown.currentText()
@@ -1292,6 +1321,7 @@ class MainUI(QDialog):
 
         #cmds.reorder(root, r=-3)
         cmds.bakeResults(root, hi='below', shape=True, sm=True, time=(start,stop))
+
 
     # --------------------------------------------------------------------------------------------------------------
     # Writes the current file path to preferences

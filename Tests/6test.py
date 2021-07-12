@@ -1,17 +1,5 @@
-import pymesh
-import numpy as np
 
-vertices = np.array([
- [0.0, 0.0],
- [1.0, 0.0],
- [1.0, 1.0],
- [0.0, 1.0],
- ]);
-tri = pymesh.triangle();
-tri.points = vertices;
-tri.max_area = 0.05;
-tri.split_boundary = False;
-tri.verbosity = 0;
-tri.run(); # Execute triangle.
-mesh = tri.mesh;
-print(mesh)
+locator = 
+lights = cmds.ls(sl=True)
+for light in lights:
+    cmds.expression(s=f'if {locator}.brake == 1:\n\t{light}.intensity = 10\n\t{light}.exposure = 5\nelse:\n\t{light}.intensity = 0\n\t{light}.exposure = 0', ae=True)

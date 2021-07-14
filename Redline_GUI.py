@@ -381,6 +381,9 @@ class MainUI(QDialog):
         self.preBakeSave_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Wheel Constraint #####
+        self.siteName_edit = QLineEdit()
+        self.siteName_edit.setPlaceholderText('Site Name')
+        self.siteName_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.wheelConstr_button = QPushButton('Constrain wheels to mesh')
         self.wheelConstr_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
@@ -404,6 +407,20 @@ class MainUI(QDialog):
         self.bakeStop_edit.setPlaceholderText('Ex:  2500')
         self.exportFBX_button = QPushButton('Export Selected Root Joint Animation')
         self.exportFBX_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Blend Shapes #####
+        self.blendControl_dropdown = QComboBox(self)
+        self.joints = cmds.ls('*root_jt', r=True)
+        for joint in self.joints:
+            self.blendControl_dropdown.addItem(joint)
+        self.blendNode_edit = QLineEdit()
+        self.blendNode_edit.setPlaceholderText('Blend Node Name - Ex: Initial Impact')
+        self.blendNode_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.blendGroupName_edit = QLineEdit()
+        self.blendGroupName_edit.setPlaceholderText('Create Group Name')
+        self.blendGroupName_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.createBlendGroup_button = QPushButton('Group Shapes')
+        self.createBlendGroup_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
     def create_layout(self):
         main_layout = QVBoxLayout()
@@ -567,7 +584,8 @@ class MainUI(QDialog):
 
         vLocator_layout.addWidget(self.preBakeSave_button, 4,0,1,7)
 
-        vLocator_layout.addWidget(self.wheelConstr_button, 5,0,1,7)
+        vLocator_layout.addWidget(self.siteName_edit, 5,0,1,4)
+        vLocator_layout.addWidget(self.wheelConstr_button, 5,4,1,3)
         vLocator_group.setLayout(vLocator_layout)
         vCrashTool_layout.addWidget(vLocator_group)
 
@@ -585,6 +603,18 @@ class MainUI(QDialog):
 
         bake_group.setLayout(bake_layout)
         vCrashTool_layout.addWidget(bake_group)
+
+        ##### Blend Shapes #####
+        blend_group = QGroupBox("Blend Shapes")
+        blend_layout = QGridLayout()
+
+        blend_layout.addWidget(self.blendControl_dropdown, 0, 0, 1, 2)
+        blend_layout.addWidget(self.blendNode_edit, 0, 2, 1, 3)
+        blend_layout.addWidget(self.blendGroupName_edit, 0, 5, 1, 3)
+        blend_layout.addWidget(self.createBlendGroup_button, 1, 0, 1, 8)
+
+        blend_group.setLayout(blend_layout)
+        vCrashTool_layout.addWidget(blend_group)
 
 
         ##############################################
@@ -651,7 +681,7 @@ class MainUI(QDialog):
         self.load_xyzfile_button.clicked.connect(self.load_xyzfile)
 
         #--------------------------------------  VC Section  ------------------------------------------------#
-        ##### Vechicle Locator #####
+        ##### File Management #####
         self.choose_rig_button.clicked.connect(self.choose_rig)
         self.loadRig_button.clicked.connect(self.load_rig)
         self.choose_mesh_button.clicked.connect(self.choose_mesh)
@@ -660,15 +690,21 @@ class MainUI(QDialog):
         self.convert_vcData_button.clicked.connect(self.convertVCData)
         self.choose_vLocator_button.clicked.connect(self.loadvLocator)
         self.create_vLocator_button.clicked.connect(self.vehicleLocator)
+
+        ##### Vehicle Rigging #####
         self.pairRig2Locator_button.clicked.connect(self.pairRig2Locator)
         self.rotateOnConst_button.clicked.connect(self.rotateOnConst)
         self.cgHeight_button.clicked.connect(self.cgHeightAdjust)
         self.pairLight_button.clicked.connect(self.pairLight2Brakes)
         self.preBakeSave_button.clicked.connect(self.save)
         self.wheelConstr_button.clicked.connect(self.wheelConst)
+
         ##### Bake Joint #####
         self.bakeButton.clicked.connect(self.bake)
         self.exportFBX_button.clicked.connect(self.exportFBX)
+
+        ##### Blend Shapes #####
+        self.createBlendGroup_button.clicked.connect(self.createBlendGroup)
     #---------------------------------------------------------------------------------------------------------------
     # Button Functions
     #---------------------------------------------------------------------------------------------------------------
@@ -1131,6 +1167,7 @@ class MainUI(QDialog):
         for root in roots:
             if root not in self.joints:
                 self.joint_dropdown.addItem(root)
+                self.blendControl_dropdown.addItem(root)
 
     def choose_mesh(self):
         # Set Mesh Path
@@ -1187,6 +1224,26 @@ class MainUI(QDialog):
                 f.write('\n')
 
             f.close()
+
+    def createBlendGroup(self):
+        blendNode = self.blendNode_edit.text()
+        rootJoint = self.blendControl_dropdown.currentText()
+        groupName = self.blendGroupName_edit.text()
+
+        list = cmds.listAttr(blendNode, m=True)
+        presets = ['message', 'caching', 'frozen', 'isHistoricallyInteresting', 'nodeState', 'binMembership', 'input', 'output', 'originalGeometry', 'envelopeWeightsList', 'envelope', 'function', 'fchild', 'map64BitIndices', 'topologyCheck', 'origin', 'baseOrigin', 'baseOriginX', 'baseOriginY', 'baseOriginZ', 'targetOrigin', 'targetOriginX', 'targetOriginY', 'targetOriginZ', 'parallelBlender', 'useTargetCompWeights', 'supportNegativeWeights', 'paintWeights', 'offsetDeformer', 'offsetX', 'offsetY', 'offsetZ', 'localVertexFrame', 'midLayerId', 'midLayerParent', 'nextNode', 'parentDirectory', 'targetDirectory', 'deformationOrder', 'attributeAliasList']
+
+        cmds.select(rootJoint)
+        cmds.addAttr(ln=groupName, dv=0, minValue=0, maxValue=1, k=True)
+
+        for item in list:
+            is_preset = False
+            for preset in presets:
+                if preset in item:
+                    is_preset = True
+            if not is_preset:
+                shape = item
+                cmds.expression(s=f'{blendNode}.{shape} = {rootJoint}.{groupName}')
 
     def vehicleLocator(self):
         #Init Scene
@@ -1308,7 +1365,9 @@ class MainUI(QDialog):
         cmds.setAttr(obj + '.target[0].targetOffsetTranslateZ', -height)
 
     def wheelConst(self):
-        mesh = cmds.ls('*polySurf*',type='transform', r=True)
+        site = self.siteName_edit.text()
+
+        mesh = cmds.ls(site, r=True)
         wheelCtrls = cmds.ls('*wheel_ctrl', r=True)
 
         for ctrl in wheelCtrls:

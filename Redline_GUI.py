@@ -102,10 +102,14 @@ class MainUI(QDialog):
         self.tab2 = QWidget()
         self.tab3 = QWidget()
         self.tab4 = QWidget()
+        self.tab5 = QWidget()
+        self.tab6 = QWidget()
         self.tabWidget.addTab(self.tab1, 'Vehicle Tools')
         self.tabWidget.addTab(self.tab2, 'Site Tools')
         self.tabWidget.addTab(self.tab3, 'Point Cloud Tools')
         self.tabWidget.addTab(self.tab4, 'Virtual Crash Tools')
+        self.tabWidget.addTab(self.tab5, 'Vehicle Rigging')
+        self.tabWidget.addTab(self.tab6, 'Character Rigging')
 
         ################################################## VEHICLE TOOL BUTTONS ########################################################################
         ##### Studio Dropdown #####
@@ -262,7 +266,7 @@ class MainUI(QDialog):
         self.density_label.setAlignment(Qt.AlignCenter)
         self.density_current = self.density_list[self.choose_density_button.currentIndex()]
 
-        ##################################################### VC and Rigging ####################################################################################
+        ##################################################### VC Files ####################################################################################
         ##### File Management Buttons #####
         self.choose_rig_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
         self.choose_rig_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -303,6 +307,8 @@ class MainUI(QDialog):
 
         self.create_vLocator_button = QPushButton("Create Vehicle Locator")
         self.create_vLocator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##################################################### Vehicle Rigging ####################################################################################
 
         self.fps_edit = QComboBox(self)
         fps_list = ['24','30','100']
@@ -422,11 +428,98 @@ class MainUI(QDialog):
         self.createBlendGroup_button = QPushButton('Group Shapes')
         self.createBlendGroup_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
+        ##################################################### Character Rigging ####################################################################################
+        ##### File Load #####
+        self.chooseCharacterData_edit = QLineEdit()
+        self.chooseCharacterData_edit.setPlaceholderText("Character Data File")
+        self.chooseCharacterData_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.chooseCharacterData_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
+        self.chooseCharacterData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Joint Labels and Edits #####
+        self.headLabel = QLabel()
+        self.headLabel.setText('Head Joint: ')
+        self.head_edit = QLineEdit()
+        self.head_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.neckLabel = QLabel()
+        self.neckLabel.setText('Neck Joint: ')
+        self.neck_edit = QLineEdit()
+        self.neck_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.torsoJointLabel = QLabel()
+        self.torsoJointLabel.setText('Torso Joint: ')
+        self.torsoJoint_edit = QLineEdit()
+        self.torsoJoint_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.rightUpperArmLabel = QLabel()
+        self.rightUpperArmLabel.setText('Right Upper Arm Joint: ')
+        self.rightUpperArm_edit = QLineEdit()
+        self.rightUpperArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.rightLowerArmLabel = QLabel()
+        self.rightLowerArmLabel.setText('Right Lower Arm Joint: ')
+        self.rightLowerArm_edit = QLineEdit()
+        self.rightLowerArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.leftUpperArmLabel = QLabel()
+        self.leftUpperArmLabel.setText('Left Upper Arm Joint: ')
+        self.leftUpperArm_edit = QLineEdit()
+        self.leftUpperArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.leftLowerArmLabel = QLabel()
+        self.leftLowerArmLabel.setText('Left Lower Arm Joint: ')
+        self.leftLowerArm_edit = QLineEdit()
+        self.leftLowerArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.hipLabel = QLabel()
+        self.hipLabel.setText('Hip Joint: ')
+        self.hip_edit = QLineEdit()
+        self.hip_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.rightFemurLabel = QLabel()
+        self.rightFemurLabel.setText('Right Femur Joint: ')
+        self.rightFemur_edit = QLineEdit()
+        self.rightFemur_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.rightLowerLegLabel = QLabel()
+        self.rightLowerLegLabel.setText('Right Lower Leg Joint: ')
+        self.rightLowerLeg_edit = QLineEdit()
+        self.rightLowerLeg_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.rightFootLabel = QLabel()
+        self.rightFootLabel.setText('Right Foot Joint: ')
+        self.rightFoot_edit = QLineEdit()
+        self.rightFoot_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.LeftFemurLabel = QLabel()
+        self.LeftFemurLabel.setText('Left Femur Joint: ')
+        self.LeftFemur_edit = QLineEdit()
+        self.LeftFemur_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.leftLowerLegLabel = QLabel()
+        self.leftLowerLegLabel.setText('Left Lower Leg Joint: ')
+        self.leftLowerLeg_edit = QLineEdit()
+        self.leftLowerLeg_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.leftFootLabel = QLabel()
+        self.leftFootLabel.setText('Left Foot Joint: ')
+        self.leftFoot_edit = QLineEdit()
+        self.leftFoot_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.importCharacter_button = QPushButton('Import Character Movement')
+        self.importCharacter_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        #SET TEXT FOR TESTING
+        self.LeftFemur_edit.setText('Character1_LeftUpLeg')
+        self.rightFemur_edit.setText('Character1_RightUpLeg')
+        self.leftFoot_edit.setText('Character1_LeftFoot')
+        self.rightFoot_edit.setText('Character1_RightFoot')
+        self.head_edit.setText('Character1_Head')
+        self.hip_edit.setText('Character1_Hips')
+        self.leftLowerArm_edit.setText('Character1_LeftForeArm')
+        self.leftUpperArm_edit.setText('Character1_LeftShoulder')
+        self.leftLowerLeg_edit.setText('Character1_LeftLeg')
+        self.rightLowerLeg_edit.setText('Character1_RightLeg')
+        self.neck_edit.setText('Character1_Neck')
+        self.rightLowerArm_edit.setText('Character1_RightForeArm')
+        self.rightUpperArm_edit.setText('Character1_RightShoulder')
+        self.torsoJoint_edit.setText('Character1_Spine')
+
     def create_layout(self):
         main_layout = QVBoxLayout()
         vehicleTool_layout = QVBoxLayout()
         siteTool_layout = QVBoxLayout()
         vCrashTool_layout = QVBoxLayout()
+        vehicleRigging_layout = QVBoxLayout()
+        characterRigging_layout = QVBoxLayout()
         self.pcTool_layout = QVBoxLayout()
 
         self.setStyleSheet("""QTabWidget {background-color: rgb(100,102,117);}
@@ -559,6 +652,10 @@ class MainUI(QDialog):
         files_group.setLayout(files_layout)
         vCrashTool_layout.addWidget(files_group)
 
+        ##############################################
+        ######    Vehicle Rigging Section       ######
+        ##############################################
+
         ##### Vehicle Rigging #####
         vLocator_group = QGroupBox("Vehicle Rigging")
         vLocator_layout = QGridLayout()
@@ -587,7 +684,19 @@ class MainUI(QDialog):
         vLocator_layout.addWidget(self.siteName_edit, 5,0,1,4)
         vLocator_layout.addWidget(self.wheelConstr_button, 5,4,1,3)
         vLocator_group.setLayout(vLocator_layout)
-        vCrashTool_layout.addWidget(vLocator_group)
+        vehicleRigging_layout.addWidget(vLocator_group)
+
+        ##### Blend Shapes #####
+        blend_group = QGroupBox("Blend Shapes")
+        blend_layout = QGridLayout()
+
+        blend_layout.addWidget(self.blendControl_dropdown, 0, 0, 1, 2)
+        blend_layout.addWidget(self.blendNode_edit, 0, 2, 1, 3)
+        blend_layout.addWidget(self.blendGroupName_edit, 0, 5, 1, 3)
+        blend_layout.addWidget(self.createBlendGroup_button, 1, 0, 1, 8)
+
+        blend_group.setLayout(blend_layout)
+        vehicleRigging_layout.addWidget(blend_group)
 
         ##### Bake Section #####
         bake_group = QGroupBox("Joint Bake")
@@ -602,20 +711,48 @@ class MainUI(QDialog):
         bake_layout.addWidget(self.exportFBX_button,3,0,1,4)
 
         bake_group.setLayout(bake_layout)
-        vCrashTool_layout.addWidget(bake_group)
+        vehicleRigging_layout.addWidget(bake_group)
 
-        ##### Blend Shapes #####
-        blend_group = QGroupBox("Blend Shapes")
-        blend_layout = QGridLayout()
+        ##############################################
+        ######   Character Rigging Section      ######
+        ##############################################
+        joint_group = QGroupBox("Vehicle Rigging")
+        joint_layout = QGridLayout()
 
-        blend_layout.addWidget(self.blendControl_dropdown, 0, 0, 1, 2)
-        blend_layout.addWidget(self.blendNode_edit, 0, 2, 1, 3)
-        blend_layout.addWidget(self.blendGroupName_edit, 0, 5, 1, 3)
-        blend_layout.addWidget(self.createBlendGroup_button, 1, 0, 1, 8)
+        joint_layout.addWidget(self.chooseCharacterData_button, 0, 0)
+        joint_layout.addWidget(self.chooseCharacterData_edit, 0, 1, 1, 3)
+        joint_layout.addWidget(self.headLabel, 1, 0)
+        joint_layout.addWidget(self.head_edit, 1, 1, 1, 3)
+        joint_layout.addWidget(self.neckLabel,2,0)
+        joint_layout.addWidget(self.neck_edit,2,1,1,3)
+        joint_layout.addWidget(self.torsoJointLabel, 3,0)
+        joint_layout.addWidget(self.torsoJoint_edit,3,1,1,3)
+        joint_layout.addWidget(self.rightUpperArmLabel,4,0)
+        joint_layout.addWidget(self.rightUpperArm_edit,4,1,1,3)
+        joint_layout.addWidget(self.rightLowerArmLabel,5,0)
+        joint_layout.addWidget(self.rightLowerArm_edit,5,1,1,3)
+        joint_layout.addWidget(self.leftUpperArmLabel,6,0)
+        joint_layout.addWidget(self.leftUpperArm_edit,6,1,1,3)
+        joint_layout.addWidget(self.leftLowerArmLabel,7,0)
+        joint_layout.addWidget(self.leftLowerArm_edit,7,1,1,3)
+        joint_layout.addWidget(self.hipLabel,8,0)
+        joint_layout.addWidget(self.hip_edit,8,1,1,3)
+        joint_layout.addWidget(self.rightFemurLabel,9,0)
+        joint_layout.addWidget(self.rightFemur_edit,9,1,1,3)
+        joint_layout.addWidget(self.rightLowerLegLabel,10,0)
+        joint_layout.addWidget(self.rightLowerLeg_edit,10,1,1,3)
+        joint_layout.addWidget(self.rightFootLabel,11,0)
+        joint_layout.addWidget(self.rightFoot_edit,11,1,1,3)
+        joint_layout.addWidget(self.LeftFemurLabel,12,0)
+        joint_layout.addWidget(self.LeftFemur_edit,12,1,1,3)
+        joint_layout.addWidget(self.leftLowerLegLabel,13,0)
+        joint_layout.addWidget(self.leftLowerLeg_edit,13,1,1,3)
+        joint_layout.addWidget(self.leftFootLabel,14,0)
+        joint_layout.addWidget(self.leftFoot_edit,14,1,1,3)
+        joint_layout.addWidget(self.importCharacter_button, 15,0,1,4)
 
-        blend_group.setLayout(blend_layout)
-        vCrashTool_layout.addWidget(blend_group)
-
+        joint_group.setLayout(joint_layout)
+        characterRigging_layout.addWidget(joint_group)
 
         ##############################################
         ######          Save Section            ######
@@ -633,6 +770,8 @@ class MainUI(QDialog):
         self.tab2.setLayout(siteTool_layout)
         self.tab3.setLayout(self.pcTool_layout)
         self.tab4.setLayout(vCrashTool_layout)
+        self.tab5.setLayout(vehicleRigging_layout)
+        self.tab6.setLayout(characterRigging_layout)
         main_layout.addWidget(self.banner)
         main_layout.addWidget(self.tabWidget)
         main_layout.addWidget(save_group)
@@ -672,6 +811,8 @@ class MainUI(QDialog):
         self.choose_locator_button.clicked.connect(self.choose_locator)
         self.load_locator_button.clicked.connect(self.load_locator)
 
+
+
         ##### Cable Group #####
         self.open_cable_button.clicked.connect(self.cable_gui)
 
@@ -705,6 +846,10 @@ class MainUI(QDialog):
 
         ##### Blend Shapes #####
         self.createBlendGroup_button.clicked.connect(self.createBlendGroup)
+
+        ##### Charcater Import #####
+        self.chooseCharacterData_button.clicked.connect(self.loadCharacterData)
+        self.importCharacter_button.clicked.connect(self.rotateJoints)
     #---------------------------------------------------------------------------------------------------------------
     # Button Functions
     #---------------------------------------------------------------------------------------------------------------
@@ -770,18 +915,16 @@ class MainUI(QDialog):
             cmds.select(allDagObjects=True)
             prev_all_objects = cmds.ls(selection=True)
             cmds.select(deselect=True)
-            # print(str(prev_all_objects))
 
             cmds.file(vehiclespec_path, i=True)
             cmds.select(allDagObjects=True)
             new_all_objects = cmds.ls(selection=True)
             cmds.select(deselect=True)
-            # print(str(new_all_objects))
+
             diff = [x for x in new_all_objects if x not in prev_all_objects]
-            # print(str(diff))
-            cmds.group(diff, name="Vehiclespecs")
-            cmds.xform (absolute=True, scale=(1, 1, 1),rotation=(90,90,0),translation=(-10.583,-4.333,0),)
-            cmds.makeIdentity(apply=True, t=1, r=1, s=1, n=0)
+            group = cmds.group(diff, name="Vehiclespecs")
+            cmds.move(0,0,0,group,rpr=True)
+            cmds.rotate(90,90,0)
             cmds.select(deselect=True)
 
         else:
@@ -1133,8 +1276,13 @@ class MainUI(QDialog):
     def exportFBX(self):
         root = self.joint_dropdown.currentText()
 
+        colonIndex = 0
+        for i in range(0,len(root)):
+            if root[i] == ':':
+                colonIndex = i + 1
+
         cmds.select(root)
-        cmds.file(self.desktop_dir + '\\' + root[6:] + '_FBX', type='FBX export', es=True, pr=True, force=True)
+        cmds.file(self.desktop_dir + '\\' + root[colonIndex:] + '_FBX', type='FBX export', es=True, pr=True, force=True)
 
     def cable_gui(self):
         #Opens GUI for easy cable creation
@@ -1171,7 +1319,7 @@ class MainUI(QDialog):
 
     def choose_mesh(self):
         # Set Mesh Path
-        file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "OBJ Files (*.obj);;All Files (*.*)")[0]
+        file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "OBJ Files (*.obj, *.fbx);;All Files (*.*)")[0]
         if file_path == "": # If they cancel the dialog
             return # Then just don't open anything
         self.choose_mesh_edit.setText(file_path)
@@ -1210,6 +1358,8 @@ class MainUI(QDialog):
         for i in range(0,len(lines)-1):
             if 'time [ s]' in lines[i+1]:
                 vehicles.append(lines[i][0])
+                vehicleIndices.append(i)
+            if 'auto-ees' in lines[i+1]:
                 vehicleIndices.append(i)
 
         frameTotal = vehicleIndices[1] - vehicleIndices[0]
@@ -1328,6 +1478,13 @@ class MainUI(QDialog):
     def pairRig2Locator(self):
         locName = self.vLocatorMatch_dropdown.currentText()
         rigName = self.rigMatch_dropdown.currentText()
+        cmds.select(rigName)
+        for i in range(0,4):
+            root = cmds.pickWalk(direction='up')
+        rootconst = cmds.parentConstraint(locName, root)
+        cmds.rotate(0,0,0)
+        cmds.delete(rootconst)
+        cmds.select(deselect=True)
         constraint = cmds.parentConstraint(locName, rigName)
         self.constraintList_dropdown.addItem(constraint[0])
         self.cgHeight_dropdown.addItem(constraint[0])
@@ -1380,6 +1537,160 @@ class MainUI(QDialog):
 
         #cmds.reorder(root, r=-3)
         cmds.bakeResults(root, hi='below', shape=True, sm=True, time=(start,stop))
+
+    def loadCharacterData(self):
+        file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "CSV Files (*.csv);;All Files (*.*)")[0]
+        if file_path == "":  # If they cancel the dialog
+            return  # Then just don't open anything
+        self.chooseCharacterData_edit.setText(file_path)
+
+
+    def importCharacter(self):
+        filename = self.chooseCharacterData_edit.text()
+        f = open(filename, "r")
+        lines = f.readlines()
+        f.close()
+
+        #Clean CSV
+        lines = [line.split(',') for line in lines]
+        for i in range(0,len(lines)):
+            lines[i] = [item.strip() for item in lines[i] if item != '' and item != '\n']
+
+        #Get joint list
+        parts = []
+        partIndices = []
+        for i in range(0,len(lines)-1):
+            if 'time [ s]' in lines[i+1]:
+                parts.append(lines[i][0])
+                partIndices.append(i)
+
+        frameTotal = partIndices[1] - partIndices[0]
+
+        for i in range(0,len(parts)):
+            print(parts[i])
+            print(partIndices[i])
+
+        #Create MOV Files
+        jointFiles = []
+        for i in range(0,len(parts)):
+            name = str(parts[i])
+            name = name.split(' ')
+            new_name = ''
+            for n in range(0,len(name)):
+                new_name += name[n]
+            name = new_name
+            f = open(self.desktop_dir + '/' + name + '.mov', 'w')
+            jointFiles.append(self.desktop_dir + '/' + name + '.mov')
+            for j in range(2, frameTotal):
+                for k in range(0,len(lines[partIndices[i] + j])):
+                    f.write(lines[partIndices[i] + j][k] + ' ')
+                f.write('\n')
+
+        f.close()
+
+        attrList = ['Time','Distance','Velocity','vni','vnz','vc2mayaRotX2Z','vc2mayaRotY2X','vc2mayaRotZ2Y','ignoreX', 'ignoreY', 'ignoreZ','Xrad','Yrad','Zrad']
+
+        for file in jointFiles:
+            print(file)
+
+        joints = [self.LeftFemur_edit.text(),self.rightFemur_edit.text(), self.leftFoot_edit.text(),
+        self.rightFoot_edit.text(),self.head_edit.text(), self.hip_edit.text(),  self.leftLowerArm_edit.text(),
+        self.leftUpperArm_edit.text(),self.leftLowerLeg_edit.text(),self.rightLowerLeg_edit.text(),self.neck_edit.text(),
+        self.rightLowerArm_edit.text(), self.rightUpperArm_edit.text(), self.torsoJoint_edit.text()]
+
+        for i in range(0,14):
+            joint = joints[i]
+            filename = jointFiles[i]
+            for attr in attrList:
+                cmds.select(joint)
+                cmds.addAttr(ln=attr, at='float')
+                cmds.setAttr(joint+'.'+attr, k=True)
+                cmds.select(deselect=True)
+
+            if filename.endswith('hip.mov'):
+                cmds.movIn(joint + '.Time', joint + '.Distance', joint + '.Velocity', joint + '.vc2mayaRotX2Z', joint + '.vc2mayaRotY2X', joint + '.vc2mayaRotZ2Y', joint + '.vni', joint + '.vnz', joint + '.translateZ', joint + '.translateX', joint + '.translateY', joint + '.Xrad', joint + '.Yrad', joint + '.Zrad', f=filename)
+            else:
+                cmds.movIn(joint + '.Time', joint + '.Distance', joint + '.Velocity', joint + '.vc2mayaRotX2Z', joint + '.vc2mayaRotY2X', joint + '.vc2mayaRotZ2Y', joint + '.vni', joint + '.vnz', joint + '.ignoreZ', joint + '.ignoreX', joint + '.ignoreY', joint + '.Xrad', joint + '.Yrad', joint + '.Zrad', f=filename)
+
+        #Set joints to variables
+        lfemur, rfemur, lfoot, rfoot, head, hip, lforearm, lshoulder, leftLowerLeg, rightLowerLeg, neck, rforearm, rshoulder, torso = joints
+
+        #Expression for joint movement
+        cmds.expression(s=f'{hip}.rotateX = {hip}.vc2mayaRotY2X;\n{hip}.rotateY = {hip}.vc2mayaRotZ2Y;\n{hip}.rotateZ = {hip}.vc2mayaRotX2Z;')
+        cmds.expression(s=f'{torso}.rotateX = {torso}.vc2mayaRotY2X - {hip}.vc2mayaRotY2X;\n{torso}.rotateY = {torso}.vc2mayaRotZ2Y - {hip}.vc2mayaRotZ2Y;\n{torso}.rotateZ = {torso}.vc2mayaRotX2Z - {hip}.vc2mayaRotX2Z;')
+        cmds.expression(s=f'{neck}.rotateX = {neck}.vc2mayaRotY2X - {torso}.rotateX;\n{neck}.rotateY = {neck}.vc2mayaRotZ2Y - {torso}.rotateY;\n{neck}.rotateZ = {neck}.vc2mayaRotX2Z - {torso}.rotateZ;')
+        cmds.expression(s=f'{head}.rotateX = {head}.vc2mayaRotY2X - {neck}.rotateX;\n{head}.rotateY = {head}.vc2mayaRotZ2Y - {neck}.rotateY;\n{head}.rotateZ = {head}.vc2mayaRotX2Z - {neck}.rotateZ;')
+        #cmds.expression(s=f'{lfemur}.rotateX = {lfemur}.vc2mayaRotY2X-{hip}.vc2mayaRotY2X;\n{lfemur}.rotateY = -{lfemur}.vc2mayaRotZ2Y+{hip}.vc2mayaRotZ2Y;\n{lfemur}.rotateZ = {lfemur}.vc2mayaRotX2Z- {hip}.vc2mayaRotX2Z;')
+        #cmds.expression(s=f'{rightFemur}.rotateX = -{hip}.vc2mayaRotY2X+{rightFemur}.vc2mayaRotY2X;\n{rightFemur}.rotateY = -90-{rightFemur}.vc2mayaRotZ2Y;\n{rightFemur}.rotateZ = {rightFemur}.vc2mayaRotX2Z;')
+        #cmds.expression(s=f'{leftLowerLeg}.rotateX = {leftLowerLeg}.vc2mayaRotY2X-{leftFemur}.vc2mayaRotY2X;\n{leftLowerLeg}.rotateY = {leftLowerLeg}.vc2mayaRotZ2Y-{leftFemur}.vc2mayaRotZ2Y;\n{leftLowerLeg}.rotateZ = {leftLowerLeg}.vc2mayaRotX2Z-{leftFemur}.vc2mayaRotX2Z;')
+        #cmds.expression(s=f'{rightLowerLeg}.rotateX = {rightLowerLeg}.vc2mayaRotY2X-{rightFemur}.vc2mayaRotY2X;\n{rightLowerLeg}.rotateY = {rightLowerLeg}.vc2mayaRotZ2Y-{rightFemur}.vc2mayaRotZ2Y;\n{rightLowerLeg}.rotateZ = {rightLowerLeg}.vc2mayaRotX2Z-{rightFemur}.vc2mayaRotX2Z;')
+        #cmds.expression(s=f'{lshoulder}.rotateZ = -{torso}.rotateZ;')
+        #cmds.expression(s=f'{lforearm}.rotateZ = {lforearm}.vc2mayaRotX2Z - {lshoulder}.rotateZ;\n{lforearm}.rotateX = {lforearm}.vc2mayaRotY2X - {lshoulder}.rotateX;\n{lforearm}.rotateY = {lforearm}.vc2mayaRotZ2Y - {lshoulder}.rotateY;')
+
+    def rotateJoints(self):
+        filename = self.chooseCharacterData_edit.text()
+        f = open(filename, "r")
+        lines = f.readlines()
+        f.close()
+
+        #Clean CSV
+        lines = [line.split(',') for line in lines]
+        for i in range(0,len(lines)):
+            lines[i] = [item.strip() for item in lines[i] if item != '' and item != '\n']
+
+        #Get joint list
+        parts = []
+        partIndices = []
+        for i in range(0,len(lines)-1):
+            if 'time [ s]' in lines[i+1]:
+                parts.append(lines[i][0])
+                partIndices.append(i)
+
+        frameTotal = partIndices[1] - partIndices[0]
+
+        #Create MOV Files
+        joints = [self.LeftFemur_edit.text(),self.rightFemur_edit.text(), self.leftFoot_edit.text(),
+        self.rightFoot_edit.text(),self.head_edit.text(), self.hip_edit.text(),  self.leftLowerArm_edit.text(),
+        self.leftUpperArm_edit.text(),self.leftLowerLeg_edit.text(),self.rightLowerLeg_edit.text(),self.neck_edit.text(),
+        self.rightLowerArm_edit.text(), self.rightUpperArm_edit.text(), self.torsoJoint_edit.text()]
+
+
+        #for i in range(0,len(parts)):
+        #    for j in range(2, frameTotal):
+        #        time = lines[partIndices[i]+j][0]
+        #        xrot = lines[partIndices[i]+j][3]
+        #        yrot = lines[partIndices[i]+j][4]
+        #        zrot = lines[partIndices[i]+j][5]
+
+        #        cmds.currentTime(float(time)*10)
+        #        cmds.rotate(zrot,xrot,yrot,joints[i],ws=True)
+        #        cmds.setKeyframe(joints[i],at='rotateZ')
+        #        cmds.setKeyframe(joints[i],at='rotateY')
+        #        cmds.setKeyframe(joints[i],at='rotateX')
+        lfemur, rfemur, lfoot, rfoot, head, hip, lforearm, lshoulder, leftLowerLeg, rightLowerLeg, neck, rforearm, rshoulder, torso = joints
+
+        rotateOrder = [hip,torso,lshoulder,lforearm,rshoulder,rforearm,neck,head,lfemur,leftLowerLeg,lfoot,rfemur,rightLowerLeg,rfoot]
+        newJoints = []
+        for j in range(2,frameTotal):
+            for i in range(0,len(parts)):
+
+                index = joints.index(rotateOrder[i])
+                time = lines[partIndices[index]+j][0]
+                xrot = float(lines[partIndices[index]+j][3])
+                yrot = float(lines[partIndices[index]+j][4])
+                zrot = float(lines[partIndices[index]+j][5])
+                #xpos = float(lines[partIndices[index]+j][8])
+                #ypos = float(lines[partIndices[index]+j][9])
+                #zpos = float(lines[partIndices[index]+j][10])
+                #if j == 2:
+                #    newJoints.append(cmds.spaceLocator(p=(ypos,zpos,xpos), n=lines[partIndices[index]][0]))
+                #else:
+                #    cmds.move(ypos,zpos,xpos,newJoints[i], a=True)
+                cmds.currentTime(float(time)*10)
+                cmds.rotate(yrot,zrot,xrot,joints[index], a=True, ws=True)
+                cmds.setKeyframe(joints[index],at='rotateX')
+                cmds.setKeyframe(joints[index],at='rotateY')
+                cmds.setKeyframe(joints[index],at='rotateZ')
 
 
     # --------------------------------------------------------------------------------------------------------------

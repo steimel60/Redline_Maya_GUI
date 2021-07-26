@@ -203,6 +203,9 @@ class MainUI(QDialog):
         self.quick_rotate_button = QPushButton("Quick VC Rotate")
         self.hv_rotate_button = QPushButton("Quick HV Rotate")
 
+        ##### Scale Button #####
+        self.autoScale_button = QPushButton("Auto Scale")
+
         ##### Remove Tires Button #####
         self.remove_tires_button = QPushButton(QIcon(self.icon_dir + "/tire.png"), "Remove Tires")
         self.remove_tires_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -512,6 +515,8 @@ class MainUI(QDialog):
         self.rightLowerArm_edit.setText('Character1_RightForeArm')
         self.rightUpperArm_edit.setText('Character1_RightShoulder')
         self.torsoJoint_edit.setText('Character1_Spine')
+        self.chooseCharacterData_edit.setText('C:/Users/DylanSteimel/Desktop/fallstraightdown.csv')
+
 
     def create_layout(self):
         main_layout = QVBoxLayout()
@@ -580,6 +585,7 @@ class MainUI(QDialog):
         ##### Extra Tools GUI Section #####
         tools_group = QGroupBox("Extra Tools")
         tools_layout = QVBoxLayout()
+        tools_layout.addWidget(self.autoScale_button)
         tools_layout.addWidget(self.remove_tires_button)
         tools_layout.addWidget(self.remove_license_plate_button)
         tools_layout.addWidget(self.make_windows_transparent_button)
@@ -799,6 +805,7 @@ class MainUI(QDialog):
         self.quick_rotate_button.clicked.connect(self.quick_rotate)
         self.hv_rotate_button.clicked.connect(self.hv_rotate)
         ##### Extra Tools #####
+        self.autoScale_button.clicked.connect(self.autoScale)
         self.remove_tires_button.clicked.connect(self.remove_tires)
         self.remove_license_plate_button.clicked.connect(self.remove_license_plate)
         self.make_windows_transparent_button.clicked.connect(self.make_windows_transparent)
@@ -810,8 +817,6 @@ class MainUI(QDialog):
         ##### Locator Group #####
         self.choose_locator_button.clicked.connect(self.choose_locator)
         self.load_locator_button.clicked.connect(self.load_locator)
-
-
 
         ##### Cable Group #####
         self.open_cable_button.clicked.connect(self.cable_gui)
@@ -983,6 +988,44 @@ class MainUI(QDialog):
         cmds.select(all=True)
         cmds.rotate(-90, 0, -90, a=True, p=[0,0,0])
         cmds.select(deselect=True)
+
+    def autoScale(self):
+        length = cmds.getAttr('curveShape4.maxValue')
+        width = cmds.getAttr('curveShape1.maxValue')
+
+        bumpers = cmds.ls('*bumper*', '*Bumper*','*Fender*','*fender*')
+        bumper_group = cmds.group(bumpers)
+
+        cmds.select(bumper_group)
+
+        cmds.geomToBBox(n='tempBBox', single=True, keepOriginal=True)
+
+
+        bbMinX = cmds.getAttr('tempBBox.boundingBoxMinX')
+        bbMaxX = cmds.getAttr('tempBBox.boundingBoxMaxX')
+        bbMinZ = cmds.getAttr('tempBBox.boundingBoxMinZ')
+        bbMaxZ = cmds.getAttr('tempBBox.boundingBoxMaxZ')
+
+        cmds.delete('tempBBox')
+
+        bbLength = bbMaxZ - bbMinZ
+        bbWidth = bbMaxX - bbMinX
+
+        dxfArea = length*width
+
+        bbArea = bbLength*bbWidth
+
+        scaleZ = length/bbLength
+        scaleX = width/bbWidth
+
+        print('DXF Length x Width')
+        print(f'{length} x {width}')
+        print('Bounding Box Length x Width')
+        print(f'{bbLength} x {bbWidth}')
+
+        currentScale = cmds.getAttr('Vehicle.scale')
+        vehicle = cmds.select('Vehicle')
+        cmds.scale(scaleX*currentScale[0][0], 1*currentScale[0][1], scaleZ*currentScale[0][2], vehicle)
 
     def remove_tires(self):
         try:
@@ -1359,8 +1402,6 @@ class MainUI(QDialog):
             if 'time [ s]' in lines[i+1]:
                 vehicles.append(lines[i][0])
                 vehicleIndices.append(i)
-            if 'auto-ees' in lines[i+1]:
-                vehicleIndices.append(i)
 
         frameTotal = vehicleIndices[1] - vehicleIndices[0]
 
@@ -1544,7 +1585,6 @@ class MainUI(QDialog):
             return  # Then just don't open anything
         self.chooseCharacterData_edit.setText(file_path)
 
-
     def importCharacter(self):
         filename = self.chooseCharacterData_edit.text()
         f = open(filename, "r")
@@ -1671,28 +1711,110 @@ class MainUI(QDialog):
 
         rotateOrder = [hip,torso,lshoulder,lforearm,rshoulder,rforearm,neck,head,lfemur,leftLowerLeg,lfoot,rfemur,rightLowerLeg,rfoot]
         newJoints = []
-        for j in range(2,frameTotal):
-            for i in range(0,len(parts)):
 
-                index = joints.index(rotateOrder[i])
-                time = lines[partIndices[index]+j][0]
-                xrot = float(lines[partIndices[index]+j][3])
-                yrot = float(lines[partIndices[index]+j][4])
-                zrot = float(lines[partIndices[index]+j][5])
+        #Comun Indices
+        timeCol = 0
+        xRotCol = 3
+        yRotCol = 4
+        zRotCol = 5
+        xOmgCol =11
+        yOmgCol = 12
+        zOmgCol =13
+
+        #Create Dict of tuples (dataframe of frames,[list of parent joints],joint reference)
+        dataFrames = {  'hip':(lines[partIndices[joints.index(hip)]+2:partIndices[joints.index(hip)]+frameTotal],[], hip),
+                        'torso':(lines[partIndices[joints.index(torso)]+2:partIndices[joints.index(torso)]+frameTotal],['hip'], torso),
+                        'lshoulder':(lines[partIndices[joints.index(lshoulder)]+2:partIndices[joints.index(lshoulder)]+frameTotal],['torso'], lshoulder),
+                        'lforearm':(lines[partIndices[joints.index(lforearm)]+2:partIndices[joints.index(lforearm)]+frameTotal],['lshoulder'], lforearm),
+                        'rshoulder':(lines[partIndices[joints.index(rshoulder)]+2:partIndices[joints.index(rshoulder)]+frameTotal],['torso'], rshoulder),
+                        'rforearm':(lines[partIndices[joints.index(rforearm)]+2:partIndices[joints.index(rforearm)]+frameTotal],['rshoulder'], rforearm),
+                        'neck':(lines[partIndices[joints.index(neck)]+2:partIndices[joints.index(neck)]+frameTotal],['torso'], neck),
+                        'head':(lines[partIndices[joints.index(head)]+2:partIndices[joints.index(head)]+frameTotal],['neck'], head),
+                        'lfemur':(lines[partIndices[joints.index(lfemur)]+2:partIndices[joints.index(lfemur)]+frameTotal],['hip'], lfemur),
+                        'leftLowerLeg':(lines[partIndices[joints.index(leftLowerLeg)]+2:partIndices[joints.index(leftLowerLeg)]+frameTotal],['lfemur'], leftLowerLeg),
+                        'lfoot':(lines[partIndices[joints.index(lfoot)]+2:partIndices[joints.index(lfoot)]+frameTotal],['leftLowerLeg'], lfoot),
+                        'rfemur':(lines[partIndices[joints.index(rfemur)]+2:partIndices[joints.index(rfemur)]+frameTotal],['hip'], rfemur),
+                        'rightLowerLeg':(lines[partIndices[joints.index(rightLowerLeg)]+2:partIndices[joints.index(rightLowerLeg)]+frameTotal],['rfemur'], rightLowerLeg),
+                        'rfoot':(lines[partIndices[joints.index(rfoot)]+2:partIndices[joints.index(rfoot)]+frameTotal],['rightLowerLeg'], rfoot)}
+
+
+        #for j in range(2,frameTotal):
+        #    for i in range(0,len(parts)):
+        #        index = joints.index(rotateOrder[i])
+        #        time = lines[partIndices[index]+j][0]
+        #        xrot = float(lines[partIndices[index]+j][3])
+        #        yrot = float(lines[partIndices[index]+j][4])
+        #        zrot = float(lines[partIndices[index]+j][5])
+        #        xomg = float(lines[partIndices[index]+j][11])*180/math.pi
+        #        yomg = float(lines[partIndices[index]+j][12])*180/math.pi
+        #        zomg = float(lines[partIndices[index]+j][13])*180/math.pi
                 #xpos = float(lines[partIndices[index]+j][8])
                 #ypos = float(lines[partIndices[index]+j][9])
                 #zpos = float(lines[partIndices[index]+j][10])
-                #if j == 2:
-                #    newJoints.append(cmds.spaceLocator(p=(ypos,zpos,xpos), n=lines[partIndices[index]][0]))
-                #else:
-                #    cmds.move(ypos,zpos,xpos,newJoints[i], a=True)
+        #        cmds.currentTime(float(time)*10)
+        #        if j == 2:
+        #            cmds.rotate(yrot,zrot,xrot,joints[index], a=True, ws=True)
+        #        else:
+        #            cmds.rotate(yomg*.1,zomg*.1,xomg*.1,joints[index], r=True, ws=True)
+
+        print('\n')
+        print('\n')
+        print('\n')
+
+        for key in dataFrames:
+            print(f'dataframe of {key}')
+            print(dataFrames[key])
+
+        print('\n')
+        print('\n')
+        print('\n')
+
+        for frame in range(0,frameTotal-2):
+            for key in dataFrames:
+                xAdjust = 0
+                yAdjust = 0
+                zAdjust = 0
+                xRotAdj = 0
+                yRotAdj = 0
+                zRotAdj = 0
+                time = float(dataFrames[key][0][frame][timeCol])
+                xrot = float(dataFrames[key][0][frame][xRotCol])
+                yrot = float(dataFrames[key][0][frame][yRotCol])
+                zrot = float(dataFrames[key][0][frame][zRotCol])
+
+                for parentJoint in dataFrames[key][1]:
+                    xAdjust += float(dataFrames[parentJoint][0][frame][xOmgCol])
+                    yAdjust += float(dataFrames[parentJoint][0][frame][yOmgCol])
+                    zAdjust += float(dataFrames[parentJoint][0][frame][zOmgCol])
+                    xRotAdj += float(dataFrames[parentJoint][0][frame][xRotCol])
+                    yRotAdj += float(dataFrames[parentJoint][0][frame][yRotCol])
+                    zRotAdj += float(dataFrames[parentJoint][0][frame][zRotCol])
+
+
+                if 'shoulder' not in key and 'forearm' not in key:
+                    xomg = (float(dataFrames[key][0][frame][xOmgCol]) - xAdjust)*18/math.pi
+                    yomg = (float(dataFrames[key][0][frame][yOmgCol]) - yAdjust)*18/math.pi
+                    zomg = (float(dataFrames[key][0][frame][zOmgCol]) - zAdjust)*18/math.pi
+
+                elif 'shoulder' in key or 'forearm' in key:
+                    xomg = (float(dataFrames[key][0][frame][xOmgCol]) - xAdjust)*18/math.pi
+                    yomg = (float(dataFrames[key][0][frame][yOmgCol]) - zAdjust)*18/math.pi
+                    zomg = (float(dataFrames[key][0][frame][zOmgCol]) - yAdjust)*18/math.pi
+
                 cmds.currentTime(float(time)*10)
-                cmds.rotate(yrot,zrot,xrot,joints[index], a=True, ws=True)
-                cmds.setKeyframe(joints[index],at='rotateX')
-                cmds.setKeyframe(joints[index],at='rotateY')
-                cmds.setKeyframe(joints[index],at='rotateZ')
 
+                if frame == 0 and 'shoulder' not in key:
+                    cmds.rotate(yrot,zrot,xrot,dataFrames[key][2], a=True, ws=True)
+                elif frame ==0 and 'shoulder' in key:
+                    cmds.rotate(zrot,yrot,xrot,dataFrames[key][2], a=True, ws=True)
+                elif 'shoulder' in key:
+                    cmds.rotate(zomg,yomg,xomg,dataFrames[key][2], r=True, ws=True)
+                else:
+                    cmds.rotate(yomg,zomg,xomg,dataFrames[key][2],r=True,ws=True)
 
+                cmds.setKeyframe(dataFrames[key][2],at='rotateX')
+                cmds.setKeyframe(dataFrames[key][2],at='rotateY')
+                cmds.setKeyframe(dataFrames[key][2],at='rotateZ')
     # --------------------------------------------------------------------------------------------------------------
     # Writes the current file path to preferences
     # --------------------------------------------------------------------------------------------------------------

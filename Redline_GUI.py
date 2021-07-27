@@ -201,10 +201,13 @@ class MainUI(QDialog):
         self.right_arrow_button = QPushButton(QIcon(self.icon_dir + "/right"), "Rotate +90")
         self.right_arrow_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.quick_rotate_button = QPushButton("Quick VC Rotate")
+        self.quick_rotate_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.hv_rotate_button = QPushButton("Quick HV Rotate")
+        self.hv_rotate_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Scale Button #####
         self.autoScale_button = QPushButton("Auto Scale")
+        self.autoScale_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Remove Tires Button #####
         self.remove_tires_button = QPushButton(QIcon(self.icon_dir + "/tire.png"), "Remove Tires")
@@ -240,6 +243,7 @@ class MainUI(QDialog):
         self.load_locator_button = QPushButton(QIcon(self.icon_dir + "/load.png"), "Load Locators")
         self.load_locator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
+        ##### Cable Creation Buttons #####
         self.open_cable_button = QPushButton("Open Cable Creator")
         self.open_cable_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
@@ -270,6 +274,17 @@ class MainUI(QDialog):
         self.density_current = self.density_list[self.choose_density_button.currentIndex()]
 
         ##################################################### VC Files ####################################################################################
+        ##### VC Data Buttons #####
+        self.choose_vcData_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
+        self.choose_vcData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.choose_vcData_edit = QLineEdit()
+        self.choose_vcData_edit.setPlaceholderText("Virtual Crash Data File")
+        self.choose_vcData_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.convert_vcData_button = QPushButton("Convert VC Data")
+        self.convert_vcData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
         ##### File Management Buttons #####
         self.choose_rig_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
         self.choose_rig_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -288,19 +303,10 @@ class MainUI(QDialog):
         self.choose_mesh_edit.setPlaceholderText("Ground Proxy File")
         self.choose_mesh_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
-        self.loadMesh_button = QPushButton("Ground Proxy")
+        self.loadMesh_button = QPushButton("Load Ground Proxy")
         self.loadMesh_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
         ##### Vehicle Locator Buttons #####
-        self.choose_vcData_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
-        self.choose_vcData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
-
-        self.choose_vcData_edit = QLineEdit()
-        self.choose_vcData_edit.setPlaceholderText("Virtual Crash Data File")
-        self.choose_vcData_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-
-        self.convert_vcData_button = QPushButton("Convert VC Data")
-        self.convert_vcData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
-
         self.choose_vLocator_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
         self.choose_vLocator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
@@ -310,8 +316,6 @@ class MainUI(QDialog):
 
         self.create_vLocator_button = QPushButton("Create Vehicle Locator")
         self.create_vLocator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
-
-        ##################################################### Vehicle Rigging ####################################################################################
 
         self.fps_edit = QComboBox(self)
         fps_list = ['24','30','100']
@@ -324,46 +328,44 @@ class MainUI(QDialog):
         self.fps_label.setText('FPS:')
         self.fps_label.setMaximumWidth(35)
 
-        ##### Make Constraints #####
-        self.rigMatch_dropdown = QComboBox(self)
-        rigs = cmds.ls('*_driveControl', r=True)
-        for rig in rigs:
-            self.rigMatch_dropdown.addItem(rig)
-        self.vLocatorMatch_dropdown = QComboBox(self)
+        ##################################################### Vehicle Rigging ####################################################################################
+        ##### Active Locator Drop Down #####
+        self.LocatorLabel = QLabel()
+        self.LocatorLabel.setText('Active Locator:')
+        self.activeLocator_dropdown = QComboBox(self)
         locators = cmds.ls('*_Locator')
         for locator in locators:
-            self.vLocatorMatch_dropdown.addItem(locator)
+            self.activeLocator_dropdown.addItem(locator)
+        self.activeLocator_dropdown.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Active Rig Dropdown #####
+        self.RigLabel = QLabel()
+        self.RigLabel.setText('Active Rig:')
+        self.activeRig_dropdown = QComboBox(self)
+        rigs = cmds.ls('*_TopNode')
+        rigs.extend(cmds.ls('*:*_TopNode'))
+        for rig in rigs:
+            self.activeRig_dropdown.addItem(rig)
+        self.activeRig_dropdown.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Make Constraints #####
         self.pairRig2Locator_button = QPushButton('Pair Rig to Locator')
         self.pairRig2Locator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
-        self.constraintList_dropdown = QComboBox(self)
-        constraints = cmds.ls('*driveControl_parentConstraint*', r=True)
-        for constraint in constraints:
-            self.constraintList_dropdown.addItem(constraint)
-
+        ##### Edit Constraints #####
         self.parentX = QLineEdit()
-        self.parentX.setPlaceholderText("X")
-        self.parentX.setMaximumWidth(70)
-        self.parentX.setMinimumWidth(70)
+        self.parentX.setPlaceholderText("Rotate X")
         self.parentX.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.parentY = QLineEdit()
-        self.parentY.setPlaceholderText("Y")
-        self.parentY.setMaximumWidth(70)
-        self.parentY.setMinimumWidth(70)
+        self.parentY.setPlaceholderText("Rotate Y")
         self.parentY.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.parentZ = QLineEdit()
-        self.parentZ.setPlaceholderText("Z")
-        self.parentZ.setMaximumWidth(70)
-        self.parentZ.setMinimumWidth(70)
+        self.parentZ.setPlaceholderText("Rotate Z")
         self.parentZ.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.rotateOnConst_button = QPushButton('Rotate on Constraint')
         self.rotateOnConst_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### CoG Height Adjustment #####
-        self.cgHeight_dropdown = QComboBox(self)
-        constraints = cmds.ls('*driveControl_parentConstraint*', r=True)
-        for constraint in constraints:
-            self.cgHeight_dropdown.addItem(constraint)
         self.cgHeight_edit = QLineEdit()
         self.cgHeight_edit.setPlaceholderText('CoG Height')
         self.cgHeight_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -371,10 +373,6 @@ class MainUI(QDialog):
         self.cgHeight_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Light Rigging #####
-        self.lightLocator_dropdown = QComboBox(self)
-        locators = cmds.ls('*_Locator')
-        for locator in locators:
-            self.lightLocator_dropdown.addItem(locator)
         self.lightName_edit = QLineEdit()
         self.lightName_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.lightName_edit.setPlaceholderText('Light Name')
@@ -399,10 +397,8 @@ class MainUI(QDialog):
         ##### Bake Button #####
         self.bakeButton = QPushButton('Bake Root Joint')
         self.bakeButton.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.joint_dropdown = QComboBox(self)
-        self.joints = cmds.ls('*root_jt', r=True)
-        for joint in self.joints:
-            self.joint_dropdown.addItem(joint)
+
+        ##### Bake Settings #####
         self.bakeStart_label = QLabel()
         self.bakeStart_label.setText('Start Frame:')
         self.bakeStart_edit = QLineEdit()
@@ -414,14 +410,12 @@ class MainUI(QDialog):
         self.bakeStop_edit = QLineEdit()
         self.bakeStop_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.bakeStop_edit.setPlaceholderText('Ex:  2500')
+
+        ##### Export FBX #####
         self.exportFBX_button = QPushButton('Export Selected Root Joint Animation')
         self.exportFBX_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Blend Shapes #####
-        self.blendControl_dropdown = QComboBox(self)
-        self.joints = cmds.ls('*root_jt', r=True)
-        for joint in self.joints:
-            self.blendControl_dropdown.addItem(joint)
         self.blendNode_edit = QLineEdit()
         self.blendNode_edit.setPlaceholderText('Blend Node Name - Ex: Initial Impact')
         self.blendNode_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -545,7 +539,6 @@ class MainUI(QDialog):
         studio_layout.addWidget(self.load_studio_button)
         studio_group.setLayout(studio_layout)
         vehicleTool_layout.addWidget(studio_group)
-        #vehicleTool_layout.insertSpacing(-1, 10)
 
         ##### Vehicle GUI Section #####
         load_group = QGroupBox("Vehicle")
@@ -580,7 +573,6 @@ class MainUI(QDialog):
         rotation_layout.addWidget(self.hv_rotate_button, 1, 0, 1, 3)
         rotation_group.setLayout(rotation_layout)
         vehicleTool_layout.addWidget(rotation_group)
-        #vehicleTool_layout.insertSpacing(-1, 10)
 
         ##### Extra Tools GUI Section #####
         tools_group = QGroupBox("Extra Tools")
@@ -591,7 +583,6 @@ class MainUI(QDialog):
         tools_layout.addWidget(self.make_windows_transparent_button)
         tools_group.setLayout(tools_layout)
         vehicleTool_layout.addWidget(tools_group)
-        #vehicleTool_layout.insertSpacing(-1, 10)
 
         ##############################################
         ######          Site Section            ######
@@ -661,34 +652,40 @@ class MainUI(QDialog):
         ##############################################
         ######    Vehicle Rigging Section       ######
         ##############################################
+        ##### Active Locator and Rig #####
+        activeItems_group = QGroupBox("Active Locator and Rig")
+        activeItems_Layout = QGridLayout()
+
+        activeItems_Layout.addWidget(self.LocatorLabel,0,0)
+        activeItems_Layout.addWidget(self.activeLocator_dropdown,0,1,1,2)
+        activeItems_Layout.addWidget(self.RigLabel,1,0)
+        activeItems_Layout.addWidget(self.activeRig_dropdown,1,1,1,2)
+
+        activeItems_group.setLayout(activeItems_Layout)
+        vehicleRigging_layout.addWidget(activeItems_group)
 
         ##### Vehicle Rigging #####
         vLocator_group = QGroupBox("Vehicle Rigging")
         vLocator_layout = QGridLayout()
 
-        vLocator_layout.addWidget(self.vLocatorMatch_dropdown, 0,0,1,2)
-        vLocator_layout.addWidget(self.rigMatch_dropdown, 0,2,1,2)
-        vLocator_layout.addWidget(self.pairRig2Locator_button,0,4,1,3)
+        vLocator_layout.addWidget(self.pairRig2Locator_button,0,0,1,4)
 
-        vLocator_layout.addWidget(self.constraintList_dropdown,1,0,1,2)
-        vLocator_layout.addWidget(self.parentX,1,2)
-        vLocator_layout.addWidget(self.parentY,1,3)
-        vLocator_layout.addWidget(self.parentZ,1,4)
-        vLocator_layout.addWidget(self.rotateOnConst_button,1,5,1,2)
+        vLocator_layout.addWidget(self.parentX,1,0)
+        vLocator_layout.addWidget(self.parentY,1,1)
+        vLocator_layout.addWidget(self.parentZ,1,2)
+        vLocator_layout.addWidget(self.rotateOnConst_button,1,3)
 
-        vLocator_layout.addWidget(self.cgHeight_dropdown,2,0,1,2)
-        vLocator_layout.addWidget(self.cgHeight_edit,2,2,1,3)
-        vLocator_layout.addWidget(self.cgHeight_button,2,5,1,2)
+        vLocator_layout.addWidget(self.cgHeight_edit,2,0,1,2)
+        vLocator_layout.addWidget(self.cgHeight_button,2,2,1,2)
 
-        vLocator_layout.addWidget(self.lightLocator_dropdown,3,0,1,2)
-        vLocator_layout.addWidget(self.lightName_edit,3,2,1,2)
-        vLocator_layout.addWidget(self.lightIntensity,3,4)
-        vLocator_layout.addWidget(self.pairLight_button,3,5,1,2)
+        vLocator_layout.addWidget(self.lightName_edit,3,0,1,2)
+        vLocator_layout.addWidget(self.lightIntensity,3,2)
+        vLocator_layout.addWidget(self.pairLight_button,3,3)
 
-        vLocator_layout.addWidget(self.preBakeSave_button, 4,0,1,7)
+        vLocator_layout.addWidget(self.preBakeSave_button, 4,0,1,4)
 
-        vLocator_layout.addWidget(self.siteName_edit, 5,0,1,4)
-        vLocator_layout.addWidget(self.wheelConstr_button, 5,4,1,3)
+        vLocator_layout.addWidget(self.siteName_edit, 5,0,1,2)
+        vLocator_layout.addWidget(self.wheelConstr_button, 5,2,1,2)
         vLocator_group.setLayout(vLocator_layout)
         vehicleRigging_layout.addWidget(vLocator_group)
 
@@ -696,10 +693,10 @@ class MainUI(QDialog):
         blend_group = QGroupBox("Blend Shapes")
         blend_layout = QGridLayout()
 
-        blend_layout.addWidget(self.blendControl_dropdown, 0, 0, 1, 2)
-        blend_layout.addWidget(self.blendNode_edit, 0, 2, 1, 3)
-        blend_layout.addWidget(self.blendGroupName_edit, 0, 5, 1, 3)
-        blend_layout.addWidget(self.createBlendGroup_button, 1, 0, 1, 8)
+        #blend_layout.addWidget(self.blendControl_dropdown, 0, 0, 1, 2)
+        blend_layout.addWidget(self.blendNode_edit, 0,0)
+        blend_layout.addWidget(self.blendGroupName_edit, 0,1)
+        blend_layout.addWidget(self.createBlendGroup_button, 1,0,1,2)
 
         blend_group.setLayout(blend_layout)
         vehicleRigging_layout.addWidget(blend_group)
@@ -708,13 +705,13 @@ class MainUI(QDialog):
         bake_group = QGroupBox("Joint Bake")
         bake_layout = QGridLayout()
 
-        bake_layout.addWidget(self.joint_dropdown, 0,0,1,4)
-        bake_layout.addWidget(self.bakeStart_label,1,0)
-        bake_layout.addWidget(self.bakeStart_edit,1,1)
-        bake_layout.addWidget(self.bakeStop_label,1,2)
-        bake_layout.addWidget(self.bakeStop_edit,1,3)
-        bake_layout.addWidget(self.bakeButton,2,0,1,4)
-        bake_layout.addWidget(self.exportFBX_button,3,0,1,4)
+        #bake_layout.addWidget(self.joint_dropdown, 0,0,1,4)
+        bake_layout.addWidget(self.bakeStart_label,0,0)
+        bake_layout.addWidget(self.bakeStart_edit,0,1)
+        bake_layout.addWidget(self.bakeStop_label,0,2)
+        bake_layout.addWidget(self.bakeStop_edit,0,3)
+        bake_layout.addWidget(self.bakeButton,1,0,1,4)
+        bake_layout.addWidget(self.exportFBX_button,2,0,1,4)
 
         bake_group.setLayout(bake_layout)
         vehicleRigging_layout.addWidget(bake_group)
@@ -944,6 +941,7 @@ class MainUI(QDialog):
         self.save_last_file(self.spellbook_current)
 
     def neg_rotation(self):
+        #Rotate in negative direction
         direction = self.xyz_selection.currentIndex()
         if direction == 0:
             cmds.select(all=True)
@@ -962,6 +960,7 @@ class MainUI(QDialog):
             print('rotate')
 
     def pos_rotation(self):
+        #Rotate in positive direction
         direction = self.xyz_selection.currentIndex()
         if direction == 0:
             cmds.select(all=True)
@@ -980,16 +979,19 @@ class MainUI(QDialog):
             print('rotate')
 
     def quick_rotate(self):
+        #Rotates to a preset for Virtual Crash asset creation
         cmds.select(all=True)
         cmds.rotate(90, 0, 90, a=True, p=[0,0,0])
         cmds.select(deselect=True)
 
     def hv_rotate(self):
+        #Rotates for a preset for HV asset creation
         cmds.select(all=True)
         cmds.rotate(-90, 0, -90, a=True, p=[0,0,0])
         cmds.select(deselect=True)
 
     def autoScale(self):
+        #Scales vehicle to size of vehicle specs
         length = cmds.getAttr('curveShape4.maxValue')
         width = cmds.getAttr('curveShape1.maxValue')
 
@@ -1028,6 +1030,7 @@ class MainUI(QDialog):
         cmds.scale(scaleX*currentScale[0][0], 1*currentScale[0][1], scaleZ*currentScale[0][2], vehicle)
 
     def remove_tires(self):
+        #removes tire objects
         try:
             tires = cmds.ls('*Tire*', '*tire*')
             for tire in tires:
@@ -1166,6 +1169,7 @@ class MainUI(QDialog):
         self.choose_locator_edit.setText(file_path)
 
     def load_locator(self):
+        #load xyz file
         filename = self.choose_locator_edit.text()
         f = open(filename, 'r')
         full = f.readlines()
@@ -1317,7 +1321,15 @@ class MainUI(QDialog):
         cmds.file(self.desktop_dir + '\\' + self.asset + '_OBJ', type='OBJexport', es=True, sh=True, force=True)
 
     def exportFBX(self):
-        root = self.joint_dropdown.currentText()
+        #Exports root joint for Unreal Engine
+        rigName = self.activeRig_dropdown.currentText()
+
+        cmds.select(rigName, hierarchy=True)
+        groupList = cmds.ls(sl=True)
+        cmds.select(deselect=True)
+        for item in groupList:
+            if item.endswith('root_jt'):
+                root = item
 
         colonIndex = 0
         for i in range(0,len(root)):
@@ -1352,13 +1364,10 @@ class MainUI(QDialog):
             asset = 'asset'
         dc = cmds.ls('*drive_ctrl', r=True)
         dc = cmds.rename(dc, asset + '_driveControl')
-        self.rigMatch_dropdown.addItem(dc)
-        roots = cmds.ls('*root_jt', r=True)
-        #root = cmds.rename(root, asset+'_root_jt')
-        for root in roots:
-            if root not in self.joints:
-                self.joint_dropdown.addItem(root)
-                self.blendControl_dropdown.addItem(root)
+        rig = cmds.ls('*_TopNode')
+        rig.extend(cmds.ls('*:*_TopNode'))
+        rigName = cmds.rename(rig, asset + '_TopNode')
+        self.activeRig_dropdown.addItem(rigName)
 
     def choose_mesh(self):
         # Set Mesh Path
@@ -1368,22 +1377,26 @@ class MainUI(QDialog):
         self.choose_mesh_edit.setText(file_path)
 
     def load_mesh(self):
+        #Import mesh from set path
         filename = self.choose_mesh_edit.text()
         cmds.file(filename, i=True)
 
     def loadVCData(self):
+        #Set path for VC data
         file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "CSV Files (*.csv);;All Files (*.*)")[0]
         if file_path == "":  # If they cancel the dialog
             return  # Then just don't open anything
         self.choose_vcData_edit.setText(file_path)
 
     def loadvLocator(self):
+        #Load in MOV file
         file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "MOV Files (*.mov);;All Files (*.*)")[0]
         if file_path == "":  # If they cancel the dialog
             return  # Then just don't open anything
         self.choose_vLocator_edit.setText(file_path)
 
     def convertVCData(self):
+        #Convert VC Data to individual MOV files
         #Get File Path
         filename = self.choose_vcData_edit.text()
         f = open(filename, "r")
@@ -1417,26 +1430,35 @@ class MainUI(QDialog):
             f.close()
 
     def createBlendGroup(self):
+        #Connect blend shape to root joint for Unreal export
         blendNode = self.blendNode_edit.text()
-        rootJoint = self.blendControl_dropdown.currentText()
         groupName = self.blendGroupName_edit.text()
+        rigName = self.activeRig_dropdown.currentText()
 
-        list = cmds.listAttr(blendNode, m=True)
+        cmds.select(rigName, hierarchy=True)
+        groupList = cmds.ls(sl=True)
+        cmds.select(deselect=True)
+        for item in groupList:
+            if item.endswith('root_jt'):
+                rootJoint = item
+
+        attrs = cmds.listAttr(blendNode, m=True)
         presets = ['message', 'caching', 'frozen', 'isHistoricallyInteresting', 'nodeState', 'binMembership', 'input', 'output', 'originalGeometry', 'envelopeWeightsList', 'envelope', 'function', 'fchild', 'map64BitIndices', 'topologyCheck', 'origin', 'baseOrigin', 'baseOriginX', 'baseOriginY', 'baseOriginZ', 'targetOrigin', 'targetOriginX', 'targetOriginY', 'targetOriginZ', 'parallelBlender', 'useTargetCompWeights', 'supportNegativeWeights', 'paintWeights', 'offsetDeformer', 'offsetX', 'offsetY', 'offsetZ', 'localVertexFrame', 'midLayerId', 'midLayerParent', 'nextNode', 'parentDirectory', 'targetDirectory', 'deformationOrder', 'attributeAliasList']
 
         cmds.select(rootJoint)
         cmds.addAttr(ln=groupName, dv=0, minValue=0, maxValue=1, k=True)
 
-        for item in list:
+        for attr in attrs:
             is_preset = False
             for preset in presets:
-                if preset in item:
+                if preset in attr:
                     is_preset = True
             if not is_preset:
                 shape = item
                 cmds.expression(s=f'{blendNode}.{shape} = {rootJoint}.{groupName}')
 
     def vehicleLocator(self):
+        #Create vehicle locator with MOV data
         #Init Scene
         fps = self.fps_edit.currentText()
         cmds.playbackOptions(min='0sec')
@@ -1513,41 +1535,79 @@ class MainUI(QDialog):
         #Add to group
         grp = cmds.group(locName, n=locName+'_group')
         cmds.rotate('-90deg',0,0,grp,pivot=(0,0,0))
-        self.vLocatorMatch_dropdown.addItem(locName)
-        self.lightLocator_dropdown.addItem(locName)
+        self.activeLocator_dropdown.addItem(locName)
 
     def pairRig2Locator(self):
-        locName = self.vLocatorMatch_dropdown.currentText()
-        rigName = self.rigMatch_dropdown.currentText()
-        cmds.select(rigName)
-        for i in range(0,4):
-            root = cmds.pickWalk(direction='up')
-        rootconst = cmds.parentConstraint(locName, root)
-        cmds.rotate(0,0,0)
-        cmds.delete(rootconst)
+        #Constrain rig to vehicle locator
+        locName = self.activeLocator_dropdown.currentText()
+        rigName = self.activeRig_dropdown.currentText()
+
+        cmds.select(rigName, hierarchy=True)
+        groupList = cmds.ls(sl=True)
         cmds.select(deselect=True)
-        constraint = cmds.parentConstraint(locName, rigName)
-        self.constraintList_dropdown.addItem(constraint[0])
-        self.cgHeight_dropdown.addItem(constraint[0])
+        for item in groupList:
+            if item.endswith('root_ctrl'):
+                root = item
+            if item.endswith('driveControl'):
+                dc = item
+        rootconst = cmds.parentConstraint(locName, root)
+
+        cmds.delete(rootconst)
+        cmds.select(root)
+        cmds.rotate(0,0,0)
+        cmds.select(deselect=True)
+        constraint = cmds.parentConstraint(locName, dc)
         self.parentX.setText('90')
         self.parentY.setText('0')
         self.parentZ.setText('90')
-        self.constraintList_dropdown.setCurrentIndex(self.constraintList_dropdown.count() - 1)
-        self.cgHeight_dropdown.setCurrentIndex(self.constraintList_dropdown.count() - 1)
 
-        cmds.connectAttr(locName+'.steer',rigName+'.steer')
+        cmds.connectAttr(locName+'.steer',dc+'.steer')
+
+        cmds.select(rigName, hierarchy=True)
+        groupList = cmds.ls(sl=True)
+        cmds.select(deselect=True)
+        for item in groupList:
+            if item.endswith('root_jt'):
+                rootJoint = item
+
+        cmds.select(rootJoint)
+        cmds.addAttr(ln='brake', at='float', k=True)
+        cmds.connectAttr(f'{locName}.brake',f'{rootJoint}.brake')
+        cmds.select(deselect=True)
 
         self.rotateOnConst()
 
     def pairLight2Brakes(self):
-        locator = self.lightLocator_dropdown.currentText()
+        #Pair lights to MOV data
+        rigName = self.activeRig_dropdown.currentText()
+        locName = self.activeLocator_dropdown.currentText()
+
+        cmds.select(rigName, hierarchy=True)
+        groupList = cmds.ls(sl=True)
+        cmds.select(deselect=True)
+        for item in groupList:
+            if item.endswith('root_jt'):
+                root = item
+
         light = self.lightName_edit.text()
         intensity = self.lightIntensity.text()
 
-        cmds.expression(s=f'{light}.intensity = {locator}.brake * {intensity};')
+        cmds.expression(s=f'{light}.intensity = {root}.brake * {intensity};')
 
     def rotateOnConst(self):
-        const = self.constraintList_dropdown.currentText()
+        #Rotate rig on parent constraint
+        rigName = self.activeRig_dropdown.currentText()
+
+        cmds.select(rigName, hierarchy=True)
+        groupList = cmds.ls(sl=True)
+        cmds.select(deselect=True)
+        for item in groupList:
+            if item.endswith('driveControl'):
+                dc = item
+
+        constList = cmds.ls(dc + '_parentConstraint*')
+        const = constList[0]
+
         if self.parentX.text() != '':
             cmds.setAttr(const + '.target[0].targetOffsetRotateX', int(self.parentX.text()))
         if self.parentY.text() != '':
@@ -1556,13 +1616,25 @@ class MainUI(QDialog):
             cmds.setAttr(const + '.target[0].targetOffsetRotateZ', int(self.parentZ.text()))
 
     def cgHeightAdjust(self):
-        obj = self.cgHeight_dropdown.currentText()
+        #Adjust z offset
+        rigName = self.activeRig_dropdown.currentText()
+
+        cmds.select(rigName, hierarchy=True)
+        groupList = cmds.ls(sl=True)
+        cmds.select(deselect=True)
+        for item in groupList:
+            if item.endswith('driveControl'):
+                dc = item
+
+        constList = cmds.ls(dc + '_parentConstraint*')
+        const = constList[0]
         height = self.cgHeight_edit.text()
         height = float(height)
 
-        cmds.setAttr(obj + '.target[0].targetOffsetTranslateZ', -height)
+        cmds.setAttr(const + '.target[0].targetOffsetTranslateZ', -height)
 
     def wheelConst(self):
+        #constrain wheels to mesh
         site = self.siteName_edit.text()
 
         mesh = cmds.ls(site, r=True)
@@ -1572,20 +1644,29 @@ class MainUI(QDialog):
             cmds.geometryConstraint(mesh[0],ctrl)
 
     def bake(self):
+        #Bake animation
         start = self.bakeStart_edit.text()
         stop = self.bakeStop_edit.text()
-        root = self.joint_dropdown.currentText()
+        rigName = self.activeRig_dropdown.currentText()
 
-        #cmds.reorder(root, r=-3)
+        cmds.select(rigName, hierarchy=True)
+        groupList = cmds.ls(sl=True)
+        cmds.select(deselect=True)
+        for item in groupList:
+            if item.endswith('root_jt'):
+                root = item
+
         cmds.bakeResults(root, hi='below', shape=True, sm=True, time=(start,stop))
 
     def loadCharacterData(self):
+        #Set path to character data
         file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "CSV Files (*.csv);;All Files (*.*)")[0]
         if file_path == "":  # If they cancel the dialog
             return  # Then just don't open anything
         self.chooseCharacterData_edit.setText(file_path)
 
     def importCharacter(self):
+        #Load data from set character path
         filename = self.chooseCharacterData_edit.text()
         f = open(filename, "r")
         lines = f.readlines()
@@ -1660,12 +1741,6 @@ class MainUI(QDialog):
         cmds.expression(s=f'{torso}.rotateX = {torso}.vc2mayaRotY2X - {hip}.vc2mayaRotY2X;\n{torso}.rotateY = {torso}.vc2mayaRotZ2Y - {hip}.vc2mayaRotZ2Y;\n{torso}.rotateZ = {torso}.vc2mayaRotX2Z - {hip}.vc2mayaRotX2Z;')
         cmds.expression(s=f'{neck}.rotateX = {neck}.vc2mayaRotY2X - {torso}.rotateX;\n{neck}.rotateY = {neck}.vc2mayaRotZ2Y - {torso}.rotateY;\n{neck}.rotateZ = {neck}.vc2mayaRotX2Z - {torso}.rotateZ;')
         cmds.expression(s=f'{head}.rotateX = {head}.vc2mayaRotY2X - {neck}.rotateX;\n{head}.rotateY = {head}.vc2mayaRotZ2Y - {neck}.rotateY;\n{head}.rotateZ = {head}.vc2mayaRotX2Z - {neck}.rotateZ;')
-        #cmds.expression(s=f'{lfemur}.rotateX = {lfemur}.vc2mayaRotY2X-{hip}.vc2mayaRotY2X;\n{lfemur}.rotateY = -{lfemur}.vc2mayaRotZ2Y+{hip}.vc2mayaRotZ2Y;\n{lfemur}.rotateZ = {lfemur}.vc2mayaRotX2Z- {hip}.vc2mayaRotX2Z;')
-        #cmds.expression(s=f'{rightFemur}.rotateX = -{hip}.vc2mayaRotY2X+{rightFemur}.vc2mayaRotY2X;\n{rightFemur}.rotateY = -90-{rightFemur}.vc2mayaRotZ2Y;\n{rightFemur}.rotateZ = {rightFemur}.vc2mayaRotX2Z;')
-        #cmds.expression(s=f'{leftLowerLeg}.rotateX = {leftLowerLeg}.vc2mayaRotY2X-{leftFemur}.vc2mayaRotY2X;\n{leftLowerLeg}.rotateY = {leftLowerLeg}.vc2mayaRotZ2Y-{leftFemur}.vc2mayaRotZ2Y;\n{leftLowerLeg}.rotateZ = {leftLowerLeg}.vc2mayaRotX2Z-{leftFemur}.vc2mayaRotX2Z;')
-        #cmds.expression(s=f'{rightLowerLeg}.rotateX = {rightLowerLeg}.vc2mayaRotY2X-{rightFemur}.vc2mayaRotY2X;\n{rightLowerLeg}.rotateY = {rightLowerLeg}.vc2mayaRotZ2Y-{rightFemur}.vc2mayaRotZ2Y;\n{rightLowerLeg}.rotateZ = {rightLowerLeg}.vc2mayaRotX2Z-{rightFemur}.vc2mayaRotX2Z;')
-        #cmds.expression(s=f'{lshoulder}.rotateZ = -{torso}.rotateZ;')
-        #cmds.expression(s=f'{lforearm}.rotateZ = {lforearm}.vc2mayaRotX2Z - {lshoulder}.rotateZ;\n{lforearm}.rotateX = {lforearm}.vc2mayaRotY2X - {lshoulder}.rotateX;\n{lforearm}.rotateY = {lforearm}.vc2mayaRotZ2Y - {lshoulder}.rotateY;')
 
     def rotateJoints(self):
         filename = self.chooseCharacterData_edit.text()

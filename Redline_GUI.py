@@ -352,7 +352,7 @@ class MainUI(QDialog):
         self.pairRig2Locator_button = QPushButton('Pair Rig to Locator')
         self.pairRig2Locator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
-        ##### Edit Constraints #####
+        ##### Edit Constraint Rotation #####
         self.parentX = QLineEdit()
         self.parentX.setPlaceholderText("Rotate X")
         self.parentX.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -365,12 +365,18 @@ class MainUI(QDialog):
         self.rotateOnConst_button = QPushButton('Rotate on Constraint')
         self.rotateOnConst_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
-        ##### CoG Height Adjustment #####
+        ##### Edit Constraint Translation #####
         self.cgHeight_edit = QLineEdit()
         self.cgHeight_edit.setPlaceholderText('CoG Height')
         self.cgHeight_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.cgHeight_button = QPushButton('Adjust Height')
-        self.cgHeight_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.cgXOffset_edit = QLineEdit()
+        self.cgXOffset_edit.setPlaceholderText('CoG X Offset')
+        self.cgXOffset_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.cgYOffset_edit = QLineEdit()
+        self.cgYOffset_edit.setPlaceholderText('CoG Y Offset')
+        self.cgYOffset_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.cgAdjust_button = QPushButton('Adjust CoG Offset')
+        self.cgAdjust_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Light Rigging #####
         self.lightName_edit = QLineEdit()
@@ -510,7 +516,6 @@ class MainUI(QDialog):
         self.rightUpperArm_edit.setText('Character1_RightShoulder')
         self.torsoJoint_edit.setText('Character1_Spine')
         self.chooseCharacterData_edit.setText('C:/Users/DylanSteimel/Desktop/fallstraightdown.csv')
-
 
     def create_layout(self):
         main_layout = QVBoxLayout()
@@ -675,8 +680,10 @@ class MainUI(QDialog):
         vLocator_layout.addWidget(self.parentZ,1,2)
         vLocator_layout.addWidget(self.rotateOnConst_button,1,3)
 
-        vLocator_layout.addWidget(self.cgHeight_edit,2,0,1,2)
-        vLocator_layout.addWidget(self.cgHeight_button,2,2,1,2)
+        vLocator_layout.addWidget(self.cgXOffset_edit,2,0)
+        vLocator_layout.addWidget(self.cgYOffset_edit,2,1)
+        vLocator_layout.addWidget(self.cgHeight_edit,2,2)
+        vLocator_layout.addWidget(self.cgAdjust_button,2,3)
 
         vLocator_layout.addWidget(self.lightName_edit,3,0,1,2)
         vLocator_layout.addWidget(self.lightIntensity,3,2)
@@ -837,7 +844,7 @@ class MainUI(QDialog):
         ##### Vehicle Rigging #####
         self.pairRig2Locator_button.clicked.connect(self.pairRig2Locator)
         self.rotateOnConst_button.clicked.connect(self.rotateOnConst)
-        self.cgHeight_button.clicked.connect(self.cgHeightAdjust)
+        self.cgAdjust_button.clicked.connect(self.cgAdjustOffset)
         self.pairLight_button.clicked.connect(self.pairLight2Brakes)
         self.preBakeSave_button.clicked.connect(self.save)
         self.wheelConstr_button.clicked.connect(self.wheelConst)
@@ -1615,8 +1622,8 @@ class MainUI(QDialog):
         if self.parentZ.text() != '':
             cmds.setAttr(const + '.target[0].targetOffsetRotateZ', int(self.parentZ.text()))
 
-    def cgHeightAdjust(self):
-        #Adjust z offset
+    def cgAdjustOffset(self):
+        #Adjust CoG offset
         rigName = self.activeRig_dropdown.currentText()
 
         cmds.select(rigName, hierarchy=True)
@@ -1628,9 +1635,25 @@ class MainUI(QDialog):
 
         constList = cmds.ls(dc + '_parentConstraint*')
         const = constList[0]
+
+        xOffset = self.cgXOffset_edit.text()
+        yOffset = self.cgYOffset_edit.text()
         height = self.cgHeight_edit.text()
+        if xOffset == '':
+            xOffset = 0
+            self.cgXOffset_edit.setText('0')
+        if yOffset == '':
+            yOffset = 0
+            self.cgYOffset_edit.setText('0')
+        if height == '':
+            height = 0
+            self.cgHeight_edit.setText('0')
+        xOffset = float(xOffset)
+        yOffset = float(yOffset)
         height = float(height)
 
+        cmds.setAttr(const + '.target[0].targetOffsetTranslateX', -xOffset)
+        cmds.setAttr(const + '.target[0].targetOffsetTranslateY', -yOffset)
         cmds.setAttr(const + '.target[0].targetOffsetTranslateZ', -height)
 
     def wheelConst(self):

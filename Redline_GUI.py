@@ -342,8 +342,8 @@ class MainUI(QDialog):
         self.RigLabel = QLabel()
         self.RigLabel.setText('Active Rig:')
         self.activeRig_dropdown = QComboBox(self)
-        rigs = cmds.ls('*_TopNode')
-        rigs.extend(cmds.ls('*:*_TopNode'))
+        rigs = cmds.ls('*_TopNode*')
+        rigs.extend(cmds.ls('*:*_TopNode*'))
         for rig in rigs:
             self.activeRig_dropdown.addItem(rig)
         self.activeRig_dropdown.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -420,6 +420,10 @@ class MainUI(QDialog):
         ##### Export FBX #####
         self.exportFBX_button = QPushButton('Export Selected Root Joint Animation')
         self.exportFBX_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.unrealExportSelection_button = QPushButton('Select Skeleton and Mesh for Unreal')
+        self.unrealExportSelection_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.unrealExport_button = QPushButton('Bake and Export to Unreal')
+        self.unrealExport_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Blend Shapes #####
         self.blendNode_edit = QLineEdit()
@@ -638,13 +642,13 @@ class MainUI(QDialog):
         files_layout.addWidget(self.choose_vcData_edit,0,1,1,4)
         files_layout.addWidget(self.convert_vcData_button,0,5,1,2)
 
-        files_layout.addWidget(self.choose_rig_button,1,0)
-        files_layout.addWidget(self.choose_rig_edit,1,1,1,4)
-        files_layout.addWidget(self.loadRig_button,1,5,1,2)
+        files_layout.addWidget(self.choose_mesh_button,1,0)
+        files_layout.addWidget(self.choose_mesh_edit,1,1,1,4)
+        files_layout.addWidget(self.loadMesh_button,1,5,1,2)
 
-        files_layout.addWidget(self.choose_mesh_button,2,0)
-        files_layout.addWidget(self.choose_mesh_edit,2,1,1,4)
-        files_layout.addWidget(self.loadMesh_button,2,5,1,2)
+        files_layout.addWidget(self.choose_rig_button,2,0)
+        files_layout.addWidget(self.choose_rig_edit,2,1,1,4)
+        files_layout.addWidget(self.loadRig_button,2,5,1,2)
 
         files_layout.addWidget(self.choose_vLocator_button, 3, 0)
         files_layout.addWidget(self.choose_vLocator_edit, 3, 1, 1, 4)
@@ -713,12 +717,15 @@ class MainUI(QDialog):
         bake_layout = QGridLayout()
 
         #bake_layout.addWidget(self.joint_dropdown, 0,0,1,4)
-        bake_layout.addWidget(self.bakeStart_label,0,0)
-        bake_layout.addWidget(self.bakeStart_edit,0,1)
-        bake_layout.addWidget(self.bakeStop_label,0,2)
-        bake_layout.addWidget(self.bakeStop_edit,0,3)
-        bake_layout.addWidget(self.bakeButton,1,0,1,4)
-        bake_layout.addWidget(self.exportFBX_button,2,0,1,4)
+        bake_layout.addWidget(self.unrealExportSelection_button,0,0,1,2)
+        bake_layout.addWidget(self.unrealExport_button,0,2,1,2)
+        bake_layout.addWidget(self.bakeStart_label,1,0)
+        bake_layout.addWidget(self.bakeStart_edit,1,1)
+        bake_layout.addWidget(self.bakeStop_label,1,2)
+        bake_layout.addWidget(self.bakeStop_edit,1,3)
+        bake_layout.addWidget(self.bakeButton,2,0,1,4)
+        bake_layout.addWidget(self.exportFBX_button,3,0,1,4)
+
 
         bake_group.setLayout(bake_layout)
         vehicleRigging_layout.addWidget(bake_group)
@@ -852,6 +859,8 @@ class MainUI(QDialog):
         ##### Bake Joint #####
         self.bakeButton.clicked.connect(self.bake)
         self.exportFBX_button.clicked.connect(self.exportFBX)
+        self.unrealExportSelection_button.clicked.connect(self.unrealExportSelection)
+        self.unrealExport_button.clicked.connect(self.unrealExport)
 
         ##### Blend Shapes #####
         self.createBlendGroup_button.clicked.connect(self.createBlendGroup)
@@ -988,6 +997,7 @@ class MainUI(QDialog):
     def quick_rotate(self):
         #Rotates to a preset for Virtual Crash asset creation
         cmds.select(all=True)
+        cmds.select('Vehiclespecs',deselect=True)
         cmds.rotate(90, 0, 90, a=True, p=[0,0,0])
         cmds.select(deselect=True)
 
@@ -1371,8 +1381,7 @@ class MainUI(QDialog):
             asset = 'asset'
         dc = cmds.ls('*drive_ctrl', r=True)
         dc = cmds.rename(dc, asset + '_driveControl')
-        rig = cmds.ls('*_TopNode')
-        rig.extend(cmds.ls('*:*_TopNode'))
+        rig = cmds.ls('*:*_TopNode')
         rigName = cmds.rename(rig, asset + '_TopNode')
         self.activeRig_dropdown.addItem(rigName)
 
@@ -1461,19 +1470,24 @@ class MainUI(QDialog):
                 if preset in attr:
                     is_preset = True
             if not is_preset:
-                shape = item
+                shape = attr
                 cmds.expression(s=f'{blendNode}.{shape} = {rootJoint}.{groupName}')
 
     def vehicleLocator(self):
         #Create vehicle locator with MOV data
+        filename = self.choose_vLocator_edit.text()
+
+        f = open(filename, 'r')
+        lines = f.readlines()
+        f.close()
+        frameTotal = len(lines) - 1
         #Init Scene
         fps = self.fps_edit.currentText()
-        cmds.playbackOptions(min='0sec')
+        cmds.playbackOptions(min='0sec', max=frameTotal)
         cmds.playbackOptions(ast='0sec')
+        cmds.playbackOptions(aet=str(frameTotal/int(fps))+'sec')
         cmds.currentUnit(time=fps+'fps')
         cmds.currentTime(0)
-
-        filename = self.choose_vLocator_edit.text()
 
         #Get Asset Name for Locator
         try:
@@ -1612,15 +1626,37 @@ class MainUI(QDialog):
             if item.endswith('driveControl'):
                 dc = item
 
-        constList = cmds.ls(dc + '_parentConstraint*')
-        const = constList[0]
+        cmds.select(dc, hierarchy=True)
+        groupList = cmds.ls(sl=True)
+        cmds.select(deselect=True)
+        for item in groupList:
+            if 'parentConstraint' in item:
+                const = item
+
+        rotX = self.parentX.text()
+        rotY = self.parentY.text()
+        rotZ = self.parentZ.text()
+
+        if rotX == '':
+            rotX = 0
+            self.parentX.setText('0')
+        if rotY == '':
+            rotY = 0
+            self.parentY.setText('0')
+        if rotZ == '':
+            rotZ = 0
+            self.parentZ.setText('0')
+
+        rotX = float(rotX)
+        rotY = float(rotY)
+        rotZ = float(rotZ)
 
         if self.parentX.text() != '':
-            cmds.setAttr(const + '.target[0].targetOffsetRotateX', int(self.parentX.text()))
+            cmds.setAttr(const + '.target[0].targetOffsetRotateX', rotX)
         if self.parentY.text() != '':
-            cmds.setAttr(const + '.target[0].targetOffsetRotateY', int(self.parentY.text()))
+            cmds.setAttr(const + '.target[0].targetOffsetRotateY', rotY)
         if self.parentZ.text() != '':
-            cmds.setAttr(const + '.target[0].targetOffsetRotateZ', int(self.parentZ.text()))
+            cmds.setAttr(const + '.target[0].targetOffsetRotateZ', rotZ)
 
     def cgAdjustOffset(self):
         #Adjust CoG offset
@@ -1633,12 +1669,17 @@ class MainUI(QDialog):
             if item.endswith('driveControl'):
                 dc = item
 
-        constList = cmds.ls(dc + '_parentConstraint*')
-        const = constList[0]
+        cmds.select(dc, hierarchy=True)
+        groupList = cmds.ls(sl=True)
+        cmds.select(deselect=True)
+        for item in groupList:
+            if 'parentConstraint' in item:
+                const = item
 
         xOffset = self.cgXOffset_edit.text()
         yOffset = self.cgYOffset_edit.text()
         height = self.cgHeight_edit.text()
+
         if xOffset == '':
             xOffset = 0
             self.cgXOffset_edit.setText('0')
@@ -1648,6 +1689,7 @@ class MainUI(QDialog):
         if height == '':
             height = 0
             self.cgHeight_edit.setText('0')
+
         xOffset = float(xOffset)
         yOffset = float(yOffset)
         height = float(height)
@@ -1913,6 +1955,44 @@ class MainUI(QDialog):
                 cmds.setKeyframe(dataFrames[key][2],at='rotateX')
                 cmds.setKeyframe(dataFrames[key][2],at='rotateY')
                 cmds.setKeyframe(dataFrames[key][2],at='rotateZ')
+
+    def unrealExportSelection(self):
+        #Exports root joint for Unreal Engine
+        rigName = self.activeRig_dropdown.currentText()
+
+        cmds.select(rigName, hierarchy=True)
+        groupList = cmds.ls(sl=True)
+        cmds.select(deselect=True)
+        for item in groupList:
+            if item.endswith('root_jt'):
+                root = item
+
+        cmds.select(rigName, hierarchy=True)
+        groupList = cmds.ls(sl=True)
+        cmds.select(deselect=True)
+        for item in groupList:
+            if item.endswith('_Render'):
+                renderGroup = item
+
+        cmds.select([renderGroup, root], hierarchy=True)
+        renderGroupList = cmds.ls(sl=True)
+        for item in renderGroupList:
+            if item.endswith('_Chassis'):
+                chassisGroup = item
+            if item.endswith('_ParentYourMeshHere'):
+                parentGroup = item
+
+        cmds.select(root, deselect=True, hierarchy=True)
+        cmds.select(renderGroup, deselect=True, hierarchy=False)
+        cmds.select([chassisGroup,parentGroup], deselect=True, hierarchy=True)
+        exportItems = cmds.ls(sl=True)
+        cmds.parent(exportItems, world=True)
+        cmds.parent(root, world=True)
+        cmds.select(root, hierarchy=True)
+        cmds.select(exportItems, add=True)
+
+    def unrealExport(self):
+        mel.eval('ExportSelection;')
     # --------------------------------------------------------------------------------------------------------------
     # Writes the current file path to preferences
     # --------------------------------------------------------------------------------------------------------------

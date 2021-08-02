@@ -572,6 +572,16 @@ class MainUI(QDialog):
         spell_group.setLayout(spell_layout)
         vehicleTool_layout.addWidget(spell_group)
 
+        ##### Extra Tools GUI Section #####
+        tools_group = QGroupBox("Extra Tools")
+        tools_layout = QVBoxLayout()
+        tools_layout.addWidget(self.autoScale_button)
+        tools_layout.addWidget(self.remove_tires_button)
+        tools_layout.addWidget(self.remove_license_plate_button)
+        tools_layout.addWidget(self.make_windows_transparent_button)
+        tools_group.setLayout(tools_layout)
+        vehicleTool_layout.addWidget(tools_group)
+
         ##### Rotation GUI Section #####
         rotation_group = QGroupBox("Rotation")
         rotation_layout = QGridLayout()
@@ -582,16 +592,6 @@ class MainUI(QDialog):
         rotation_layout.addWidget(self.hv_rotate_button, 1, 0, 1, 3)
         rotation_group.setLayout(rotation_layout)
         vehicleTool_layout.addWidget(rotation_group)
-
-        ##### Extra Tools GUI Section #####
-        tools_group = QGroupBox("Extra Tools")
-        tools_layout = QVBoxLayout()
-        tools_layout.addWidget(self.autoScale_button)
-        tools_layout.addWidget(self.remove_tires_button)
-        tools_layout.addWidget(self.remove_license_plate_button)
-        tools_layout.addWidget(self.make_windows_transparent_button)
-        tools_group.setLayout(tools_layout)
-        vehicleTool_layout.addWidget(tools_group)
 
         ##############################################
         ######          Site Section            ######
@@ -997,7 +997,10 @@ class MainUI(QDialog):
     def quick_rotate(self):
         #Rotates to a preset for Virtual Crash asset creation
         cmds.select(all=True)
-        cmds.select('Vehiclespecs',deselect=True)
+        try:
+            cmds.select('Vehiclespecs',deselect=True)
+        except:
+            pass
         cmds.rotate(90, 0, 90, a=True, p=[0,0,0])
         cmds.select(deselect=True)
 
@@ -1048,135 +1051,61 @@ class MainUI(QDialog):
 
     def remove_tires(self):
         #removes tire objects
-        try:
-            tires = cmds.ls('*Tire*', '*tire*')
-            for tire in tires:
-                try:
-                    print(tire)
-                    cmds.delete(tire)
-                except Exception as e:
-                    print(e)
+        cmds.select('Vehicle*', hierarchy=True)
+        cmds.select('Vehicle*', deselect=True, hierarchy=False)
+        items = cmds.ls(sl=True, g=True)
+        cmds.select(deselect=True)
+        coordinateList = []
+        tireBB = []
+        tires = []
+        #Get Bounding Box Coordinates for each item
+        for item in items:
+            cmds.select(item)
+            cmds.geomToBBox(n='tempBBox', single=True, keepOriginal=True)
+            minY = cmds.getAttr('tempBBox.boundingBoxMinY')
+            maxY = cmds.getAttr('tempBBox.boundingBoxMaxY')
+            minX = cmds.getAttr('tempBBox.boundingBoxMinX')
+            maxX = cmds.getAttr('tempBBox.boundingBoxMaxX')
+            minZ = cmds.getAttr('tempBBox.boundingBoxMinZ')
+            maxZ = cmds.getAttr('tempBBox.boundingBoxMaxZ')
+            coords = (minX,maxX,minY,maxY,minZ,maxZ)
+            coordinateList.append(coords)
+            if minY < 0.05:
+                tireBB.append(coords)
+                tires.append(item)
+            cmds.delete('tempBBox')
 
-            rims = cmds.ls('*Rim*', '*rim*')
-            for rim in rims:
-                if (rim == 'rimShader') or (rim == 'rimSG') or (rim == 'Rims') or ('primary' in rim) or ('Primary' in rim):
-                    continue
-                else:
-                    try:
-                        print(rim)
-                        cmds.delete(rim)
-                    except Exception as e:
-                        print(e)
-
-            brakes = cmds.ls('*Brake*', '*brake*')
-            for brake in brakes:
-                if (brake == 'brakeShader') or (brake == 'brakeSG'):
-                    continue
-                else:
-                    try:
-                        print(brake)
-                        cmds.delete(brake)
-                    except Exception as e:
-                        print(e)
-
-            bolts = cmds.ls('*Bolt*', '*bolt*', '*Nuts*', '*nuts*')
-            for bolt in bolts:
-                try:
-                    print(bolt)
-                    cmds.delete(bolt)
-                except Exception as e:
-                    print(e)
-
-            logos = cmds.ls('*Logo*')
-            for logo in logos:
-                try:
-                    print(logo)
-                    cmds.delete(logo)
-                except Exception as e:
-                    print(e)
-
-            wheels = cmds.ls('*Wheel*', '*wheel*')
-            for wheel in wheels:
-                try:
-                    print(wheel)
-                    cmds.delete(wheel)
-                except Exception as e:
-                    print(e)
-
-            axis = cmds.ls('*Axis*', '*axis*', '*axel*', '*Axel*')
-            for axel in axis:
-                try:
-                    print(axel)
-                    cmds.delete(axel)
-                except Exception as e:
-                    print(e)
-        except Exception as e:
-            print(e)
-
-        try:
-            tires = cmds.ls('*Tire*', '*tire*', s=True)
-            for tire in tires:
-                try:
-                    print(tire)
-                    cmds.delete(tire)
-                except Exception as e:
-                    print(e)
-
-            rims = cmds.ls('*Rim*', '*rim*', s=True)
-            for rim in rims:
-                if (rim == 'rimShader') or (rim == 'rimSG') or (rim == 'Rims') or ('primary' in rim) or ('Primary' in rim):
-                    continue
-                else:
-                    try:
-                        print(rim)
-                        cmds.delete(rim)
-                    except Exception as e:
-                        print(e)
-
-            brakes = cmds.ls('*Brake*', '*brake*', s=True)
-            for brake in brakes:
-                if (brake == 'brakeShader') or (brake == 'brakeSG'):
-                    continue
-                else:
-                    try:
-                        print(brake)
-                        cmds.delete(brake)
-                    except Exception as e:
-                        print(e)
-
-            bolts = cmds.ls('*Bolt*', '*bolt*', '*Nuts*', '*nuts*', s=True)
-            for bolt in bolts:
-                try:
-                    print(bolt)
-                    cmds.delete(bolt)
-                except Exception as e:
-                    print(e)
-
-            logos = cmds.ls('*Logo*')
-            for logo in logos:
-                try:
-                    print(logo)
-                    cmds.delete(logo)
-                except Exception as e:
-                    print(e)
-
-            wheels = cmds.ls('*Wheel*', '*wheel*', s=True)
-            for wheel in wheels:
-                try:
-                    print(wheel)
-                    cmds.delete(wheel)
-                except Exception as e:
-                    print(e)
-
-            axis = cmds.ls('*Axis*', '*axis*', '*axel*', '*Axel*', s=True)
-            for axel in axis:
-                try:
-                    print(axel)
-                    cmds.delete(axel)
-                except Exception as e:
-                    print(e)
-        except Exception as e:
-            print(e)
+        #See if BBox is inside tire, delete if True
+        i = 0
+        for coord in coordinateList:
+            itemMinX = coord[0]
+            itemMaxX = coord[1]
+            itemMinY = coord[2]
+            itemMaxY = coord[3]
+            itemMinZ = coord[4]
+            itemMaxZ = coord[5]
+            for tire in tireBB:
+                inY = False
+                inX = False
+                inZ = False
+                tireMinX = tire[0]
+                tireMaxX = tire[1]
+                tireMinY = tire[2]
+                tireMaxY = tire[3]
+                tireMinZ = tire[4]
+                tireMaxZ = tire[5]
+                if itemMinX > tireMinX and itemMaxX < tireMaxX:
+                    inX = True
+                if itemMinY > tireMinY and itemMaxY < tireMaxY:
+                    inY = True
+                if itemMinZ > tireMinZ and itemMaxZ < tireMaxZ:
+                    inZ = True
+                if (inY and inX) or (inY and inZ) or (inX and inZ):
+                    cmds.delete(items[i])
+                    break
+            i += 1
+        for tire in tires:
+            cmds.delete(tire)
 
     def choose_locator(self):
         # Set locator Path
@@ -1328,9 +1257,9 @@ class MainUI(QDialog):
 
     def auto_vc(self):
         #Do everything
+        self.remove_tires()
         self.quick_rotate()
         self.auto_apply_spellbook()
-        self.remove_tires()
         self.remove_license_plate()
 
     def export(self):

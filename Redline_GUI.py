@@ -865,7 +865,7 @@ class MainUI(QDialog):
 
         ##### Charcater Import #####
         self.chooseCharacterData_button.clicked.connect(self.loadCharacterData)
-        self.importCharacter_button.clicked.connect(self.rotateJoints)
+        self.importCharacter_button.clicked.connect(self.charLocators)
     #---------------------------------------------------------------------------------------------------------------
     # Button Functions
     #---------------------------------------------------------------------------------------------------------------
@@ -1907,6 +1907,89 @@ class MainUI(QDialog):
         cmds.parent(root, world=True)
         cmds.select(root, hierarchy=True)
         cmds.select(exportItems, add=True)
+
+    def charLocators(self):
+        #Load data from set character path
+        filename = self.chooseCharacterData_edit.text()
+        f = open(filename, "r")
+        lines = f.readlines()
+        f.close()
+
+        #Clean CSV
+        lines = [line.split(',') for line in lines]
+        for i in range(0,len(lines)):
+            lines[i] = [item.strip() for item in lines[i] if item != '' and item != '\n']
+
+        #Get joint list
+        parts = []
+        partIndices = []
+        for i in range(0,len(lines)-1):
+            if 'time [ s]' in lines[i+1]:
+                parts.append(lines[i][0])
+                partIndices.append(i)
+
+        frameTotal = partIndices[1] - partIndices[0]
+
+        for i in range(0,len(parts)):
+            print(parts[i])
+            print(partIndices[i])
+
+        #Create MOV Files
+        jointFiles = []
+        for i in range(0,len(parts)):
+            name = str(parts[i])
+            name = name.split(' ')
+            new_name = ''
+            for n in range(0,len(name)):
+                new_name += name[n]
+            name = new_name
+            f = open(self.desktop_dir + '/' + name + '.mov', 'w')
+            jointFiles.append(self.desktop_dir + '/' + name + '.mov')
+            for j in range(2, frameTotal):
+                for k in range(0,len(lines[partIndices[i] + j])):
+                    f.write(lines[partIndices[i] + j][k] + ' ')
+                f.write('\n')
+
+        f.close()
+
+        for joint in jointFiles:
+            locator = cmds.spaceLocator(p=(0,0,0))
+            locName = locator[0]
+            cmds.addAttr(ln='Time', at='float')
+            cmds.setAttr(locator[0]+'.Time', k=True)
+            cmds.addAttr(ln='Distance', at='float')
+            cmds.setAttr(locator[0]+'.Distance', k=True)
+            cmds.addAttr(ln='Velocity', at='float')
+            cmds.setAttr(locator[0]+'.Velocity', k=True)
+            cmds.addAttr(ln='Xrot', at='float')
+            cmds.setAttr(locator[0]+'.Xrot', k=True)
+            cmds.addAttr(ln='Yrot', at='float')
+            cmds.setAttr(locator[0]+'.Yrot', k=True)
+            cmds.addAttr(ln='Zrot', at='float')
+            cmds.setAttr(locator[0]+'.Zrot', k=True)
+            cmds.addAttr(ln='vni', at='float')
+            cmds.setAttr(locator[0]+'.vni', k=True)
+            cmds.addAttr(ln='vnz', at='float')
+            cmds.setAttr(locator[0]+'.vnz', k=True)
+            cmds.addAttr(ln='steer', at='float')
+            cmds.setAttr(locator[0]+'.steer', k=True)
+            cmds.addAttr(ln='CGx', at='float')
+            cmds.setAttr(locator[0]+'.CGx', k=True)
+            cmds.addAttr(ln='CGy', at='float')
+            cmds.setAttr(locator[0]+'.CGy', k=True)
+            cmds.addAttr(ln='CGz', at='float')
+            cmds.setAttr(locator[0]+'.CGz', k=True)
+            cmds.addAttr(ln='Xrad', at='float')
+            cmds.setAttr(locator[0]+'.Xrad', k=True)
+            cmds.addAttr(ln='Yrad', at='float')
+            cmds.setAttr(locator[0]+'.Yrad', k=True)
+            cmds.addAttr(ln='Zrad', at='float')
+            cmds.setAttr(locator[0]+'.Zrad', k=True)
+            cmds.addAttr(ln='lastV', at='float')
+            cmds.setAttr(locator[0]+'.lastV', k=True)
+            cmds.addAttr(ln='brake', at='float')
+            cmds.setAttr(locator[0]+'.brake', k=True)
+            cmds.movIn(locName + '.Time', locName + '.Distance', locName + '.Velocity', locName + '.Xrot', locName + '.Yrot', locName + '.Zrot', locName + '.vni', locName + '.vnz', locName + '.steer', locName + '.translateX', locName + '.translateY', locName + '.translateZ', locName + ".Xrad", locName + '.Yrad', locName + '.Zrad', locName + '.lastV', locName + '.brake', f=joint)
 
     def unrealExport(self):
         mel.eval('ExportSelection;')

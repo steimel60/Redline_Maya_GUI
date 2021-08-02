@@ -613,8 +613,6 @@ class MainUI(QDialog):
         cable_group.setLayout(cable_layout)
         siteTool_layout.addWidget(cable_group)
 
-
-
         ##############################################
         ######      Point Cloud Section         ######
         ##############################################
@@ -960,53 +958,43 @@ class MainUI(QDialog):
         #Rotate in negative direction
         direction = self.xyz_selection.currentIndex()
         if direction == 0:
-            cmds.select(all=True)
+            cmds.select('Vehicle*')
             cmds.rotate(-90, 0, 0, relative=True, p=[0,0,0])
             cmds.select(deselect=True)
-            print('rotate')
         if direction == 1:
-            cmds.select(all=True)
+            cmds.select('Vehicle*')
             cmds.rotate(0, -90, 0, relative=True, p=[0,0,0])
             cmds.select(deselect=True)
-            print('rotate')
         if direction == 2:
-            cmds.select(all=True)
+            cmds.select('Vehicle*')
             cmds.rotate(0, 0, -90, relative=True, p=[0,0,0])
             cmds.select(deselect=True)
-            print('rotate')
 
     def pos_rotation(self):
         #Rotate in positive direction
         direction = self.xyz_selection.currentIndex()
         if direction == 0:
-            cmds.select(all=True)
+            cmds.select('Vehicle*')
             cmds.rotate(90, 0, 0, relative=True, p=[0,0,0])
             cmds.select(deselect=True)
-            print('rotate')
         if direction == 1:
-            cmds.select(all=True)
+            cmds.select('Vehicle*')
             cmds.rotate(0, 90, 0, relative=True, p=[0,0,0])
             cmds.select(deselect=True)
-            print('rotate')
         if direction == 2:
-            cmds.select(all=True)
+            cmds.select('Vehicle*')
             cmds.rotate(0, 0, 90, relative=True, p=[0,0,0])
             cmds.select(deselect=True)
-            print('rotate')
 
     def quick_rotate(self):
         #Rotates to a preset for Virtual Crash asset creation
-        cmds.select(all=True)
-        try:
-            cmds.select('Vehiclespecs',deselect=True)
-        except:
-            pass
+        cmds.select('Vehicle*')
         cmds.rotate(90, 0, 90, a=True, p=[0,0,0])
         cmds.select(deselect=True)
 
     def hv_rotate(self):
         #Rotates for a preset for HV asset creation
-        cmds.select(all=True)
+        cmds.select('Vehicle*')
         cmds.rotate(-90, 0, -90, a=True, p=[0,0,0])
         cmds.select(deselect=True)
 
@@ -1070,7 +1058,7 @@ class MainUI(QDialog):
             maxZ = cmds.getAttr('tempBBox.boundingBoxMaxZ')
             coords = (minX,maxX,minY,maxY,minZ,maxZ)
             coordinateList.append(coords)
-            if minY < 0.05:
+            if -0.05 < minY and minY < 0.05:
                 tireBB.append(coords)
                 tires.append(item)
             cmds.delete('tempBBox')
@@ -1970,18 +1958,18 @@ class MainUI(QDialog):
             warning_box.exec_()
 
     def remove_license_plate(self):
-        cmds.delete("LicPlate*")
+        cmds.delete('LicPlate*')
 
     def make_windows_transparent(self):
         selection = cmds.ls(selection=True)
 
         cmds.select(deselect=True)
-        cmds.hyperShade(objects="*Window*")
+        cmds.hyperShade(objects='*Window*')
         windows = cmds.ls(selection=True)
         cmds.select(deselect=True)
 
         for window in windows:
-            cmds.setAttr(window + ".aiOpaque", False)
+            cmds.setAttr(window + '.aiOpaque', False)
 
         cmds.select(selection)
 

@@ -1,5 +1,4 @@
 import fileinput, os, sys, glob, re, math
-
 import maya.OpenMayaUI as mui
 import maya.cmds as cmds
 import maya.mel as mel
@@ -24,6 +23,7 @@ def maya_main_window():
 class MainUI(QDialog):
     # Set up file references
     ms_dir = os.path.expanduser("~/maya/scripts/magic-shade")
+    skeleton_dir = ms_dir + '/skelFiles'
     icon_dir = os.path.expanduser("~/maya/scripts/magic-shade/resources/icons")
     spellbook_dir = os.path.expanduser("~/maya/scripts/magic-shade/spellbooks")
     studio_dir = os.path.expanduser("~/maya/scripts/magic-shade/studios")
@@ -55,6 +55,7 @@ class MainUI(QDialog):
         self.create_controls()  # Initializes controls
         self.create_layout()  # Initializes the internal window layout
         self.make_connections()
+        self.dialogs = list()
         self.dont_shrink = False
         self.asset = None
 
@@ -247,8 +248,6 @@ class MainUI(QDialog):
         self.open_cable_button = QPushButton("Open Cable Creator")
         self.open_cable_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
-
-
         ##################################################### Point Cloud Buttons ####################################################################################
         ##### Point CLoud Text Bar #####
         self.choose_xyzfile_edit = QLineEdit()
@@ -388,7 +387,6 @@ class MainUI(QDialog):
         self.pairLight_button = QPushButton('Pair Light to Locator')
         self.pairLight_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
-
         ##### Save Pre-Bake #####
         self.preBakeSave_button = QPushButton('Save Pre-Baked File')
         self.preBakeSave_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -444,82 +442,60 @@ class MainUI(QDialog):
         self.chooseCharacterData_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
         self.chooseCharacterData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
-        ##### Joint Labels and Edits #####
-        self.headLabel = QLabel()
-        self.headLabel.setText('Head Joint: ')
-        self.head_edit = QLineEdit()
-        self.head_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.neckLabel = QLabel()
-        self.neckLabel.setText('Neck Joint: ')
-        self.neck_edit = QLineEdit()
-        self.neck_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.torsoJointLabel = QLabel()
-        self.torsoJointLabel.setText('Torso Joint: ')
-        self.torsoJoint_edit = QLineEdit()
-        self.torsoJoint_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.rightUpperArmLabel = QLabel()
-        self.rightUpperArmLabel.setText('Right Upper Arm Joint: ')
-        self.rightUpperArm_edit = QLineEdit()
-        self.rightUpperArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.rightLowerArmLabel = QLabel()
-        self.rightLowerArmLabel.setText('Right Lower Arm Joint: ')
-        self.rightLowerArm_edit = QLineEdit()
-        self.rightLowerArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.leftUpperArmLabel = QLabel()
-        self.leftUpperArmLabel.setText('Left Upper Arm Joint: ')
-        self.leftUpperArm_edit = QLineEdit()
-        self.leftUpperArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.leftLowerArmLabel = QLabel()
-        self.leftLowerArmLabel.setText('Left Lower Arm Joint: ')
-        self.leftLowerArm_edit = QLineEdit()
-        self.leftLowerArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.hipLabel = QLabel()
-        self.hipLabel.setText('Hip Joint: ')
-        self.hip_edit = QLineEdit()
-        self.hip_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.rightFemurLabel = QLabel()
-        self.rightFemurLabel.setText('Right Femur Joint: ')
-        self.rightFemur_edit = QLineEdit()
-        self.rightFemur_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.rightLowerLegLabel = QLabel()
-        self.rightLowerLegLabel.setText('Right Lower Leg Joint: ')
-        self.rightLowerLeg_edit = QLineEdit()
-        self.rightLowerLeg_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.rightFootLabel = QLabel()
-        self.rightFootLabel.setText('Right Foot Joint: ')
-        self.rightFoot_edit = QLineEdit()
-        self.rightFoot_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.LeftFemurLabel = QLabel()
-        self.LeftFemurLabel.setText('Left Femur Joint: ')
-        self.LeftFemur_edit = QLineEdit()
-        self.LeftFemur_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.leftLowerLegLabel = QLabel()
-        self.leftLowerLegLabel.setText('Left Lower Leg Joint: ')
-        self.leftLowerLeg_edit = QLineEdit()
-        self.leftLowerLeg_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.leftFootLabel = QLabel()
-        self.leftFootLabel.setText('Left Foot Joint: ')
-        self.leftFoot_edit = QLineEdit()
-        self.leftFoot_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.importCharacter_button = QPushButton('Import Character Movement')
-        self.importCharacter_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
-
-        #SET TEXT FOR TESTING
-        self.LeftFemur_edit.setText('Character1_LeftUpLeg')
-        self.rightFemur_edit.setText('Character1_RightUpLeg')
-        self.leftFoot_edit.setText('Character1_LeftFoot')
-        self.rightFoot_edit.setText('Character1_RightFoot')
-        self.head_edit.setText('Character1_Head')
-        self.hip_edit.setText('Character1_Hips')
-        self.leftLowerArm_edit.setText('Character1_LeftForeArm')
-        self.leftUpperArm_edit.setText('Character1_LeftShoulder')
-        self.leftLowerLeg_edit.setText('Character1_LeftLeg')
-        self.rightLowerLeg_edit.setText('Character1_RightLeg')
-        self.neck_edit.setText('Character1_Neck')
-        self.rightLowerArm_edit.setText('Character1_RightForeArm')
-        self.rightUpperArm_edit.setText('Character1_RightShoulder')
-        self.torsoJoint_edit.setText('Character1_Spine')
         self.chooseCharacterData_edit.setText('C:/Users/DylanSteimel/Desktop/fallstraightdown.csv')
+
+        ##### Import Character #####
+        self.importCharacter_button = QPushButton('Import Character Locators')
+        self.importCharacter_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.popUp_button = QPushButton('Pop-Up')
+
+        ##### Skele Rig File #####
+        self.chooseSkeleRig_edit = QLineEdit()
+        self.chooseSkeleRig_edit.setPlaceholderText("Character File")
+        self.chooseSkeleRig_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.chooseSkeleRig_button = QPushButton(QIcon(self.icon_dir + "/open.png"), "")
+        self.chooseSkeleRig_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Load Character #####
+        self.loadCharacter_button = QPushButton('Load Character')
+        self.loadCharacter_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Active Assets #####
+        self.charLoc_label = QLabel()
+        self.charLoc_label.setText('Active Locator Group: ')
+        self.activeCharLocs_dropdown = QComboBox()
+        charLocs = cmds.ls('*Character_Locators*')
+        for cLoc in charLocs:
+            self.activeCharLocs_dropdown.addItem(cLoc)
+        self.activeCharLocs_dropdown.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.activeChar_label = QLabel()
+        self.activeChar_label.setText('Active Character: ')
+        self.activeCharacter_edit = QLineEdit()
+        self.activeCharacter_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Rig DropDown #####
+        self.skeleRig_label = QLabel()
+        self.skeleRig_label.setText('Character Rig Type: ')
+        self.skeleRig_dropdown = QComboBox(self)
+        skel_list = []
+        self.skelePath_list = []
+        for file in glob.glob(self.skeleton_dir + '/*'): #Finds all spellbooks and creates dropdown
+            skel_match = re.search('skelFiles(.*).SKEL', file)
+            skel_name = skel_match.group(1)
+            skel_list.append(skel_name[1:])
+            self.skelePath_list.append(file)
+        for item in skel_list:
+            self.skeleRig_dropdown.addItem(item)
+        self.skeleRig_current = self.skelePath_list[self.skeleRig_dropdown.currentIndex()]
+
+        ##### Alignment Confirmation #####
+        self.alignment_checkbox = QCheckBox('Alignment Complete', self)
+
+        ##### Pair to Locators #####
+        self.charRig2Loc_button = QPushButton('Pair Character to Locators')
+        self.charRig2Loc_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
     def create_layout(self):
         main_layout = QVBoxLayout()
@@ -659,6 +635,7 @@ class MainUI(QDialog):
         ##############################################
         ######    Vehicle Rigging Section       ######
         ##############################################
+
         ##### Active Locator and Rig #####
         activeItems_group = QGroupBox("Active Locator and Rig")
         activeItems_Layout = QGridLayout()
@@ -702,7 +679,6 @@ class MainUI(QDialog):
         blend_group = QGroupBox("Blend Shapes")
         blend_layout = QGridLayout()
 
-        #blend_layout.addWidget(self.blendControl_dropdown, 0, 0, 1, 2)
         blend_layout.addWidget(self.blendNode_edit, 0,0)
         blend_layout.addWidget(self.blendGroupName_edit, 0,1)
         blend_layout.addWidget(self.createBlendGroup_button, 1,0,1,2)
@@ -714,7 +690,6 @@ class MainUI(QDialog):
         bake_group = QGroupBox("Joint Bake")
         bake_layout = QGridLayout()
 
-        #bake_layout.addWidget(self.joint_dropdown, 0,0,1,4)
         bake_layout.addWidget(self.unrealExportSelection_button,0,0,1,2)
         bake_layout.addWidget(self.unrealExport_button,0,2,1,2)
         bake_layout.addWidget(self.bakeStart_label,1,0)
@@ -724,50 +699,47 @@ class MainUI(QDialog):
         bake_layout.addWidget(self.bakeButton,2,0,1,4)
         bake_layout.addWidget(self.exportFBX_button,3,0,1,4)
 
-
         bake_group.setLayout(bake_layout)
         vehicleRigging_layout.addWidget(bake_group)
 
         ##############################################
         ######   Character Rigging Section      ######
         ##############################################
-        joint_group = QGroupBox("Vehicle Rigging")
+
+        ##### File Management #####
+        joint_group = QGroupBox("File Management")
         joint_layout = QGridLayout()
 
-        joint_layout.addWidget(self.chooseCharacterData_button, 0, 0)
-        joint_layout.addWidget(self.chooseCharacterData_edit, 0, 1, 1, 3)
-        joint_layout.addWidget(self.headLabel, 1, 0)
-        joint_layout.addWidget(self.head_edit, 1, 1, 1, 3)
-        joint_layout.addWidget(self.neckLabel,2,0)
-        joint_layout.addWidget(self.neck_edit,2,1,1,3)
-        joint_layout.addWidget(self.torsoJointLabel, 3,0)
-        joint_layout.addWidget(self.torsoJoint_edit,3,1,1,3)
-        joint_layout.addWidget(self.rightUpperArmLabel,4,0)
-        joint_layout.addWidget(self.rightUpperArm_edit,4,1,1,3)
-        joint_layout.addWidget(self.rightLowerArmLabel,5,0)
-        joint_layout.addWidget(self.rightLowerArm_edit,5,1,1,3)
-        joint_layout.addWidget(self.leftUpperArmLabel,6,0)
-        joint_layout.addWidget(self.leftUpperArm_edit,6,1,1,3)
-        joint_layout.addWidget(self.leftLowerArmLabel,7,0)
-        joint_layout.addWidget(self.leftLowerArm_edit,7,1,1,3)
-        joint_layout.addWidget(self.hipLabel,8,0)
-        joint_layout.addWidget(self.hip_edit,8,1,1,3)
-        joint_layout.addWidget(self.rightFemurLabel,9,0)
-        joint_layout.addWidget(self.rightFemur_edit,9,1,1,3)
-        joint_layout.addWidget(self.rightLowerLegLabel,10,0)
-        joint_layout.addWidget(self.rightLowerLeg_edit,10,1,1,3)
-        joint_layout.addWidget(self.rightFootLabel,11,0)
-        joint_layout.addWidget(self.rightFoot_edit,11,1,1,3)
-        joint_layout.addWidget(self.LeftFemurLabel,12,0)
-        joint_layout.addWidget(self.LeftFemur_edit,12,1,1,3)
-        joint_layout.addWidget(self.leftLowerLegLabel,13,0)
-        joint_layout.addWidget(self.leftLowerLeg_edit,13,1,1,3)
-        joint_layout.addWidget(self.leftFootLabel,14,0)
-        joint_layout.addWidget(self.leftFoot_edit,14,1,1,3)
-        joint_layout.addWidget(self.importCharacter_button, 15,0,1,4)
+        joint_layout.addWidget(self.chooseCharacterData_button, 0,0)
+        joint_layout.addWidget(self.chooseCharacterData_edit, 0,1,1,3)
+        joint_layout.addWidget(self.importCharacter_button, 1,0,1,4)
+        joint_layout.addWidget(self.chooseSkeleRig_button, 2,0)
+        joint_layout.addWidget(self.chooseSkeleRig_edit, 2,1,1,3)
+
+        joint_layout.addWidget(self.loadCharacter_button, 4,0,1,4)
+        joint_layout.addWidget(self.popUp_button, 5,0,1,4)
 
         joint_group.setLayout(joint_layout)
         characterRigging_layout.addWidget(joint_group)
+
+        ##### Char Rigging #####
+        charRig_group = QGroupBox("Character Rigging")
+        charRig_layout = QGridLayout()
+
+        charRig_layout.addWidget(self.charLoc_label, 0,0,1,1)
+        charRig_layout.addWidget(self.activeCharLocs_dropdown, 0,1,1,3)
+
+        charRig_layout.addWidget(self.activeChar_label, 1,0,1,1)
+        charRig_layout.addWidget(self.activeCharacter_edit, 1,1,1,3)
+
+        charRig_layout.addWidget(self.skeleRig_label, 2,0,1,1)
+        charRig_layout.addWidget(self.skeleRig_dropdown, 2,1,1,3)
+
+        charRig_layout.addWidget(self.alignment_checkbox, 3,0,1,1)
+        charRig_layout.addWidget(self.charRig2Loc_button, 3,1,1,3)
+
+        charRig_group.setLayout(charRig_layout)
+        characterRigging_layout.addWidget(charRig_group)
 
         ##############################################
         ######          Save Section            ######
@@ -866,6 +838,12 @@ class MainUI(QDialog):
         ##### Charcater Import #####
         self.chooseCharacterData_button.clicked.connect(self.loadCharacterData)
         self.importCharacter_button.clicked.connect(self.charLocators)
+        self.chooseSkeleRig_button.clicked.connect(self.loadCharRig)
+        self.loadCharacter_button.clicked.connect(self.importCharRig)
+        self.popUp_button.clicked.connect(self.popUp)
+
+        ##### Character Rigging #####
+        self.charRig2Loc_button.clicked.connect(self.charRig2Locs)
     #---------------------------------------------------------------------------------------------------------------
     # Button Functions
     #---------------------------------------------------------------------------------------------------------------
@@ -1647,231 +1625,22 @@ class MainUI(QDialog):
             return  # Then just don't open anything
         self.chooseCharacterData_edit.setText(file_path)
 
-    def importCharacter(self):
-        #Load data from set character path
-        filename = self.chooseCharacterData_edit.text()
-        f = open(filename, "r")
-        lines = f.readlines()
-        f.close()
+    def loadCharRig(self):
+        #Set path to character data
+        file_path = QFileDialog.getOpenFileName(None, "", self.desktop_dir, "Char Files (*.ma *.mb);;All Files (*.*)")[0]
+        if file_path == "":  # If they cancel the dialog
+            return  # Then just don't open anything
+        self.chooseSkeleRig_edit.setText(file_path)
 
-        #Clean CSV
-        lines = [line.split(',') for line in lines]
-        for i in range(0,len(lines)):
-            lines[i] = [item.strip() for item in lines[i] if item != '' and item != '\n']
+    def importCharRig(self):
+        filename = self.chooseSkeleRig_edit.text()
 
-        #Get joint list
-        parts = []
-        partIndices = []
-        for i in range(0,len(lines)-1):
-            if 'time [ s]' in lines[i+1]:
-                parts.append(lines[i][0])
-                partIndices.append(i)
-
-        frameTotal = partIndices[1] - partIndices[0]
-
-        for i in range(0,len(parts)):
-            print(parts[i])
-            print(partIndices[i])
-
-        #Create MOV Files
-        jointFiles = []
-        for i in range(0,len(parts)):
-            name = str(parts[i])
-            name = name.split(' ')
-            new_name = ''
-            for n in range(0,len(name)):
-                new_name += name[n]
-            name = new_name
-            f = open(self.desktop_dir + '/' + name + '.mov', 'w')
-            jointFiles.append(self.desktop_dir + '/' + name + '.mov')
-            for j in range(2, frameTotal):
-                for k in range(0,len(lines[partIndices[i] + j])):
-                    f.write(lines[partIndices[i] + j][k] + ' ')
-                f.write('\n')
-
-        f.close()
-
-        attrList = ['Time','Distance','Velocity','vni','vnz','vc2mayaRotX2Z','vc2mayaRotY2X','vc2mayaRotZ2Y','ignoreX', 'ignoreY', 'ignoreZ','Xrad','Yrad','Zrad']
-
-        for file in jointFiles:
-            print(file)
-
-        joints = [self.LeftFemur_edit.text(),self.rightFemur_edit.text(), self.leftFoot_edit.text(),
-        self.rightFoot_edit.text(),self.head_edit.text(), self.hip_edit.text(),  self.leftLowerArm_edit.text(),
-        self.leftUpperArm_edit.text(),self.leftLowerLeg_edit.text(),self.rightLowerLeg_edit.text(),self.neck_edit.text(),
-        self.rightLowerArm_edit.text(), self.rightUpperArm_edit.text(), self.torsoJoint_edit.text()]
-
-        for i in range(0,14):
-            joint = joints[i]
-            filename = jointFiles[i]
-            for attr in attrList:
-                cmds.select(joint)
-                cmds.addAttr(ln=attr, at='float')
-                cmds.setAttr(joint+'.'+attr, k=True)
-                cmds.select(deselect=True)
-
-            if filename.endswith('hip.mov'):
-                cmds.movIn(joint + '.Time', joint + '.Distance', joint + '.Velocity', joint + '.vc2mayaRotX2Z', joint + '.vc2mayaRotY2X', joint + '.vc2mayaRotZ2Y', joint + '.vni', joint + '.vnz', joint + '.translateZ', joint + '.translateX', joint + '.translateY', joint + '.Xrad', joint + '.Yrad', joint + '.Zrad', f=filename)
-            else:
-                cmds.movIn(joint + '.Time', joint + '.Distance', joint + '.Velocity', joint + '.vc2mayaRotX2Z', joint + '.vc2mayaRotY2X', joint + '.vc2mayaRotZ2Y', joint + '.vni', joint + '.vnz', joint + '.ignoreZ', joint + '.ignoreX', joint + '.ignoreY', joint + '.Xrad', joint + '.Yrad', joint + '.Zrad', f=filename)
-
-        #Set joints to variables
-        lfemur, rfemur, lfoot, rfoot, head, hip, lforearm, lshoulder, leftLowerLeg, rightLowerLeg, neck, rforearm, rshoulder, torso = joints
-
-        #Expression for joint movement
-        cmds.expression(s=f'{hip}.rotateX = {hip}.vc2mayaRotY2X;\n{hip}.rotateY = {hip}.vc2mayaRotZ2Y;\n{hip}.rotateZ = {hip}.vc2mayaRotX2Z;')
-        cmds.expression(s=f'{torso}.rotateX = {torso}.vc2mayaRotY2X - {hip}.vc2mayaRotY2X;\n{torso}.rotateY = {torso}.vc2mayaRotZ2Y - {hip}.vc2mayaRotZ2Y;\n{torso}.rotateZ = {torso}.vc2mayaRotX2Z - {hip}.vc2mayaRotX2Z;')
-        cmds.expression(s=f'{neck}.rotateX = {neck}.vc2mayaRotY2X - {torso}.rotateX;\n{neck}.rotateY = {neck}.vc2mayaRotZ2Y - {torso}.rotateY;\n{neck}.rotateZ = {neck}.vc2mayaRotX2Z - {torso}.rotateZ;')
-        cmds.expression(s=f'{head}.rotateX = {head}.vc2mayaRotY2X - {neck}.rotateX;\n{head}.rotateY = {head}.vc2mayaRotZ2Y - {neck}.rotateY;\n{head}.rotateZ = {head}.vc2mayaRotX2Z - {neck}.rotateZ;')
-
-    def rotateJoints(self):
-        filename = self.chooseCharacterData_edit.text()
-        f = open(filename, "r")
-        lines = f.readlines()
-        f.close()
-
-        #Clean CSV
-        lines = [line.split(',') for line in lines]
-        for i in range(0,len(lines)):
-            lines[i] = [item.strip() for item in lines[i] if item != '' and item != '\n']
-
-        #Get joint list
-        parts = []
-        partIndices = []
-        for i in range(0,len(lines)-1):
-            if 'time [ s]' in lines[i+1]:
-                parts.append(lines[i][0])
-                partIndices.append(i)
-
-        frameTotal = partIndices[1] - partIndices[0]
-
-        #Create MOV Files
-        joints = [self.LeftFemur_edit.text(),self.rightFemur_edit.text(), self.leftFoot_edit.text(),
-        self.rightFoot_edit.text(),self.head_edit.text(), self.hip_edit.text(),  self.leftLowerArm_edit.text(),
-        self.leftUpperArm_edit.text(),self.leftLowerLeg_edit.text(),self.rightLowerLeg_edit.text(),self.neck_edit.text(),
-        self.rightLowerArm_edit.text(), self.rightUpperArm_edit.text(), self.torsoJoint_edit.text()]
-
-
-        #for i in range(0,len(parts)):
-        #    for j in range(2, frameTotal):
-        #        time = lines[partIndices[i]+j][0]
-        #        xrot = lines[partIndices[i]+j][3]
-        #        yrot = lines[partIndices[i]+j][4]
-        #        zrot = lines[partIndices[i]+j][5]
-
-        #        cmds.currentTime(float(time)*10)
-        #        cmds.rotate(zrot,xrot,yrot,joints[i],ws=True)
-        #        cmds.setKeyframe(joints[i],at='rotateZ')
-        #        cmds.setKeyframe(joints[i],at='rotateY')
-        #        cmds.setKeyframe(joints[i],at='rotateX')
-        lfemur, rfemur, lfoot, rfoot, head, hip, lforearm, lshoulder, leftLowerLeg, rightLowerLeg, neck, rforearm, rshoulder, torso = joints
-
-        rotateOrder = [hip,torso,lshoulder,lforearm,rshoulder,rforearm,neck,head,lfemur,leftLowerLeg,lfoot,rfemur,rightLowerLeg,rfoot]
-        newJoints = []
-
-        #Comun Indices
-        timeCol = 0
-        xRotCol = 3
-        yRotCol = 4
-        zRotCol = 5
-        xOmgCol =11
-        yOmgCol = 12
-        zOmgCol =13
-
-        #Create Dict of tuples (dataframe of frames,[list of parent joints],joint reference)
-        dataFrames = {  'hip':(lines[partIndices[joints.index(hip)]+2:partIndices[joints.index(hip)]+frameTotal],[], hip),
-                        'torso':(lines[partIndices[joints.index(torso)]+2:partIndices[joints.index(torso)]+frameTotal],['hip'], torso),
-                        'lshoulder':(lines[partIndices[joints.index(lshoulder)]+2:partIndices[joints.index(lshoulder)]+frameTotal],['torso'], lshoulder),
-                        'lforearm':(lines[partIndices[joints.index(lforearm)]+2:partIndices[joints.index(lforearm)]+frameTotal],['lshoulder'], lforearm),
-                        'rshoulder':(lines[partIndices[joints.index(rshoulder)]+2:partIndices[joints.index(rshoulder)]+frameTotal],['torso'], rshoulder),
-                        'rforearm':(lines[partIndices[joints.index(rforearm)]+2:partIndices[joints.index(rforearm)]+frameTotal],['rshoulder'], rforearm),
-                        'neck':(lines[partIndices[joints.index(neck)]+2:partIndices[joints.index(neck)]+frameTotal],['torso'], neck),
-                        'head':(lines[partIndices[joints.index(head)]+2:partIndices[joints.index(head)]+frameTotal],['neck'], head),
-                        'lfemur':(lines[partIndices[joints.index(lfemur)]+2:partIndices[joints.index(lfemur)]+frameTotal],['hip'], lfemur),
-                        'leftLowerLeg':(lines[partIndices[joints.index(leftLowerLeg)]+2:partIndices[joints.index(leftLowerLeg)]+frameTotal],['lfemur'], leftLowerLeg),
-                        'lfoot':(lines[partIndices[joints.index(lfoot)]+2:partIndices[joints.index(lfoot)]+frameTotal],['leftLowerLeg'], lfoot),
-                        'rfemur':(lines[partIndices[joints.index(rfemur)]+2:partIndices[joints.index(rfemur)]+frameTotal],['hip'], rfemur),
-                        'rightLowerLeg':(lines[partIndices[joints.index(rightLowerLeg)]+2:partIndices[joints.index(rightLowerLeg)]+frameTotal],['rfemur'], rightLowerLeg),
-                        'rfoot':(lines[partIndices[joints.index(rfoot)]+2:partIndices[joints.index(rfoot)]+frameTotal],['rightLowerLeg'], rfoot)}
-
-
-        #for j in range(2,frameTotal):
-        #    for i in range(0,len(parts)):
-        #        index = joints.index(rotateOrder[i])
-        #        time = lines[partIndices[index]+j][0]
-        #        xrot = float(lines[partIndices[index]+j][3])
-        #        yrot = float(lines[partIndices[index]+j][4])
-        #        zrot = float(lines[partIndices[index]+j][5])
-        #        xomg = float(lines[partIndices[index]+j][11])*180/math.pi
-        #        yomg = float(lines[partIndices[index]+j][12])*180/math.pi
-        #        zomg = float(lines[partIndices[index]+j][13])*180/math.pi
-                #xpos = float(lines[partIndices[index]+j][8])
-                #ypos = float(lines[partIndices[index]+j][9])
-                #zpos = float(lines[partIndices[index]+j][10])
-        #        cmds.currentTime(float(time)*10)
-        #        if j == 2:
-        #            cmds.rotate(yrot,zrot,xrot,joints[index], a=True, ws=True)
-        #        else:
-        #            cmds.rotate(yomg*.1,zomg*.1,xomg*.1,joints[index], r=True, ws=True)
-
-        print('\n')
-        print('\n')
-        print('\n')
-
-        for key in dataFrames:
-            print(f'dataframe of {key}')
-            print(dataFrames[key])
-
-        print('\n')
-        print('\n')
-        print('\n')
-
-        for frame in range(0,frameTotal-2):
-            for key in dataFrames:
-                xAdjust = 0
-                yAdjust = 0
-                zAdjust = 0
-                xRotAdj = 0
-                yRotAdj = 0
-                zRotAdj = 0
-                time = float(dataFrames[key][0][frame][timeCol])
-                xrot = float(dataFrames[key][0][frame][xRotCol])
-                yrot = float(dataFrames[key][0][frame][yRotCol])
-                zrot = float(dataFrames[key][0][frame][zRotCol])
-
-                for parentJoint in dataFrames[key][1]:
-                    xAdjust += float(dataFrames[parentJoint][0][frame][xOmgCol])
-                    yAdjust += float(dataFrames[parentJoint][0][frame][yOmgCol])
-                    zAdjust += float(dataFrames[parentJoint][0][frame][zOmgCol])
-                    xRotAdj += float(dataFrames[parentJoint][0][frame][xRotCol])
-                    yRotAdj += float(dataFrames[parentJoint][0][frame][yRotCol])
-                    zRotAdj += float(dataFrames[parentJoint][0][frame][zRotCol])
-
-
-                if 'shoulder' not in key and 'forearm' not in key:
-                    xomg = (float(dataFrames[key][0][frame][xOmgCol]) - xAdjust)*18/math.pi
-                    yomg = (float(dataFrames[key][0][frame][yOmgCol]) - yAdjust)*18/math.pi
-                    zomg = (float(dataFrames[key][0][frame][zOmgCol]) - zAdjust)*18/math.pi
-
-                elif 'shoulder' in key or 'forearm' in key:
-                    xomg = (float(dataFrames[key][0][frame][xOmgCol]) - xAdjust)*18/math.pi
-                    yomg = (float(dataFrames[key][0][frame][yOmgCol]) - zAdjust)*18/math.pi
-                    zomg = (float(dataFrames[key][0][frame][zOmgCol]) - yAdjust)*18/math.pi
-
-                cmds.currentTime(float(time)*10)
-
-                if frame == 0 and 'shoulder' not in key:
-                    cmds.rotate(yrot,zrot,xrot,dataFrames[key][2], a=True, ws=True)
-                elif frame ==0 and 'shoulder' in key:
-                    cmds.rotate(zrot,yrot,xrot,dataFrames[key][2], a=True, ws=True)
-                elif 'shoulder' in key:
-                    cmds.rotate(zomg,yomg,xomg,dataFrames[key][2], r=True, ws=True)
-                else:
-                    cmds.rotate(yomg,zomg,xomg,dataFrames[key][2],r=True,ws=True)
-
-                cmds.setKeyframe(dataFrames[key][2],at='rotateX')
-                cmds.setKeyframe(dataFrames[key][2],at='rotateY')
-                cmds.setKeyframe(dataFrames[key][2],at='rotateZ')
+        #prevItems = cmds.ls()
+        cmds.file(filename, i=True)
+        #allItems = cmds.ls()
+        #newItems = [item for item in allItems if item not in prevItems]
+        #grp = cmds.group(newItems, n='Character_Group')
+        #self.activeCharacter_edit.addItem(grp)
 
     def unrealExportSelection(self):
         #Exports root joint for Unreal Engine
@@ -1923,10 +1692,14 @@ class MainUI(QDialog):
         #Get joint list
         parts = []
         partIndices = []
-        for i in range(0,len(lines)-1):
-            if 'time [ s]' in lines[i+1]:
-                parts.append(lines[i][0])
-                partIndices.append(i)
+        partStrings = ['femur', 'foot', 'head', 'hip', 'arm', 'leg', 'neck', 'torso']
+        for i in range(0,len(lines)):
+            print(lines[i])
+            for part in partStrings:
+                if len(lines[i]) == 1:
+                    if part in lines[i][0]:
+                        parts.append(lines[i][0])
+                        partIndices.append(i)
 
         frameTotal = partIndices[1] - partIndices[0]
 
@@ -1952,9 +1725,18 @@ class MainUI(QDialog):
 
         f.close()
 
+        charList = cmds.ls('Character_Locators*')
+        charNum = len(charList)
+
+        locators = []
+        colors = [(1,1,0),(1,1,0),(.2,1,.6),(.2,1,.6),(1,0,0),(1,.502,0),(1,.6,.6),(1,0,.498),(.502,1,0),(.502,1,0),(.498,0,1),(1,.6,.6),(1,0,.498),(0,0,1)]
+        i = 0
+        cmds.currentTime(0)
+
         for joint in jointFiles:
-            locator = cmds.spaceLocator(p=(0,0,0))
+            locator = cmds.spaceLocator(p=(0,0,0), n=str(charNum)+parts[i])
             locName = locator[0]
+            locators.append(locName)
             cmds.addAttr(ln='Time', at='float')
             cmds.setAttr(locator[0]+'.Time', k=True)
             cmds.addAttr(ln='Distance', at='float')
@@ -1989,10 +1771,75 @@ class MainUI(QDialog):
             cmds.setAttr(locator[0]+'.lastV', k=True)
             cmds.addAttr(ln='brake', at='float')
             cmds.setAttr(locator[0]+'.brake', k=True)
-            cmds.movIn(locName + '.Time', locName + '.Distance', locName + '.Velocity', locName + '.Xrot', locName + '.Yrot', locName + '.Zrot', locName + '.vni', locName + '.vnz', locName + '.steer', locName + '.translateX', locName + '.translateY', locName + '.translateZ', locName + ".Xrad", locName + '.Yrad', locName + '.Zrad', locName + '.lastV', locName + '.brake', f=joint)
+
+            cmds.movIn(locName + '.Time', locName + '.Distance', locName + '.Velocity', locName + '.rotateX', locName + '.rotateY', locName + '.rotateZ', locName + '.vni', locName + '.vnz', locName + '.translateX', locName + '.translateY', locName + '.translateZ', locName + ".Xrad", locName + '.Yrad', locName + '.Zrad', f=joint)
+            cmds.setAttr(f'{locName}Shape.overrideEnabled', 1)
+            cmds.setAttr(f'{locName}Shape.overrideRGBColors', 1)
+            cmds.setAttr(f'{locName}Shape.overrideColorR',colors[i][0])
+            cmds.setAttr(f'{locName}Shape.overrideColorG',colors[i][1])
+            cmds.setAttr(f'{locName}Shape.overrideColorB',colors[i][2])
+            cmds.setAttr(f'{locName}.scaleX', .2)
+            cmds.setAttr(f'{locName}.scaleY', .2)
+            cmds.setAttr(f'{locName}.scaleZ', .2)
+            i += 1
+
+        #Add to group
+        grp = cmds.group(locators, n='Character_Locators')
+        self.activeCharLocs_dropdown.addItem(grp)
+        cmds.rotate('-90deg',0,0,grp,pivot=(0,0,0))
+
+    def charRig2Locs(self):
+        if self.alignment_checkbox.checkState():
+            #Get Active Assets
+            actLocs = self.activeCharLocs_dropdown.currentText()
+            cmds.select(actLocs, hi=True)
+            locs = cmds.ls(sl=True)
+            locs = [x for x in locs if ('Character' not in x) and 'Shape' not in x]
+            cmds.select(deselect=True)
+
+            skelSelection = self.skeleRig_dropdown.currentText()
+            for file in glob.glob(self.skeleton_dir + '/*'):
+                if skelSelection in file:
+                    f = open(file, 'r')
+                    skelJoints = f.readlines()
+                    f.close()
+
+            for i in range(0,len(skelJoints)):
+                skelJoints[i] = skelJoints[i].strip()
+
+            actChar = self.activeCharacter_edit.text()
+            cmds.select(actChar, hi=True)
+            charItems = cmds.ls(sl=True)
+            cmds.select(deselect=True)
+            charJoints = []
+            indexOrder = []
+            for joint in charItems:
+                for skel in skelJoints:
+                    if joint.endswith(skel):
+                        charJoints.append(joint)
+                        indexOrder.append(skelJoints.index(skel))
+
+            #Pair Elements
+            for i in range(0,len(charJoints)):
+                joint = charJoints[i]
+                loc = locs[indexOrder[i]]
+                const = cmds.parentConstraint(loc, joint, mo=True)
+                #const = const[0]
+                #cmds.setAttr(const + '.target[0].targetOffsetRotateX', 90)
+                #cmds.setAttr(const + '.target[0].targetOffsetRotateY', 0)
+                #cmds.setAttr(const + '.target[0].targetOffsetRotateZ', 90)
+        else:
+            warning_box = QMessageBox(QMessageBox.Warning, "Check Alignment", "Please confirm Joint and Locator alignment before pairing.")
+            warning_box.exec_()
 
     def unrealExport(self):
         mel.eval('ExportSelection;')
+
+    def popUp(self):
+        dialog = skelePopUp(self)
+        self.dialogs.append(dialog)
+        dialog.show()
+
     # --------------------------------------------------------------------------------------------------------------
     # Writes the current file path to preferences
     # --------------------------------------------------------------------------------------------------------------
@@ -2099,6 +1946,186 @@ class MainUI(QDialog):
                     cmds.hyperShade(assign=replacement)
                     cmds.select(deselect=True)
             cmds.select(selection)
+
+
+class skelePopUp(QDialog):
+    # Set up file references
+    ms_dir = os.path.expanduser("~/maya/scripts/magic-shade")
+    skeleton_dir = ms_dir + '/skelFiles'
+    icon_dir = os.path.expanduser("~/maya/scripts/magic-shade/resources/icons")
+    spellbook_dir = os.path.expanduser("~/maya/scripts/magic-shade/spellbooks")
+    studio_dir = os.path.expanduser("~/maya/scripts/magic-shade/studios")
+    pref_path = os.path.expanduser("~/maya/scripts/magic-shade/prefs")
+    save_path = os.path.expanduser("~/maya/projects/default/scenes/")
+    user_profile = os.environ['USERPROFILE']
+    desktop_dir = user_profile + '\\Desktop'
+
+    #--------------------------------------------------------------------------------------------------------------
+    #                                            Create GUI Window
+    #--------------------------------------------------------------------------------------------------------------
+    def __init__(self, parent=maya_main_window()):
+        super(skelePopUp, self).__init__(parent)
+
+        # Set up the window
+        # self.setWindowFlags(Qt.Tool)
+        self.setFixedWidth(600)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.resize(250, -1)
+        self.setWindowTitle('SKEL File Creator')
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+
+        self.create_controls()  # Initializes controls
+        self.create_layout()  # Initializes the internal window layout
+        self.make_connections()
+
+    #--------------------------------------------------------------------------------------------------------------
+    #                                             Create Widgets
+    #--------------------------------------------------------------------------------------------------------------
+    def create_controls(self):
+        UI_ELEMENT_HEIGHT = 30
+        ##### ADV Options #####
+        self.advOption_checkbox = QCheckBox('Advanced Options')
+        ##### New File Name Line #####
+        self.newFileName = QLineEdit()
+        self.newFileName.setPlaceholderText('Rig Name')
+        self.newFileName.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        ##### Joint Labels and Edits #####
+        self.headLabel = QLabel()
+        self.headLabel.setText('Head Joint: ')
+        self.head_edit = QLineEdit()
+        self.head_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.neckLabel = QLabel()
+        self.neckLabel.setText('Neck Joint: ')
+        self.neck_edit = QLineEdit()
+        self.neck_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.torsoJointLabel = QLabel()
+        self.torsoJointLabel.setText('Torso Joint: ')
+        self.torsoJoint_edit = QLineEdit()
+        self.torsoJoint_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.rightUpperArmLabel = QLabel()
+        self.rightUpperArmLabel.setText('Right Upper Arm Joint: ')
+        self.rightUpperArm_edit = QLineEdit()
+        self.rightUpperArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.rightLowerArmLabel = QLabel()
+        self.rightLowerArmLabel.setText('Right Lower Arm Joint: ')
+        self.rightLowerArm_edit = QLineEdit()
+        self.rightLowerArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.leftUpperArmLabel = QLabel()
+        self.leftUpperArmLabel.setText('Left Upper Arm Joint: ')
+        self.leftUpperArm_edit = QLineEdit()
+        self.leftUpperArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.leftLowerArmLabel = QLabel()
+        self.leftLowerArmLabel.setText('Left Lower Arm Joint: ')
+        self.leftLowerArm_edit = QLineEdit()
+        self.leftLowerArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.hipLabel = QLabel()
+        self.hipLabel.setText('Hip Joint: ')
+        self.hip_edit = QLineEdit()
+        self.hip_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.rightFemurLabel = QLabel()
+        self.rightFemurLabel.setText('Right Femur Joint: ')
+        self.rightFemur_edit = QLineEdit()
+        self.rightFemur_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.rightLowerLegLabel = QLabel()
+        self.rightLowerLegLabel.setText('Right Lower Leg Joint: ')
+        self.rightLowerLeg_edit = QLineEdit()
+        self.rightLowerLeg_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.rightFootLabel = QLabel()
+        self.rightFootLabel.setText('Right Foot Joint: ')
+        self.rightFoot_edit = QLineEdit()
+        self.rightFoot_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.LeftFemurLabel = QLabel()
+        self.LeftFemurLabel.setText('Left Femur Joint: ')
+        self.LeftFemur_edit = QLineEdit()
+        self.LeftFemur_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.leftLowerLegLabel = QLabel()
+        self.leftLowerLegLabel.setText('Left Lower Leg Joint: ')
+        self.leftLowerLeg_edit = QLineEdit()
+        self.leftLowerLeg_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.leftFootLabel = QLabel()
+        self.leftFootLabel.setText('Left Foot Joint: ')
+        self.leftFoot_edit = QLineEdit()
+        self.leftFoot_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.all_edits = [self.LeftFemur_edit, self.rightFemur_edit, self.leftFoot_edit, self.rightFoot_edit,
+        self.head_edit, self.hip_edit, self.leftLowerArm_edit, self.leftUpperArm_edit, self.leftLowerLeg_edit,
+        self.rightLowerLeg_edit, self.neck_edit,  self.rightLowerArm_edit, self.rightUpperArm_edit, self.torsoJoint_edit, self.newFileName]
+
+        ##### Create SKEL File #####
+        self.createSkel_button = QPushButton('Create SKEL File')
+
+    #--------------------------------------------------------------------------------------------------------------
+    #                                              Make Layout
+    #--------------------------------------------------------------------------------------------------------------
+    def create_layout(self, layout='simple'):
+        layout1 = QVBoxLayout()
+
+        simple_group = QGroupBox()
+        simpleLayout = QGridLayout()
+
+        #simpleLayout.addWidget(self.advOption_checkbox, 0,0)
+        simpleLayout.addWidget(self.headLabel, 1,0)
+        simpleLayout.addWidget(self.head_edit, 1,1,1,3)
+        simpleLayout.addWidget(self.neckLabel, 2,0)
+        simpleLayout.addWidget(self.neck_edit, 2,1,1,3)
+        simpleLayout.addWidget(self.torsoJointLabel, 3,0)
+        simpleLayout.addWidget(self.torsoJoint_edit, 3,1,1,3)
+        simpleLayout.addWidget(self.rightUpperArmLabel, 4,0)
+        simpleLayout.addWidget(self.rightUpperArm_edit, 4,1,1,3)
+        simpleLayout.addWidget(self.rightLowerArmLabel, 5,0)
+        simpleLayout.addWidget(self.rightLowerArm_edit, 5,1,1,3)
+        simpleLayout.addWidget(self.leftUpperArmLabel, 6,0)
+        simpleLayout.addWidget(self.leftUpperArm_edit, 6,1,1,3)
+        simpleLayout.addWidget(self.leftLowerArmLabel, 7,0)
+        simpleLayout.addWidget(self.leftLowerArm_edit, 7,1,1,3)
+        simpleLayout.addWidget(self.hipLabel, 8,0)
+        simpleLayout.addWidget(self.hip_edit, 8,1,1,3)
+        simpleLayout.addWidget(self.rightFemurLabel, 9,0)
+        simpleLayout.addWidget(self.rightFemur_edit, 9,1,1,3)
+        simpleLayout.addWidget(self.rightLowerLegLabel, 10,0)
+        simpleLayout.addWidget(self.rightLowerLeg_edit, 10,1,1,3)
+        simpleLayout.addWidget(self.rightFootLabel, 11,0)
+        simpleLayout.addWidget(self.rightFoot_edit, 11,1,1,3)
+        simpleLayout.addWidget(self.LeftFemurLabel, 12,0)
+        simpleLayout.addWidget(self.LeftFemur_edit, 12,1,1,3)
+        simpleLayout.addWidget(self.leftLowerLegLabel, 13,0)
+        simpleLayout.addWidget(self.leftLowerLeg_edit, 13,1,1,3)
+        simpleLayout.addWidget(self.leftFootLabel, 14,0)
+        simpleLayout.addWidget(self.leftFoot_edit, 14,1,1,3)
+        simpleLayout.addWidget(self.newFileName, 15,0,1,2)
+        simpleLayout.addWidget(self.createSkel_button, 15,2,1,2)
+
+
+        simple_group.setLayout(simpleLayout)
+        layout1.addWidget(simple_group)
+        self.setLayout(layout1)
+
+    #--------------------------------------------------------------------------------------------------------------
+    #                                             Make Connections
+    #--------------------------------------------------------------------------------------------------------------
+    def make_connections(self):
+        self.createSkel_button.clicked.connect(self.createFile)
+        #self.advOption_checkbox.stateChanged.connect(self.setOptions)
+
+    #--------------------------------------------------------------------------------------------------------------
+    #                                                 Functions
+    #--------------------------------------------------------------------------------------------------------------
+    def createFile(self):
+        #Get Variables
+        joints = [self.LeftFemur_edit.text(), self.rightFemur_edit.text(), self.leftFoot_edit.text(), self.rightFoot_edit.text(),
+        self.head_edit.text(), self.hip_edit.text(), self.leftLowerArm_edit.text(), self.leftUpperArm_edit.text(), self.leftLowerLeg_edit.text(),
+        self.rightLowerLeg_edit.text(), self.neck_edit.text(),  self.rightLowerArm_edit.text(), self.rightUpperArm_edit.text(), self.torsoJoint_edit.text()]
+
+        newFile = f'{self.skeleton_dir}/{self.newFileName.text()}'
+
+        #Create File
+        f = open(f'{newFile}.SKEL', 'w')
+        for joint in joints:
+            f.write(f'{joint}\n')
+        f.close()
+
+        for edit in self.all_edits:
+            edit.setText('')
 
 # Dev code to automatically close old windows when running
 try:

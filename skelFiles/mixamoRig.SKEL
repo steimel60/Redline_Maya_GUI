@@ -1,0 +1,14 @@
+femur_left,LeftUpLeg,True,True
+femur_right,RightUpLeg,True,True
+foot_left,LeftFoot,True,True
+foot_right,RightFoot,True,True
+head,Head,True,True
+hip,Hips,True,True
+left_lower_arm,LeftForeArm,True,True
+left_upper_arm,LeftArm,True,True
+lower_leg_left,LeftLeg,True,True
+lower_leg_right,RightLeg,True,True
+neck,Neck,True,True
+right_lower_arm,RightForeArm,True,True
+right_upper_arm,RightArm,True,True
+torso,Spine,True,True

@@ -32,7 +32,7 @@ class MainUI(QDialog):
     thumbs_dir = os.path.expanduser("~/maya/projects/default/scenes/.mayaSwatches")
     save_path = os.path.expanduser("~/maya/projects/default/scenes/")
     user_profile = os.environ['USERPROFILE']
-    desktop_dir = user_profile + '\\Desktop'
+    desktop_dir = user_profile + '/Desktop'
     last_file_pref = "last_vehicular_spellbook"
     vehicle_library_dir = user_profile + "/deltav/Jason Young - Asset Library/3D Vehicle Library/"
     vehiclespec_library_dir = user_profile + "/deltav/Jason Young - Asset Library/3D Vehicle Library/"
@@ -88,7 +88,7 @@ class MainUI(QDialog):
     #                                   Make the Buttons
     #--------------------------------------------------------------------------------------------------------------
     def create_controls(self):
-        UI_ELEMENT_HEIGHT = 30
+        UI_ELEMENT_HEIGHT = 20
         UI_ELEMENT_WIDTH = 150
 
         ##### Banner #####
@@ -394,7 +394,7 @@ class MainUI(QDialog):
         self.wheelConstr_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Bake Button #####
-        self.bakeButton = QPushButton('Bake Root Joint')
+        self.bakeButton = QPushButton('Bake Root Joint and Geometry')
         self.bakeButton.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Bake Settings #####
@@ -409,14 +409,13 @@ class MainUI(QDialog):
         self.bakeStop_edit = QLineEdit()
         self.bakeStop_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.bakeStop_edit.setPlaceholderText('Ex:  2500')
+        self.vehicleFBX_label = QLabel('File Name: ')
+        self.vehicleFBX = QLineEdit()
+        self.vehicleFBX.setPlaceholderText('FBX File Name')
 
         ##### Export FBX #####
         self.exportFBX_button = QPushButton('Export Selected Root Joint Animation')
         self.exportFBX_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.unrealExportSelection_button = QPushButton('Select Skeleton and Mesh for Unreal')
-        self.unrealExportSelection_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.unrealExport_button = QPushButton('Bake and Export to Unreal')
-        self.unrealExport_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Blend Shapes #####
         self.blendNode_edit = QLineEdit()
@@ -505,6 +504,29 @@ class MainUI(QDialog):
         self.charRig2Loc_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.addMotion_button = QPushButton('Pair Idle Locators to Animated Locators')
         self.addMotion_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### Export Metahuman #####
+        self.metahumanFBXName = QLineEdit()
+        self.metahumanFBXName.setPlaceholderText('FBX File Name')
+
+        self.metaStartLabel = QLabel('Bake Start: ')
+        self.metahumanBakeStart = QLineEdit()
+        self.metahumanBakeStart.setPlaceholderText('Start Frame')
+
+        self.metaEndLabel = QLabel('Bake Start: ')
+        self.metahumanBakeEnd = QLineEdit()
+        self.metahumanBakeEnd.setPlaceholderText('End Frame')
+
+        self.bodyJoints_label = QLabel('Control Rig: ')
+        self.bodyJoints_dropdown = QComboBox()
+        bodyJoints = cmds.ls('*Body_joints*')
+        self.activeJoints = []
+        for joint in bodyJoints:
+            self.bodyJoints_dropdown.addItem(joint)
+            self.activeJoints.append(joint)
+        self.bodyJoints_dropdown.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.selectControlRig_button = QPushButton('Select Control Rig')
+        self.exportControlRig_button = QPushButton('Export Control Rig')
 
     def create_layout(self):
         main_layout = QVBoxLayout()
@@ -699,13 +721,13 @@ class MainUI(QDialog):
         bake_group = QGroupBox("Joint Bake")
         bake_layout = QGridLayout()
 
-        bake_layout.addWidget(self.unrealExportSelection_button,0,0,1,2)
-        bake_layout.addWidget(self.unrealExport_button,0,2,1,2)
-        bake_layout.addWidget(self.bakeStart_label,1,0)
-        bake_layout.addWidget(self.bakeStart_edit,1,1)
-        bake_layout.addWidget(self.bakeStop_label,1,2)
-        bake_layout.addWidget(self.bakeStop_edit,1,3)
-        bake_layout.addWidget(self.bakeButton,2,0,1,4)
+        bake_layout.addWidget(self.bakeStart_label,0,0)
+        bake_layout.addWidget(self.bakeStart_edit,0,1)
+        bake_layout.addWidget(self.bakeStop_label,0,2)
+        bake_layout.addWidget(self.bakeStop_edit,0,3)
+        bake_layout.addWidget(self.bakeButton,1,0,1,4)
+        bake_layout.addWidget(self.vehicleFBX_label, 2,0)
+        bake_layout.addWidget(self.vehicleFBX, 2,1,1,3)
         bake_layout.addWidget(self.exportFBX_button,3,0,1,4)
 
         bake_group.setLayout(bake_layout)
@@ -755,6 +777,22 @@ class MainUI(QDialog):
         charRig_group.setLayout(charRig_layout)
         characterRigging_layout.addWidget(charRig_group)
 
+        ##### Metahuman Export #####
+        mhExport_group = QGroupBox("Metahuman Export")
+        mhExport_layout = QGridLayout()
+
+        mhExport_layout.addWidget(self.bodyJoints_label, 0,0)
+        mhExport_layout.addWidget(self.bodyJoints_dropdown, 0,1,1,3)
+        mhExport_layout.addWidget(self.selectControlRig_button, 1,0,1,4)
+        mhExport_layout.addWidget(self.metaStartLabel, 2,0)
+        mhExport_layout.addWidget(self.metahumanBakeStart, 2,1)
+        mhExport_layout.addWidget(self.metaEndLabel, 2,2)
+        mhExport_layout.addWidget(self.metahumanBakeEnd, 2,3)
+        mhExport_layout.addWidget(self.metahumanFBXName, 3,0,1,2)
+        mhExport_layout.addWidget(self.exportControlRig_button, 3,2,1,2)
+
+        mhExport_group.setLayout(mhExport_layout)
+        characterRigging_layout.addWidget(mhExport_group)
         ##############################################
         ######          Save Section            ######
         ##############################################
@@ -843,8 +881,6 @@ class MainUI(QDialog):
         ##### Bake Joint #####
         self.bakeButton.clicked.connect(self.bake)
         self.exportFBX_button.clicked.connect(self.exportFBX)
-        self.unrealExportSelection_button.clicked.connect(self.unrealExportSelection)
-        self.unrealExport_button.clicked.connect(self.unrealExport)
 
         ##### Blend Shapes #####
         self.createBlendGroup_button.clicked.connect(self.createBlendGroup)
@@ -860,6 +896,10 @@ class MainUI(QDialog):
         ##### Character Rigging #####
         self.charRig2Loc_button.clicked.connect(self.charRig2Locs)
         self.addMotion_button.clicked.connect(self.addMotion)
+
+        ##### Metahuman Export #####
+        self.selectControlRig_button.clicked.connect(self.selectControRig)
+        self.exportControlRig_button.clicked.connect(self.metahumanExport)
     #---------------------------------------------------------------------------------------------------------------
     # Button Functions
     #---------------------------------------------------------------------------------------------------------------
@@ -1258,14 +1298,37 @@ class MainUI(QDialog):
         for item in groupList:
             if item.endswith('root_jt'):
                 root = item
+        root = cmds.ls(root)
+        cmds.select(deselect=True)
+        cmds.select('*:*Render', hi=True)
+        cmds.select('*:*Chassis', hi=True, deselect=True)
+        cmds.select('*:*ParentYourMeshHere', hi=True, deselect=True)
+        cmds.select('*:*Render', hi=False, deselect=True)
+        geo = cmds.ls(sl=True)
+
+        export = root + geo
 
         colonIndex = 0
         for i in range(0,len(root)):
             if root[i] == ':':
                 colonIndex = i + 1
 
-        cmds.select(root)
-        cmds.file(self.desktop_dir + '\\' + root[colonIndex:] + '_FBX', type='FBX export', es=True, pr=True, force=True)
+        cmds.select(export)
+        #get variables
+        filename = self.vehicleFBX.text()
+        exportLocation = self.desktop_dir + '/' + filename
+        #fix unicode error
+        exportLocation = exportLocation.replace('\\','/')
+        #export with metahuman settings
+        mel.eval('FBXResetExport')
+        mel.eval('FBXExportTangents -v 1')
+        mel.eval('FBXExportSmoothingGroups -v 1')
+        mel.eval('FBXExportSmoothMesh -v 1')
+        mel.eval('FBXExportSkins -v 1')
+        mel.eval('FBXExportShapes -v 1')
+        mel.eval('FBXExportConstraints -v 1')
+        mel.eval('FBXExportSkeletonDefinitions -v 1')
+        mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
 
     def cable_gui(self):
         #Opens GUI for easy cable creation
@@ -1631,8 +1694,24 @@ class MainUI(QDialog):
         for item in groupList:
             if item.endswith('root_jt'):
                 root = item
+            if item.endswith('_Render'):
+                renderGroup = item
+        root = cmds.ls(root)
+        cmds.select(deselect=True)
+        cmds.select(renderGroup, hi=True)
+        cmds.select('*:*Chassis', hi=True, deselect=True)
+        cmds.select('*:*ParentYourMeshHere', hi=True, deselect=True)
+        cmds.select('*:*Render', hi=False, deselect=True)
+        geo = cmds.ls(sl=True)
+        blendShapes = cmds.ls('*blendShape*')
 
-        cmds.bakeResults(root, hi='below', shape=True, sm=True, time=(start,stop))
+        bakeMe = geo + root + blendShapes
+
+        cmds.select(bakeMe, hi=True)
+        export = cmds.ls(sl=True)
+        cmds.select(deselect=True)
+
+        cmds.bakeResults(bakeMe, hi='below', shape=True, sm=True, time=(start,stop))
 
     def loadCharacterData(self):
         #Set path to character data
@@ -1653,45 +1732,15 @@ class MainUI(QDialog):
 
         #prevItems = cmds.ls()
         cmds.file(filename, i=True)
+        joints = cmds.ls('*Body_joints*')
+        for joint in joints:
+            if joint not in self.activeJoints:
+                self.bodyJoints_dropdown.addItem(joint)
+                self.activeJoints.append(joint)
         #allItems = cmds.ls()
         #newItems = [item for item in allItems if item not in prevItems]
         #grp = cmds.group(newItems, n='Character_Group')
         #self.activeCharacter_edit.addItem(grp)
-
-    def unrealExportSelection(self):
-        #Exports root joint for Unreal Engine
-        rigName = self.activeRig_dropdown.currentText()
-
-        cmds.select(rigName, hierarchy=True)
-        groupList = cmds.ls(sl=True)
-        cmds.select(deselect=True)
-        for item in groupList:
-            if item.endswith('root_jt'):
-                root = item
-
-        cmds.select(rigName, hierarchy=True)
-        groupList = cmds.ls(sl=True)
-        cmds.select(deselect=True)
-        for item in groupList:
-            if item.endswith('_Render'):
-                renderGroup = item
-
-        cmds.select([renderGroup, root], hierarchy=True)
-        renderGroupList = cmds.ls(sl=True)
-        for item in renderGroupList:
-            if item.endswith('_Chassis'):
-                chassisGroup = item
-            if item.endswith('_ParentYourMeshHere'):
-                parentGroup = item
-
-        cmds.select(root, deselect=True, hierarchy=True)
-        cmds.select(renderGroup, deselect=True, hierarchy=False)
-        cmds.select([chassisGroup,parentGroup], deselect=True, hierarchy=True)
-        exportItems = cmds.ls(sl=True)
-        cmds.parent(exportItems, world=True)
-        cmds.parent(root, world=True)
-        cmds.select(root, hierarchy=True)
-        cmds.select(exportItems, add=True)
 
     def charLocators(self):
         #Load data from set character path
@@ -1928,8 +1977,25 @@ class MainUI(QDialog):
         for i in range(0,len(animLocs)):
             cmds.parentConstraint(animLocs[i],idleLocs[i],mo=False)
 
-    def unrealExport(self):
-        mel.eval('ExportSelection;')
+    def selectControRig(self):
+        rig = self.bodyJoints_dropdown.currentText()
+        cmds.select(rig, r=True)
+
+    def metahumanExport(self):
+        #get variables
+        filename = self.metahumanFBXName.text()
+        exportLocation = self.desktop_dir + '/' + filename
+        bakeStart = int(self.metahumanBakeStart.text())
+        bakeEnd = int(self.metahumanBakeEnd.text())
+        #fix unicode error
+        exportLocation = exportLocation.replace('\\','/')
+        #export with metahuman settings
+        mel.eval('FBXResetExport')
+        mel.eval('FBXExportInputConnections -v 0')
+        mel.eval('FBXExportBakeComplexAnimation -v 1')
+        mel.eval(f'FBXExportBakeComplexStart -v {bakeStart}')
+        mel.eval(f'FBXExportBakeComplexEnd -v {bakeEnd}')
+        mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
 
     def popUp(self):
         dialog = skelePopUp(self)

@@ -1,8 +1,7 @@
-money = 20
-rows = 1
-tracker = 2000000
-while tracker < 2120000000:
-    for row in range(0,rows):
-        print('100,000 '*money)
-    rows += 2
-    tracker += 2000000
+list = [1,1,2,3,4]
+
+list.remove(1)
+
+print(list)
+
+GMC_Sierra_DoubleCab_2013_unsm_Arnold_Hood

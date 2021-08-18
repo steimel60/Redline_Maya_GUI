@@ -932,7 +932,7 @@ class rigExportPopUp(QDialog):
 
     def exportAnimation(self):
         if self.animStart_edit.text() == '' or self.animStop_edit.text() == '':
-            warning_box = QMessageBox(QMessageBox.Warning, "Check Bake Frames", "Please enter a valid for Start/Stop frames.")
+            warning_box = QMessageBox(QMessageBox.Warning, "Check Bake Frames", "Please enter a valid input for Start/Stop frames.")
             warning_box.exec_()
 
         elif not self.anim_checkbox.checkState():

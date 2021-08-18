@@ -547,6 +547,7 @@ class skelePopUp(QDialog):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(250, -1)
         self.setWindowTitle('SKEL File Creator')
+        self.setWindowIcon(QIcon(icon_dir + "/RedlineLogo.png"))
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
 
         self.create_controls()  # Initializes controls
@@ -838,6 +839,7 @@ class rigExportPopUp(QDialog):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(250, -1)
         self.setWindowTitle('Character Export')
+        self.setWindowIcon(QIcon(icon_dir + "/RedlineLogo.png"))
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
 
         self.create_controls()  # Initializes controls

@@ -74,8 +74,8 @@ class ToolKit():
         self.loadRig_button.clicked.connect(self.load_rig)
         self.choose_mesh_button.clicked.connect(self.choose_mesh)
         self.loadMesh_button.clicked.connect(self.load_mesh)
-        self.choose_vcData_button.clicked.connect(self.loadVCData)
-        self.choose_vLocator_button.clicked.connect(self.loadvLocator)
+        self.choose_vcData_button.clicked.connect(self.choose_vc_data)
+        self.choose_vLocator_button.clicked.connect(self.choose_v_locator)
 
         ##### Use Data #####
         self.convert_vcData_button.clicked.connect(self.convertVCData)
@@ -136,6 +136,8 @@ class ToolKit():
         rig = cmds.ls('*:*_TopNode')
         rigName = cmds.rename(rig, asset + '_TopNode')
 
+        self.choose_rig_edit.setText('')
+
     def choose_mesh(self):
         # Set Mesh Path
         file_path = QFileDialog.getOpenFileName(None, "", desktop_dir, "OBJ Files (*.obj, *.fbx);;All Files (*.*)")[0]
@@ -147,15 +149,16 @@ class ToolKit():
         #Import mesh from set path
         filename = self.choose_mesh_edit.text()
         cmds.file(filename, i=True)
+        self.choose_mesh_edit.setText('')
 
-    def loadVCData(self):
+    def choose_vc_data(self):
         #Set path for VC data
         file_path = QFileDialog.getOpenFileName(None, "", desktop_dir, "CSV Files (*.csv);;All Files (*.*)")[0]
         if file_path == "":  # If they cancel the dialog
             return  # Then just don't open anything
         self.choose_vcData_edit.setText(file_path)
 
-    def loadvLocator(self):
+    def choose_v_locator(self):
         #Load in MOV file
         file_path = QFileDialog.getOpenFileName(None, "", desktop_dir, "MOV Files (*.mov);;All Files (*.*)")[0]
         if file_path == "":  # If they cancel the dialog
@@ -196,86 +199,95 @@ class ToolKit():
 
             f.close()
 
+        self.choose_vcData_edit.setText('')
+
     def vehicleLocator(self):
-        #Create vehicle locator with MOV data
-        filename = self.choose_vLocator_edit.text()
+        if self.fps_edit.text() == '':
+            warning_box = QMessageBox(QMessageBox.Warning, "Set FPS", "Please enter a valid FPS.")
+            warning_box.exec_()
+        else:
+            #Create vehicle locator with MOV data
+            filename = self.choose_vLocator_edit.text()
 
-        f = open(filename, 'r')
-        lines = f.readlines()
-        f.close()
-        frameTotal = len(lines) - 1
-        #Init Scene
-        fps = self.fps_edit.text()
-        cmds.playbackOptions(min='0sec', max=frameTotal)
-        cmds.playbackOptions(ast='0sec')
-        cmds.playbackOptions(aet=str(frameTotal/int(fps))+'sec')
-        cmds.currentUnit(time=fps+'fps')
-        cmds.currentTime(0)
+            f = open(filename, 'r')
+            lines = f.readlines()
+            f.close()
+            frameTotal = len(lines) - 1
+            #Init Scene
+            fps = self.fps_edit.text()
+            cmds.playbackOptions(min='0sec', max=frameTotal)
+            cmds.playbackOptions(ast='0sec')
+            cmds.playbackOptions(aet=str(frameTotal/int(fps))+'sec')
+            cmds.currentUnit(time=fps+'fps')
+            cmds.currentTime(0)
 
-        #Get Asset Name for Locator
-        try:
-            assetMatch = re.search('/*([a-zA-Z0-9-_ ]*)\.mov', filename)
-            asset = assetMatch.group(1) + '_Locator'
-        except:
-            print("Couldn't retrieve asset name")
-            asset = 'vehicleLocator'
+            #Get Asset Name for Locator
+            try:
+                assetMatch = re.search('/*([a-zA-Z0-9-_ ]*)\.mov', filename)
+                asset = assetMatch.group(1) + '_Locator'
+            except:
+                print("Couldn't retrieve asset name")
+                asset = 'vehicleLocator'
 
-        #Set up locator with vehicle attributes
-        locator = cmds.spaceLocator(p=(0,0,0), n=asset)
-        cmds.addAttr(ln='Time', at='float')
-        cmds.setAttr(locator[0]+'.Time', k=True)
-        cmds.addAttr(ln='Distance', at='float')
-        cmds.setAttr(locator[0]+'.Distance', k=True)
-        cmds.addAttr(ln='Velocity', at='float')
-        cmds.setAttr(locator[0]+'.Velocity', k=True)
-        cmds.addAttr(ln='Xrot', at='float')
-        cmds.setAttr(locator[0]+'.Xrot', k=True)
-        cmds.addAttr(ln='Yrot', at='float')
-        cmds.setAttr(locator[0]+'.Yrot', k=True)
-        cmds.addAttr(ln='Zrot', at='float')
-        cmds.setAttr(locator[0]+'.Zrot', k=True)
-        cmds.addAttr(ln='vni', at='float')
-        cmds.setAttr(locator[0]+'.vni', k=True)
-        cmds.addAttr(ln='vnz', at='float')
-        cmds.setAttr(locator[0]+'.vnz', k=True)
-        cmds.addAttr(ln='steer', at='float')
-        cmds.setAttr(locator[0]+'.steer', k=True)
-        cmds.addAttr(ln='CGx', at='float')
-        cmds.setAttr(locator[0]+'.CGx', k=True)
-        cmds.addAttr(ln='CGy', at='float')
-        cmds.setAttr(locator[0]+'.CGy', k=True)
-        cmds.addAttr(ln='CGz', at='float')
-        cmds.setAttr(locator[0]+'.CGz', k=True)
-        cmds.addAttr(ln='Xrad', at='float')
-        cmds.setAttr(locator[0]+'.Xrad', k=True)
-        cmds.addAttr(ln='Yrad', at='float')
-        cmds.setAttr(locator[0]+'.Yrad', k=True)
-        cmds.addAttr(ln='Zrad', at='float')
-        cmds.setAttr(locator[0]+'.Zrad', k=True)
-        cmds.addAttr(ln='lastV', at='float')
-        cmds.setAttr(locator[0]+'.lastV', k=True)
-        cmds.addAttr(ln='brake', at='float')
-        cmds.setAttr(locator[0]+'.brake', k=True)
+            #Set up locator with vehicle attributes
+            locator = cmds.spaceLocator(p=(0,0,0), n=asset)
+            cmds.addAttr(ln='Time', at='float')
+            cmds.setAttr(locator[0]+'.Time', k=True)
+            cmds.addAttr(ln='Distance', at='float')
+            cmds.setAttr(locator[0]+'.Distance', k=True)
+            cmds.addAttr(ln='Velocity', at='float')
+            cmds.setAttr(locator[0]+'.Velocity', k=True)
+            cmds.addAttr(ln='Xrot', at='float')
+            cmds.setAttr(locator[0]+'.Xrot', k=True)
+            cmds.addAttr(ln='Yrot', at='float')
+            cmds.setAttr(locator[0]+'.Yrot', k=True)
+            cmds.addAttr(ln='Zrot', at='float')
+            cmds.setAttr(locator[0]+'.Zrot', k=True)
+            cmds.addAttr(ln='vni', at='float')
+            cmds.setAttr(locator[0]+'.vni', k=True)
+            cmds.addAttr(ln='vnz', at='float')
+            cmds.setAttr(locator[0]+'.vnz', k=True)
+            cmds.addAttr(ln='steer', at='float')
+            cmds.setAttr(locator[0]+'.steer', k=True)
+            cmds.addAttr(ln='CGx', at='float')
+            cmds.setAttr(locator[0]+'.CGx', k=True)
+            cmds.addAttr(ln='CGy', at='float')
+            cmds.setAttr(locator[0]+'.CGy', k=True)
+            cmds.addAttr(ln='CGz', at='float')
+            cmds.setAttr(locator[0]+'.CGz', k=True)
+            cmds.addAttr(ln='Xrad', at='float')
+            cmds.setAttr(locator[0]+'.Xrad', k=True)
+            cmds.addAttr(ln='Yrad', at='float')
+            cmds.setAttr(locator[0]+'.Yrad', k=True)
+            cmds.addAttr(ln='Zrad', at='float')
+            cmds.setAttr(locator[0]+'.Zrad', k=True)
+            cmds.addAttr(ln='lastV', at='float')
+            cmds.setAttr(locator[0]+'.lastV', k=True)
+            cmds.addAttr(ln='brake', at='float')
+            cmds.setAttr(locator[0]+'.brake', k=True)
 
-        #Connect Attr to expressions
-        locName = locator[0]
+            #Connect Attr to expressions
+            locName = locator[0]
 
-        cmds.expression(s=locator[0]+".translateX="+locator[0]+".CGx", o=locator[0], ae=True, n='translateX')
-        cmds.expression(s=locator[0]+".translateY="+locator[0]+".CGy", o=locator[0], ae=True, n='translateY')
-        cmds.expression(s=locator[0]+".translateZ="+locator[0]+".CGz", o=locator[0], ae=True, n='translateZ')
+            cmds.expression(s=locator[0]+".translateX="+locator[0]+".CGx", o=locator[0], ae=True, n='translateX')
+            cmds.expression(s=locator[0]+".translateY="+locator[0]+".CGy", o=locator[0], ae=True, n='translateY')
+            cmds.expression(s=locator[0]+".translateZ="+locator[0]+".CGz", o=locator[0], ae=True, n='translateZ')
 
-        cmds.expression(s=locator[0]+".rotateX="+locator[0]+".Xrot", o=locator[0], ae=True, n='rotX', uc='angularOnly')
-        cmds.expression(s=locator[0]+".rotateY="+locator[0]+".Yrot", o=locator[0], ae=True, n='rotY', uc='angularOnly')
-        cmds.expression(s=locator[0]+".rotateZ="+locator[0]+".Zrot", o=locator[0], ae=True, n='rotZ', uc='angularOnly')
+            cmds.expression(s=locator[0]+".rotateX="+locator[0]+".Xrot", o=locator[0], ae=True, n='rotX', uc='angularOnly')
+            cmds.expression(s=locator[0]+".rotateY="+locator[0]+".Yrot", o=locator[0], ae=True, n='rotY', uc='angularOnly')
+            cmds.expression(s=locator[0]+".rotateZ="+locator[0]+".Zrot", o=locator[0], ae=True, n='rotZ', uc='angularOnly')
 
-        cmds.expression(s=locator[0]+f""".lastV=`getAttr -time (frame-1)  {locName}.Velocity`;
-        float $diff =  {locName}.Velocity-{locName}.lastV ;
-        if ($diff < 0)""" +'{'+f'{locName}.brake=1;'+
-        '}'+f'else {locName}.brake = 0;', o=locator[0], ae=True, n='brakeAndVel')
+            cmds.expression(s=locator[0]+f""".lastV=`getAttr -time (frame-1)  {locName}.Velocity`;
+            float $diff =  {locName}.Velocity-{locName}.lastV ;
+            if ($diff < 0)""" +'{'+f'{locName}.brake=1;'+
+            '}'+f'else {locName}.brake = 0;', o=locator[0], ae=True, n='brakeAndVel')
 
-        #Load Attr from MOV file
-        cmds.movIn(locName + '.Time', locName + '.Distance', locName + '.Velocity', locName + '.Xrot', locName + '.Yrot', locName + '.Zrot', locName + '.vni', locName + '.vnz', locName + '.steer', locName + '.CGx', locName + '.CGy', locName + '.CGz', locName + ".Xrad", locName + '.Yrad', locName + '.Zrad', locName + '.lastV', locName + '.brake', f=filename)
+            #Load Attr from MOV file
+            cmds.movIn(locName + '.Time', locName + '.Distance', locName + '.Velocity', locName + '.Xrot', locName + '.Yrot', locName + '.Zrot', locName + '.vni', locName + '.vnz', locName + '.steer', locName + '.CGx', locName + '.CGy', locName + '.CGz', locName + ".Xrad", locName + '.Yrad', locName + '.Zrad', locName + '.lastV', locName + '.brake', f=filename)
 
-        #Add to group
-        grp = cmds.group(locName, n=locName+'_group')
-        cmds.rotate('-90deg',0,0,grp,pivot=(0,0,0))
+            #Add to group
+            grp = cmds.group(locName, n=locName+'_group')
+            cmds.rotate('-90deg',0,0,grp,pivot=(0,0,0))
+
+            self.fps_edit.setText('')
+            self.choose_vLocator_edit.setText('')

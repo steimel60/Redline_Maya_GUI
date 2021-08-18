@@ -494,14 +494,14 @@ class ToolKit():
             is_arnold = True
 
         if is_arnold:
-            spellbook_path = self.spellbook_dir + '\\' + 'Arn2Blinn.spb'
+            spellbook_path = spellbook_dir + '\\' + 'Arn2Blinn.spb'
             cmds.select(all=True)
             cmds.rotate(0, 0, -90, r=True, p=[0,0,0])
             cmds.select(deselect=True)
             cmds.delete('*aiSkyDomeLight*')
 
         else:
-            spellbook_path = self.spellbook_dir + '\\' + 'Hum2Blinn.spb'
+            spellbook_path = spellbook_dir + '\\' + 'Hum2Blinn.spb'
             cmds.select(deselect=True)
 
         #spellbook_path =

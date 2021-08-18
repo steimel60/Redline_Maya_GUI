@@ -31,8 +31,6 @@ class ToolKit():
         self.chooseCharacterData_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
         self.chooseCharacterData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
-        self.chooseCharacterData_edit.setText('C:/Users/DylanSteimel/Desktop/fallstraightdown.csv')
-
         ##### Import Character Locators #####
         self.tPoseLocators_button = QPushButton('Import T/A Pose Locators')
         self.tPoseLocators_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -40,15 +38,17 @@ class ToolKit():
         self.importCharacter_button = QPushButton('Import Animation Locators')
         self.importCharacter_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
-        self.popUp_button = QPushButton('Pop-Up')
-
         ##### Skele Rig File #####
+        self.popUp_button = QPushButton('Create Rig Pairing Template')
+
         self.chooseSkeleRig_edit = QLineEdit()
-        self.chooseSkeleRig_edit.setPlaceholderText("Character File")
+        self.chooseSkeleRig_edit.setPlaceholderText("Rig File")
         self.chooseSkeleRig_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.chooseSkeleRig_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
         self.chooseSkeleRig_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.refreshCharAssets_button = QPushButton('Load/Refresh SKEL Assets')
 
         ##### Load Character #####
         self.loadCharacter_button = QPushButton('Load Character')
@@ -74,6 +74,7 @@ class ToolKit():
         self.activeChar_label = QLabel()
         self.activeChar_label.setText('Active Character: ')
         self.activeCharacter_edit = QLineEdit()
+        self.activeCharacter_edit.setPlaceholderText('Character Joint Hierarchy - Top Node')
         self.activeCharacter_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Rig DropDown #####
@@ -89,7 +90,6 @@ class ToolKit():
             self.skelePath_list.append(file)
         for item in skel_list:
             self.skeleRig_dropdown.addItem(item)
-        self.skeleRig_current = self.skelePath_list[self.skeleRig_dropdown.currentIndex()]
 
         ##### Alignment Confirmation #####
         self.alignment_checkbox = QCheckBox('Alignment Complete')
@@ -97,8 +97,11 @@ class ToolKit():
         ##### Pair to Locators #####
         self.charRig2Loc_button = QPushButton('Pair Character to Locators')
         self.charRig2Loc_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.addMotion_button = QPushButton('Pair Idle Locators to Animated Locators')
-        self.addMotion_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.add_motion_button = QPushButton('Pair Idle Locators to Animated Locators')
+        self.add_motion_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        ##### General Export #####
+        self.generalExport_button = QPushButton('Non-Metahuman Export')
 
         ##### Export Metahuman #####
         self.metahumanFBXName = QLineEdit()
@@ -126,16 +129,22 @@ class ToolKit():
     #Connections
     def make_connections(self):
         ##### Charcater Import #####
-        self.chooseCharacterData_button.clicked.connect(self.loadCharacterData)
-        self.tPoseLocators_button.clicked.connect(self.loadIdleLocs)
-        self.importCharacter_button.clicked.connect(self.charLocators)
-        self.chooseSkeleRig_button.clicked.connect(self.loadCharRig)
-        self.loadCharacter_button.clicked.connect(self.importCharRig)
+        self.chooseCharacterData_button.clicked.connect(self.choose_character_data)
+        self.tPoseLocators_button.clicked.connect(self.load_idle_locs)
+        self.importCharacter_button.clicked.connect(self.load_animated_locators)
+        self.chooseSkeleRig_button.clicked.connect(self.choose_char_rig)
+        self.loadCharacter_button.clicked.connect(self.load_char_rig)
+
+        ##### SKEL Files #####
         self.popUp_button.clicked.connect(self.popUp)
+        self.refreshCharAssets_button.clicked.connect(self.refreshCharAssets)
 
         ##### Character Rigging #####
-        self.charRig2Loc_button.clicked.connect(self.charRig2Locs)
-        self.addMotion_button.clicked.connect(self.addMotion)
+        self.charRig2Loc_button.clicked.connect(self.pair_char_2_locs)
+        self.add_motion_button.clicked.connect(self.add_motion)
+
+        ##### General Export #####
+        self.generalExport_button.clicked.connect(self.exportPopUp)
 
         ##### Metahuman Export #####
         self.selectControlRig_button.clicked.connect(self.selectControRig)
@@ -154,9 +163,7 @@ class ToolKit():
         fileLayout.addWidget(self.importCharacter_button, 1,2,1,2)
         fileLayout.addWidget(self.chooseSkeleRig_button, 2,0)
         fileLayout.addWidget(self.chooseSkeleRig_edit, 2,1,1,3)
-
-        fileLayout.addWidget(self.loadCharacter_button, 4,0,1,4)
-        fileLayout.addWidget(self.popUp_button, 5,0,1,4)
+        fileLayout.addWidget(self.loadCharacter_button, 3,0,1,4)
 
         fileGroup.setLayout(fileLayout)
         self.layout.addWidget(fileGroup)
@@ -165,21 +172,23 @@ class ToolKit():
         charRig_group = QGroupBox("Character Rigging")
         charRig_layout = QGridLayout()
 
-        charRig_layout.addWidget(self.idleLocs_label, 0,0,1,1)
-        charRig_layout.addWidget(self.idleLocs_dropdown, 0,1,1,3)
+        charRig_layout.addWidget(self.popUp_button, 0,0,1,2)
+        charRig_layout.addWidget(self.refreshCharAssets_button, 0,2,1,2)
+        charRig_layout.addWidget(self.idleLocs_label, 1,0,1,1)
+        charRig_layout.addWidget(self.idleLocs_dropdown, 1,1,1,3)
 
-        charRig_layout.addWidget(self.activeChar_label, 1,0,1,1)
-        charRig_layout.addWidget(self.activeCharacter_edit, 1,1,1,3)
+        charRig_layout.addWidget(self.activeChar_label, 2,0,1,1)
+        charRig_layout.addWidget(self.activeCharacter_edit, 2,1,1,3)
 
-        charRig_layout.addWidget(self.skeleRig_label, 2,0,1,1)
-        charRig_layout.addWidget(self.skeleRig_dropdown, 2,1,1,3)
+        charRig_layout.addWidget(self.skeleRig_label, 3,0,1,1)
+        charRig_layout.addWidget(self.skeleRig_dropdown, 3,1,1,3)
 
-        charRig_layout.addWidget(self.alignment_checkbox, 3,0,1,1)
-        charRig_layout.addWidget(self.charRig2Loc_button, 3,1,1,3)
+        charRig_layout.addWidget(self.alignment_checkbox, 4,0,1,1)
+        charRig_layout.addWidget(self.charRig2Loc_button, 4,1,1,3)
 
-        charRig_layout.addWidget(self.charLoc_label, 4,0,1,1)
-        charRig_layout.addWidget(self.activeCharLocs_dropdown, 4,1,1,3)
-        charRig_layout.addWidget(self.addMotion_button, 5,0,1,4)
+        charRig_layout.addWidget(self.charLoc_label, 5,0,1,1)
+        charRig_layout.addWidget(self.activeCharLocs_dropdown, 5,1,1,3)
+        charRig_layout.addWidget(self.add_motion_button, 6,0,1,4)
 
         charRig_group.setLayout(charRig_layout)
         self.layout.addWidget(charRig_group)
@@ -197,26 +206,27 @@ class ToolKit():
         mhExport_layout.addWidget(self.metahumanBakeEnd, 2,3)
         mhExport_layout.addWidget(self.metahumanFBXName, 3,0,1,2)
         mhExport_layout.addWidget(self.exportControlRig_button, 3,2,1,2)
+        mhExport_layout.addWidget(self.generalExport_button, 4,0,1,4)
 
         mhExport_group.setLayout(mhExport_layout)
         self.layout.addWidget(mhExport_group)
 
     #Functions
-    def loadCharacterData(self):
+    def choose_character_data(self):
         #Set path to character data
         file_path = QFileDialog.getOpenFileName(None, "", desktop_dir, "CSV Files (*.csv);;All Files (*.*)")[0]
         if file_path == "":  # If they cancel the dialog
             return  # Then just don't open anything
         self.chooseCharacterData_edit.setText(file_path)
 
-    def loadCharRig(self):
+    def choose_char_rig(self):
         #Set path to character data
         file_path = QFileDialog.getOpenFileName(None, "", desktop_dir, "Char Files (*.ma *.mb);;All Files (*.*)")[0]
         if file_path == "":  # If they cancel the dialog
             return  # Then just don't open anything
         self.chooseSkeleRig_edit.setText(file_path)
 
-    def importCharRig(self):
+    def load_char_rig(self):
         filename = self.chooseSkeleRig_edit.text()
 
         cmds.file(filename, i=True)
@@ -226,7 +236,9 @@ class ToolKit():
                 self.bodyJoints_dropdown.addItem(joint)
                 self.activeJoints.append(joint)
 
-    def charLocators(self):
+        self.chooseSkeleRig_edit.setText('')
+
+    def load_animated_locators(self):
         #Load data from set character path
         filename = self.chooseCharacterData_edit.text()
         f = open(filename, "r")
@@ -331,8 +343,9 @@ class ToolKit():
         grp = cmds.group(locators, n='Animation_Locators')
         self.activeCharLocs_dropdown.addItem(grp)
         cmds.rotate('-90deg',0,0,grp,pivot=(0,0,0))
+        self.chooseCharacterData_edit.setText('')
 
-    def loadIdleLocs(self):
+    def load_idle_locs(self):
         #Load data from set character path
         filename = self.chooseCharacterData_edit.text()
         f = open(filename, "r")
@@ -389,8 +402,9 @@ class ToolKit():
         grp = cmds.group(locators, n='idle_Locators')
         cmds.rotate('-90deg',0,0,grp,pivot=(0,0,0))
         self.idleLocs_dropdown.addItem(grp)
+        self.chooseCharacterData_edit.setText('')
 
-    def charRig2Locs(self):
+    def pair_char_2_locs(self):
         if self.alignment_checkbox.checkState():
             #Get Active Assets
             actLocs = self.idleLocs_dropdown.currentText()
@@ -400,7 +414,7 @@ class ToolKit():
             cmds.select(deselect=True)
 
             skelSelection = self.skeleRig_dropdown.currentText()
-            for file in glob.glob(self.skeleton_dir + '/*'):
+            for file in glob.glob(skeleton_dir + '/*'):
                 if skelSelection in file:
                     f = open(file, 'r')
                     skelJoints = f.readlines()
@@ -431,11 +445,13 @@ class ToolKit():
                 else:
                     const = cmds.parentConstraint(skel[0], skel[1], mo=True)
 
+            self.activeCharacter_edit.setText('')
+
         else:
             warning_box = QMessageBox(QMessageBox.Warning, "Check Alignment", "Please confirm Joint and Locator alignment before pairing.")
             warning_box.exec_()
 
-    def addMotion(self):
+    def add_motion(self):
         #Get Groups
         idleGroup = self.idleLocs_dropdown.currentText()
         animGroup = self.activeCharLocs_dropdown.currentText()
@@ -460,25 +476,63 @@ class ToolKit():
         cmds.select(rig, r=True)
 
     def metahumanExport(self):
-        #get variables
-        filename = self.metahumanFBXName.text()
-        exportLocation = desktop_dir + '/' + filename
-        bakeStart = int(self.metahumanBakeStart.text())
-        bakeEnd = int(self.metahumanBakeEnd.text())
-        #fix unicode error
-        exportLocation = exportLocation.replace('\\','/')
-        #export with metahuman settings
-        mel.eval('FBXResetExport')
-        mel.eval('FBXExportInputConnections -v 0')
-        mel.eval('FBXExportBakeComplexAnimation -v 1')
-        mel.eval(f'FBXExportBakeComplexStart -v {bakeStart}')
-        mel.eval(f'FBXExportBakeComplexEnd -v {bakeEnd}')
-        mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
+        if self.metahumanBakeStart.text() == '' or self.metahumanBakeEnd.text() == '':
+            warning_box = QMessageBox(QMessageBox.Warning, "Check Bake Frames", "Please enter a valid for Start/Stop frames.")
+            warning_box.exec_()
+
+        else:
+            #get variables
+            filename = self.metahumanFBXName.text()
+            exportLocation = desktop_dir + '/' + filename
+            bakeStart = int(self.metahumanBakeStart.text())
+            bakeEnd = int(self.metahumanBakeEnd.text())
+            #fix unicode error
+            exportLocation = exportLocation.replace('\\','/')
+            #export with metahuman settings
+            mel.eval('FBXResetExport')
+            mel.eval('FBXExportInputConnections -v 0')
+            mel.eval('FBXExportBakeComplexAnimation -v 1')
+            mel.eval(f'FBXExportBakeComplexStart -v {bakeStart}')
+            mel.eval(f'FBXExportBakeComplexEnd -v {bakeEnd}')
+            mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
+
+            self.metahumanFBXName.setText('')
+            self.metahumanBakeStart.setText('')
+            self.metahumanBakeEnd.setText('')
 
     def popUp(self):
         dialog = skelePopUp()
         self.dialogs.append(dialog)
         dialog.show()
+
+    def exportPopUp(self):
+        dialog = rigExportPopUp()
+        self.dialogs.append(dialog)
+        dialog.show()
+
+    def refreshCharAssets(self):
+        #Clear Dropdowns
+        self.skelePath_list.clear()
+        self.idleLocs_dropdown.clear()
+        self.skeleRig_dropdown.clear()
+        self.activeCharLocs_dropdown.clear()
+        skel_list = []
+        #Get new dropdown items
+        for file in glob.glob(skeleton_dir + '/*'): #Finds all spellbooks and creates dropdown
+            skel_match = re.search('skelFiles(.*).SKEL', file)
+            skel_name = skel_match.group(1)
+            skel_list.append(skel_name[1:])
+            self.skelePath_list.append(file)
+
+        idleLocs = cmds.ls('*idle_Locators*')
+        charLocs = cmds.ls('*Animation_Locators*')
+        #Add items to dropdown
+        for iLoc in idleLocs:
+            self.idleLocs_dropdown.addItem(iLoc)
+        for cLoc in charLocs:
+            self.activeCharLocs_dropdown.addItem(cLoc)
+        for item in skel_list:
+            self.skeleRig_dropdown.addItem(item)
 
 class skelePopUp(QDialog):
     #--------------------------------------------------------------------------------------------------------------
@@ -677,24 +731,34 @@ class skelePopUp(QDialog):
     #                                                 Functions
     #--------------------------------------------------------------------------------------------------------------
     def basicCreateSKEL(self):
-        #Get Variables
-        locs = ['femur_left','femur_right','foot_left','foot_right','head','hip','left_lower_arm','left_upper_arm',
-                'lower_leg_left','lower_leg_right','neck','right_lower_arm','right_upper_arm','torso']
-        joints = [self.LeftFemur_edit.text(), self.rightFemur_edit.text(), self.leftFoot_edit.text(), self.rightFoot_edit.text(),
-        self.head_edit.text(), self.hip_edit.text(), self.leftLowerArm_edit.text(), self.leftUpperArm_edit.text(), self.leftLowerLeg_edit.text(),
-        self.rightLowerLeg_edit.text(), self.neck_edit.text(),  self.rightLowerArm_edit.text(), self.rightUpperArm_edit.text(), self.torsoJoint_edit.text()]
-
-        newFile = f'{skeleton_dir}/{self.newFileName.text()}'
-
-        #Create File
-        f = open(f'{newFile}.SKEL', 'w')
-        for i in range(0,len(joints)):
-            f.write(f'{locs[i]},{joints[i]},True,True\n')
-        f.close()
-
-        #Clear inputs
+        missing_joint = False
         for edit in self.all_edits:
-            edit.setText('')
+            if edit.text() == '':
+                missing_joint = True
+
+        if missing_joint:
+            warning_box = QMessageBox(QMessageBox.Warning, "Check Joints", "Please enter a joint name for all joints.")
+            warning_box.exec_()
+
+        else:
+            #Get Variables
+            locs = ['femur_left','femur_right','foot_left','foot_right','head','hip','left_lower_arm','left_upper_arm',
+                    'lower_leg_left','lower_leg_right','neck','right_lower_arm','right_upper_arm','torso']
+            joints = [self.LeftFemur_edit.text(), self.rightFemur_edit.text(), self.leftFoot_edit.text(), self.rightFoot_edit.text(),
+            self.head_edit.text(), self.hip_edit.text(), self.leftLowerArm_edit.text(), self.leftUpperArm_edit.text(), self.leftLowerLeg_edit.text(),
+            self.rightLowerLeg_edit.text(), self.neck_edit.text(),  self.rightLowerArm_edit.text(), self.rightUpperArm_edit.text(), self.torsoJoint_edit.text()]
+
+            newFile = f'{skeleton_dir}/{self.newFileName.text()}'
+
+            #Create File
+            f = open(f'{newFile}.SKEL', 'w')
+            for i in range(0,len(joints)):
+                f.write(f'{locs[i]},{joints[i]},True,True\n')
+            f.close()
+
+            #Clear inputs
+            for edit in self.all_edits:
+                edit.setText('')
 
     def advCreateSKEL(self):
         locLabels = ['L Femur','R Femur','L Foot','R Foot','Head','Hip','L Lower Arm','L Upper Arm','L Lower Leg',
@@ -760,3 +824,141 @@ class skelePopUp(QDialog):
         #Track Widgets
         self.widgetCount += 1
         self.widgetList.append((comboBox,boneName,translationBox,rotationBox))
+
+class rigExportPopUp(QDialog):
+    #--------------------------------------------------------------------------------------------------------------
+    #                                            Create GUI Window
+    #--------------------------------------------------------------------------------------------------------------
+    def __init__(self, parent=maya_main_window()):
+        super(rigExportPopUp, self).__init__(parent)
+
+        # Set up the window
+        # self.setWindowFlags(Qt.Tool)
+        self.setFixedWidth(600)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.resize(250, -1)
+        self.setWindowTitle('Character Export')
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+
+        self.create_controls()  # Initializes controls
+        self.create_layout()  # Initializes the internal window layout
+        self.make_connections()
+
+    def create_controls(self):
+        ##### Skeleton Export #####
+        self.skeleStep1_label = QLabel('Step 1: Select Mesh and Joints')
+        self.skeleStep2_label = QLabel('Step 2: Confirm Selection')
+        self.skeleStep3_label = QLabel('Step 3: Name and Export FBX')
+        self.skeleConfirmation_checkbox = QCheckBox('Mesh and Joints Selected')
+        self.skeleFileName_label = QLabel('File Name:')
+        self.skeleFileName_edit = QLineEdit()
+        self.skeleFileName_edit.setPlaceholderText('FBX File Name')
+        self.exportSkele_button = QPushButton('Export Skeleton')
+
+        ##### Animation Export #####
+        self.animStep1_label = QLabel('Step 1: Set Desired Start/Stop Frames')
+        self.animStep2_label = QLabel('Step 2: Select Joint Hierarchy')
+        self.animStep3_label = QLabel('Step 3: Confirm Selection')
+        self.animStep4_label = QLabel('Step 4: Name and Export Animation')
+        self.animStart_edit = QLineEdit()
+        self.animStart_edit.setPlaceholderText('Start Frame')
+        self.animStop_edit = QLineEdit()
+        self.animStop_edit.setPlaceholderText('Stop Frame')
+        self.anim_checkbox = QCheckBox('Joints Selected')
+        self.animFBX_label = QLabel('File Name: ')
+        self.animFBX_edit = QLineEdit()
+        self.animFBX_edit.setPlaceholderText('FBX Name')
+        self.animExport_button = QPushButton('Export Animation')
+
+    def create_layout(self):
+        self.mainLayout = QHBoxLayout()
+
+        skeleton_group = QGroupBox('Skeleton Export')
+        skeleton_layout = QGridLayout()
+        skeleton_layout.addWidget(self.skeleStep1_label,0,0,1,2)
+        skeleton_layout.addWidget(self.skeleStep2_label,1,0,1,2)
+        skeleton_layout.addWidget(self.skeleStep3_label,2,0,1,2)
+        skeleton_layout.addWidget(self.skeleConfirmation_checkbox,3,0,1,3)
+        skeleton_layout.addWidget(self.skeleFileName_label,4,0)
+        skeleton_layout.addWidget(self.skeleFileName_edit,4,1,1,2)
+        skeleton_layout.addWidget(self.exportSkele_button,5,0,1,3)
+        skeleton_group.setLayout(skeleton_layout)
+
+        animExport_group = QGroupBox('Animation Export')
+        animExport_layout = QGridLayout()
+        animExport_layout.addWidget(self.animStep1_label,0,0,1,4)
+        animExport_layout.addWidget(self.animStep2_label,1,0,1,4)
+        animExport_layout.addWidget(self.animStep3_label,2,0,1,4)
+        animExport_layout.addWidget(self.animStep4_label,3,0,1,4)
+        animExport_layout.addWidget(self.anim_checkbox,4,0,1,4)
+        animExport_layout.addWidget(self.animStart_edit,5,0,1,2)
+        animExport_layout.addWidget(self.animStop_edit,5,2,1,2)
+        animExport_layout.addWidget(self.animFBX_label,6,0,1,1)
+        animExport_layout.addWidget(self.animFBX_edit,6,1,1,3)
+        animExport_layout.addWidget(self.animExport_button,7,0,1,4)
+        animExport_group.setLayout(animExport_layout)
+
+        self.mainLayout.addWidget(skeleton_group)
+        self.mainLayout.addWidget(animExport_group)
+        self.setLayout(self.mainLayout)
+
+    def make_connections(self):
+        self.exportSkele_button.clicked.connect(self.exportSkeleton)
+        self.animExport_button.clicked.connect(self.exportAnimation)
+
+    def exportSkeleton(self):
+        if self.skeleConfirmation_checkbox.checkState():
+            #get variables
+            filename = self.skeleFileName_edit.text()
+            exportLocation = desktop_dir + '/' + filename
+            #fix unicode error
+            exportLocation = exportLocation.replace('\\','/')
+            #export with metahuman settings
+            mel.eval('FBXResetExport')
+            mel.eval('FBXExportTangents -v 1')
+            mel.eval('FBXExportSmoothingGroups -v 1')
+            mel.eval('FBXExportSmoothMesh -v 1')
+            mel.eval('FBXExportSkins -v 1')
+            mel.eval('FBXExportShapes -v 1')
+            mel.eval('FBXExportConstraints -v 1')
+            mel.eval('FBXExportSkeletonDefinitions -v 1')
+            mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
+
+            self.skeleFileName_edit.setText('')
+
+        else:
+            warning_box = QMessageBox(QMessageBox.Warning, "Confirm Selection", "Please confirm Joint and Mesh are selected.")
+            warning_box.exec_()
+
+    def exportAnimation(self):
+        if self.animStart_edit.text() == '' or self.animStop_edit.text() == '':
+            warning_box = QMessageBox(QMessageBox.Warning, "Check Bake Frames", "Please enter a valid for Start/Stop frames.")
+            warning_box.exec_()
+
+        elif not self.anim_checkbox.checkState():
+            warning_box = QMessageBox(QMessageBox.Warning, "Confirm Selection", "Please confirm Joint Hierarchy is selected.")
+            warning_box.exec_()
+
+        else:
+            #get all bones below
+            selected = cmds.ls(sl=1)
+            cmds.select(selected, hi=1)
+            #get variables
+            filename = self.animFBX_edit.text()
+            exportLocation = desktop_dir + '/' + filename
+            bakeStart = int(self.animStart_edit.text())
+            bakeEnd = int(self.animStop_edit.text())
+            #fix unicode error
+            exportLocation = exportLocation.replace('\\','/')
+            #export with metahuman settings
+            mel.eval('FBXResetExport')
+            mel.eval('FBXExportInputConnections -v 0')
+            mel.eval('FBXExportBakeComplexAnimation -v 1')
+            mel.eval(f'FBXExportBakeComplexStart -v {bakeStart}')
+            mel.eval(f'FBXExportBakeComplexEnd -v {bakeEnd}')
+            mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
+            #clear selection
+            cmds.select(deselect=True)
+            self.animFBX_edit.setText('')
+            self.animStart_edit.setText('')
+            self.animStop_edit.setText('')

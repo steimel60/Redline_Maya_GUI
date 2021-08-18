@@ -293,6 +293,8 @@ class ToolKit():
         intensity = self.lightIntensity.text()
 
         cmds.expression(s=f'{light}.intensity = {root}.brake * {intensity};')
+        self.lightName_edit.setText('')
+        self.lightIntensity.setText('')
 
     def rotateOnConst(self):
         #Rotate rig on parent constraint
@@ -317,14 +319,14 @@ class ToolKit():
         rotZ = self.parentZ.text()
 
         if rotX == '':
-            rotX = 0
-            self.parentX.setText('0')
+            rotX = cmds.getAttr(const + '.target[0].targetOffsetRotateX')
+            self.parentX.setText(str(rotX))
         if rotY == '':
-            rotY = 0
-            self.parentY.setText('0')
+            rotY = cmds.getAttr(const + '.target[0].targetOffsetRotateY')
+            self.parentY.setText(str(rotY))
         if rotZ == '':
-            rotZ = 0
-            self.parentZ.setText('0')
+            rotZ = cmds.getAttr(const + '.target[0].targetOffsetRotateZ')
+            self.parentZ.setText(str(rotZ))
 
         rotX = float(rotX)
         rotY = float(rotY)
@@ -360,22 +362,22 @@ class ToolKit():
         height = self.cgHeight_edit.text()
 
         if xOffset == '':
-            xOffset = 0
-            self.cgXOffset_edit.setText('0')
+            xOffset = cmds.getAttr(const + '.target[0].targetOffsetTranslateX')
+            self.cgXOffset_edit.setText(str(xOffset))
         if yOffset == '':
-            yOffset = 0
-            self.cgYOffset_edit.setText('0')
+            yOffset = cmds.getAttr(const + '.target[0].targetOffsetTranslateY')
+            self.cgYOffset_edit.setText(str(yOffset))
         if height == '':
-            height = 0
-            self.cgHeight_edit.setText('0')
+            height = cmds.getAttr(const + '.target[0].targetOffsetTranslateZ')
+            self.cgHeight_edit.setText(str(height))
 
         xOffset = float(xOffset)
         yOffset = float(yOffset)
         height = float(height)
 
-        cmds.setAttr(const + '.target[0].targetOffsetTranslateX', -xOffset)
-        cmds.setAttr(const + '.target[0].targetOffsetTranslateY', -yOffset)
-        cmds.setAttr(const + '.target[0].targetOffsetTranslateZ', -height)
+        cmds.setAttr(const + '.target[0].targetOffsetTranslateX', xOffset)
+        cmds.setAttr(const + '.target[0].targetOffsetTranslateY', yOffset)
+        cmds.setAttr(const + '.target[0].targetOffsetTranslateZ', height)
 
     def wheelConst(self):
         #constrain wheels to mesh
@@ -386,6 +388,8 @@ class ToolKit():
 
         for ctrl in wheelCtrls:
             cmds.geometryConstraint(mesh[0],ctrl)
+
+        self.siteName_edit.setText('')
 
     def createBlendGroup(self):
         #Connect blend shape to root joint for Unreal export
@@ -415,36 +419,46 @@ class ToolKit():
                 shape = attr
                 cmds.expression(s=f'{blendNode}.{shape} = {rootJoint}.{groupName}')
 
+        self.blendNode_edit.setText('')
+        self.blendGroupName_edit.setText('')
+
     def bake(self):
-        #Bake animation
-        start = self.bakeStart_edit.text()
-        stop = self.bakeStop_edit.text()
-        rigName = self.activeRig_dropdown.currentText()
+        if self.bakeStart_edit.text() == '' or self.bakeStop_edit.text() == '':
+            warning_box = QMessageBox(QMessageBox.Warning, "Check Bake Frames", "Please enter a valid for Start/Stop frames.")
+            warning_box.exec_()
+        else:
+            #Bake animation
+            start = self.bakeStart_edit.text()
+            stop = self.bakeStop_edit.text()
+            rigName = self.activeRig_dropdown.currentText()
 
-        cmds.select(rigName, hierarchy=True)
-        groupList = cmds.ls(sl=True)
-        cmds.select(deselect=True)
-        for item in groupList:
-            if item.endswith('root_jt'):
-                root = item
-            if item.endswith('_Render'):
-                renderGroup = item
-        root = cmds.ls(root)
-        cmds.select(deselect=True)
-        cmds.select(renderGroup, hi=True)
-        cmds.select('*:*Chassis', hi=True, deselect=True)
-        cmds.select('*:*ParentYourMeshHere', hi=True, deselect=True)
-        cmds.select('*:*Render', hi=False, deselect=True)
-        geo = cmds.ls(sl=True)
-        blendShapes = cmds.ls('*blendShape*')
+            cmds.select(rigName, hierarchy=True)
+            groupList = cmds.ls(sl=True)
+            cmds.select(deselect=True)
+            for item in groupList:
+                if item.endswith('root_jt'):
+                    root = item
+                if item.endswith('_Render'):
+                    renderGroup = item
+            root = cmds.ls(root)
+            cmds.select(deselect=True)
+            cmds.select(renderGroup, hi=True)
+            cmds.select('*:*Chassis', hi=True, deselect=True)
+            cmds.select('*:*ParentYourMeshHere', hi=True, deselect=True)
+            cmds.select('*:*Render', hi=False, deselect=True)
+            geo = cmds.ls(sl=True)
+            blendShapes = cmds.ls('*blendShape*')
 
-        bakeMe = geo + root + blendShapes
+            bakeMe = geo + root + blendShapes
 
-        cmds.select(bakeMe, hi=True)
-        export = cmds.ls(sl=True)
-        cmds.select(deselect=True)
+            cmds.select(bakeMe, hi=True)
+            export = cmds.ls(sl=True)
+            cmds.select(deselect=True)
 
-        cmds.bakeResults(bakeMe, hi='below', shape=True, sm=True, time=(start,stop))
+            cmds.bakeResults(bakeMe, hi='below', shape=True, sm=True, time=(start,stop))
+
+            self.bakeStart_edit.setText('')
+            self.bakeStop_edit.setText('')
 
     def exportFBX(self):
         #Exports root joint for Unreal Engine
@@ -487,6 +501,8 @@ class ToolKit():
         mel.eval('FBXExportConstraints -v 1')
         mel.eval('FBXExportSkeletonDefinitions -v 1')
         mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
+
+        self.vehicleFBX.setText('')
 
     def save(self):
         cmds.SaveSceneAs(o=True)

@@ -177,3 +177,5 @@ class ToolKit():
         self.progress.setValue(load_value)
         self.progress.setVisible(True)
         progress_group.setVisible(False)
+
+        self.choose_xyzfile_edit.setText('')

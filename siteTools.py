@@ -101,6 +101,8 @@ class ToolKit():
 
         f.close()
 
+        self.choose_locator_edit.setText('')
+
     def cable_gui(self):
         #Opens GUI for easy cable creation
         if cmds.window("Cable Maker", exists =True):

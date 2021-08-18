@@ -255,6 +255,8 @@ class ToolKit():
         partIndices = []
         partStrings = ['femur', 'foot', 'head', 'hip', 'arm', 'leg', 'neck', 'torso']
         for i in range(0,len(lines)):
+            if len(lines[i]) == 15:
+                lines[i].pop(8) #if steer data included, exclude it
             for part in partStrings:
                 if len(lines[i]) == 1:
                     if part in lines[i][0]:
@@ -364,6 +366,8 @@ class ToolKit():
         partStrings = ['femur', 'foot', 'head', 'hip', 'arm', 'leg', 'neck', 'torso']
         colors = [(1,1,0),(1,1,0),(.2,1,.6),(.2,1,.6),(1,0,0),(1,.502,0),(1,.6,.6),(1,0,.498),(.502,1,0),(.502,1,0),(.498,0,1),(1,.6,.6),(1,0,.498),(0,0,1)]
         for i in range(0,len(lines)):
+            if len(lines[i]) == 15:
+                lines[i].pop(8) #if steer data included, exclude it
             for part in partStrings:
                 if len(lines[i]) == 1:
                     if part in lines[i][0]:

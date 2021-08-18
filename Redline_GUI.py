@@ -7,7 +7,7 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from shiboken2 import wrapInstance
 #change path to load local files
-ms_dir = os.path.expanduser("~/maya/scripts/magic-shade")
+ms_dir = os.path.expanduser("~/maya/scripts/RedlineAutomationTools")
 sys.path.append(ms_dir)
 from Settings import *
 import magicShade, pointCloud, siteTools, vcFileManager, vehicleRigging, characterRigging

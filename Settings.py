@@ -13,7 +13,9 @@ thumbs_dir = os.path.expanduser("~/maya/projects/default/scenes/.mayaSwatches")
 save_path = os.path.expanduser("~/maya/projects/default/scenes/")
 user_profile = os.environ['USERPROFILE']
 desktop_dir = user_profile + '/Desktop'
+DOCUMENTS_DIR = user_profile + '/Documents'
 last_file_pref = "last_vehicular_spellbook"
+UNREAL_PROJECT_DIR = DOCUMENTS_DIR + '/Unreal Projects'
 vehicle_library_dir = user_profile + "/deltav/Jason Young - Asset Library/3D Vehicle Library/"
 vehiclespec_library_dir = user_profile + "/deltav/Jason Young - Asset Library/3D Vehicle Library/"
 

@@ -77,6 +77,12 @@ class ToolKit():
         self.activeCharacter_edit.setPlaceholderText('Character Joint Hierarchy - Top Node')
         self.activeCharacter_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
+        ##### Unreal Option #####
+        self.unreal_checkbox = QCheckBox('Unreal Project')
+        self.unrealProjName_edit = QLineEdit()
+        self.unrealProjName_edit.setPlaceholderText('Project Name')
+        self.unrealProjName_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
         ##### Rig DropDown #####
         self.skeleRig_label = QLabel()
         self.skeleRig_label.setText('Character Rig Type: ')
@@ -164,6 +170,8 @@ class ToolKit():
         fileLayout.addWidget(self.chooseSkeleRig_button, 2,0)
         fileLayout.addWidget(self.chooseSkeleRig_edit, 2,1,1,3)
         fileLayout.addWidget(self.loadCharacter_button, 3,0,1,4)
+        fileLayout.addWidget(self.unreal_checkbox, 4,0)
+        fileLayout.addWidget(self.unrealProjName_edit, 4,1,1,3)
 
         fileGroup.setLayout(fileLayout)
         self.layout.addWidget(fileGroup)
@@ -480,7 +488,10 @@ class ToolKit():
         cmds.select(rig, r=True)
 
     def metahumanExport(self):
-        if self.metahumanBakeStart.text() == '' or self.metahumanBakeEnd.text() == '':
+        if self.metahumanFBXName.text() == '':
+            warning_box = QMessageBox(QMessageBox.Warning, "Check File Name", "Please enter a valid FBX file name.")
+            warning_box.exec_()
+        elif self.metahumanBakeStart.text() == '' or self.metahumanBakeEnd.text() == '':
             warning_box = QMessageBox(QMessageBox.Warning, "Check Bake Frames", "Please enter a valid for Start/Stop frames.")
             warning_box.exec_()
 
@@ -500,6 +511,7 @@ class ToolKit():
             mel.eval(f'FBXExportBakeComplexEnd -v {bakeEnd}')
             mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
 
+            self.unrealExport(self.metahumanFBXName.text(), 'MHControlRig')
             self.metahumanFBXName.setText('')
             self.metahumanBakeStart.setText('')
             self.metahumanBakeEnd.setText('')
@@ -510,7 +522,7 @@ class ToolKit():
         dialog.show()
 
     def exportPopUp(self):
-        dialog = rigExportPopUp()
+        dialog = rigExportPopUp(calledBy=self)
         self.dialogs.append(dialog)
         dialog.show()
 
@@ -537,6 +549,40 @@ class ToolKit():
             self.activeCharLocs_dropdown.addItem(cLoc)
         for item in skel_list:
             self.skeleRig_dropdown.addItem(item)
+
+    def unrealExport(self, assetName, assetType):
+        #get variables
+        projName = self.unrealProjName_edit.text()
+        assetName = assetName+'.fbx'
+        newLine = f'{assetName},{assetType}'
+
+        #Make txt file
+        if self.unreal_checkbox.checkState():
+            file = projName+'.txt'
+            if not os.path.exists(UNREAL_PROJECT_DIR+'/mayaProjects'):
+                os.makedirs(UNREAL_PROJECT_DIR+'/mayaProjects')
+
+            if not os.path.exists(UNREAL_PROJECT_DIR+'/mayaProjects/'+file):
+                f=open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'w')
+                f.close()
+            f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'r+')
+            current = f.readlines()
+            current = [line.strip().split(',') for line in current]
+            f.close()
+
+            f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'a+')
+            written = False
+            #overwrite if fbx already in file
+            for i in range(len(current)):
+                if current[i][0] == assetName:
+                    current[i] = newLine
+                    written = True
+            if not written:
+                f.write(newLine+'\n')
+            f.close()
+
+            warning_box = QMessageBox(QMessageBox.Information, "Unreal Export Successful", f"{assetName} has been added to your {projName} Project File.\nUse Redline Unreal Engine script to load as {assetType} in Unreal Engine.")
+            warning_box.exec_()
 
 class skelePopUp(QDialog):
     #--------------------------------------------------------------------------------------------------------------
@@ -834,11 +880,12 @@ class rigExportPopUp(QDialog):
     #--------------------------------------------------------------------------------------------------------------
     #                                            Create GUI Window
     #--------------------------------------------------------------------------------------------------------------
-    def __init__(self, parent=maya_main_window()):
+    def __init__(self, parent=maya_main_window(), calledBy=None):
         super(rigExportPopUp, self).__init__(parent)
 
         # Set up the window
         # self.setWindowFlags(Qt.Tool)
+        self.calledBy = calledBy
         self.setFixedWidth(600)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(250, -1)
@@ -913,7 +960,10 @@ class rigExportPopUp(QDialog):
         self.animExport_button.clicked.connect(self.exportAnimation)
 
     def exportSkeleton(self):
-        if self.skeleConfirmation_checkbox.checkState():
+        if self.skeleFileName_edit.text() == '':
+            warning_box = QMessageBox(QMessageBox.Warning, "Check File Name", "Please enter a valid FBX file name.")
+
+        elif self.skeleConfirmation_checkbox.checkState():
             #get variables
             filename = self.skeleFileName_edit.text()
             exportLocation = desktop_dir + '/' + filename
@@ -930,6 +980,7 @@ class rigExportPopUp(QDialog):
             mel.eval('FBXExportSkeletonDefinitions -v 1')
             mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
 
+            self.calledBy.unrealExport(self.skeleFileName_edit.text(),'skeleton')
             self.skeleFileName_edit.setText('')
 
         else:
@@ -937,7 +988,10 @@ class rigExportPopUp(QDialog):
             warning_box.exec_()
 
     def exportAnimation(self):
-        if self.animStart_edit.text() == '' or self.animStop_edit.text() == '':
+        if self.animFBX_edit.text() == '':
+            warning_box = QMessageBox(QMessageBox.Warning, "Check File Name", "Please enter a valid FBX file name.")
+
+        elif self.animStart_edit.text() == '' or self.animStop_edit.text() == '':
             warning_box = QMessageBox(QMessageBox.Warning, "Check Bake Frames", "Please enter a valid input for Start/Stop frames.")
             warning_box.exec_()
 
@@ -963,6 +1017,7 @@ class rigExportPopUp(QDialog):
             mel.eval(f'FBXExportBakeComplexStart -v {bakeStart}')
             mel.eval(f'FBXExportBakeComplexEnd -v {bakeEnd}')
             mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
+            self.calledBy.unrealExport(self.animFBX_edit.text(),'animation')
             #clear selection
             cmds.select(deselect=True)
             self.animFBX_edit.setText('')

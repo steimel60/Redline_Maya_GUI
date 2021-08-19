@@ -40,6 +40,12 @@ class ToolKit():
             self.activeRig_dropdown.addItem(rig)
         self.activeRig_dropdown.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
+        ##### Unreal Option #####
+        self.unreal_checkbox = QCheckBox('Unreal Project')
+        self.unrealProjName_edit = QLineEdit()
+        self.unrealProjName_edit.setPlaceholderText('Project Name')
+        self.unrealProjName_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
         ##### Make Constraints #####
         self.pairRig2Locator_button = QPushButton('Pair Rig to Locator')
         self.pairRig2Locator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
@@ -158,7 +164,9 @@ class ToolKit():
         activeItems_Layout.addWidget(self.activeLocator_dropdown,0,1,1,2)
         activeItems_Layout.addWidget(self.RigLabel,1,0)
         activeItems_Layout.addWidget(self.activeRig_dropdown,1,1,1,2)
-        activeItems_Layout.addWidget(self.refresh_button,2,0,1,3)
+        activeItems_Layout.addWidget(self.unreal_checkbox, 2,0)
+        activeItems_Layout.addWidget(self.unrealProjName_edit, 2,1,1,2)
+        activeItems_Layout.addWidget(self.refresh_button,3,0,1,3)
 
         activeItems_group.setLayout(activeItems_Layout)
 
@@ -502,7 +510,42 @@ class ToolKit():
         mel.eval('FBXExportSkeletonDefinitions -v 1')
         mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
 
+        self.unrealExport(self.vehicleFBX.text(), 'skeleton and animation')
         self.vehicleFBX.setText('')
+
+    def unrealExport(self, assetName, assetType):
+        #get variables
+        projName = self.unrealProjName_edit.text()
+        assetName = assetName+'.fbx'
+        newLine = f'{assetName},{assetType}'
+
+        #Make txt file
+        if self.unreal_checkbox.checkState():
+            file = projName+'.txt'
+            if not os.path.exists(UNREAL_PROJECT_DIR+'/mayaProjects'):
+                os.makedirs(UNREAL_PROJECT_DIR+'/mayaProjects')
+
+            if not os.path.exists(UNREAL_PROJECT_DIR+'/mayaProjects/'+file):
+                f=open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'w')
+                f.close()
+            f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'r+')
+            current = f.readlines()
+            current = [line.strip().split(',') for line in current]
+            f.close()
+
+            f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'a+')
+            written = False
+            #overwrite if fbx already in file
+            for i in range(len(current)):
+                if current[i][0] == assetName:
+                    current[i] = newLine
+                    written = True
+            if not written:
+                f.write(newLine+'\n')
+            f.close()
+
+            warning_box = QMessageBox(QMessageBox.Information, "Unreal Export Successful", f"{assetName} has been added to your {projName} Project File.\nUse Redline Unreal Engine script to load as {assetType} in Unreal Engine.")
+            warning_box.exec_()
 
     def save(self):
         cmds.SaveSceneAs(o=True)

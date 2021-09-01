@@ -43,7 +43,14 @@ class ToolKit():
         ##### Unreal Option #####
         self.unreal_checkbox = QCheckBox('Unreal Project')
         self.unrealProjName_edit = QLineEdit()
-        self.unrealProjName_edit.setPlaceholderText('Project Name')
+        self.unrealProjName_edit.setPlaceholderText('New Project')
+        self.unrealProjList_dropdown = QComboBox()
+        self.unrealProjList_dropdown.setLineEdit(self.unrealProjName_edit)
+        self.unrealProjList_dropdown.addItem('')
+        for file in glob.glob(UNREAL_PROJECT_DIR + '/mayaProjects/*'): #finds all projects and creates dropdown
+            projectMatch = re.search('/mayaProjects(.*).txt', file)
+            proj = projectMatch.group(1)[1:]
+            self.unrealProjList_dropdown.addItem(proj)
         self.unrealProjName_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Make Constraints #####
@@ -164,8 +171,6 @@ class ToolKit():
         activeItems_Layout.addWidget(self.activeLocator_dropdown,0,1,1,2)
         activeItems_Layout.addWidget(self.RigLabel,1,0)
         activeItems_Layout.addWidget(self.activeRig_dropdown,1,1,1,2)
-        activeItems_Layout.addWidget(self.unreal_checkbox, 2,0)
-        activeItems_Layout.addWidget(self.unrealProjName_edit, 2,1,1,2)
         activeItems_Layout.addWidget(self.refresh_button,3,0,1,3)
 
         activeItems_group.setLayout(activeItems_Layout)
@@ -207,7 +212,7 @@ class ToolKit():
         blend_group.setLayout(blend_layout)
 
         ##### Bake Section #####
-        bake_group = QGroupBox("Joint Bake")
+        bake_group = QGroupBox("Bake Animation")
         bake_layout = QGridLayout()
 
         bake_layout.addWidget(self.bakeStart_label,0,0)
@@ -215,18 +220,26 @@ class ToolKit():
         bake_layout.addWidget(self.bakeStop_label,0,2)
         bake_layout.addWidget(self.bakeStop_edit,0,3)
         bake_layout.addWidget(self.bakeButton,1,0,1,4)
-        bake_layout.addWidget(self.vehicleFBX_label, 2,0)
-        bake_layout.addWidget(self.vehicleFBX, 2,1,1,3)
-        bake_layout.addWidget(self.exportFBX_button,3,0,1,4)
 
         bake_group.setLayout(bake_layout)
 
+        ##### Export Section #####
+        export_group = QGroupBox("Export Group")
+        export_layout = QGridLayout()
 
+        export_layout.addWidget(self.unreal_checkbox, 0,0)
+        export_layout.addWidget(self.unrealProjList_dropdown, 0,1,1,3)
+        export_layout.addWidget(self.vehicleFBX_label, 1,0)
+        export_layout.addWidget(self.vehicleFBX, 1,1,1,3)
+        export_layout.addWidget(self.exportFBX_button,4,0,1,4)
+
+        export_group.setLayout(export_layout)
         #Add groups to tab
         self.layout.addWidget(activeItems_group)
         self.layout.addWidget(vLocator_group)
         self.layout.addWidget(blend_group)
         self.layout.addWidget(bake_group)
+        self.layout.addWidget(export_group)
 
     #Functions
     def refreshAssets(self):
@@ -495,11 +508,11 @@ class ToolKit():
 
         cmds.select(export)
         #get variables
-        filename = self.vehicleFBX.text()
+        filename = f"VEH_{self.vehicleFBX.text()}"
         exportLocation = desktop_dir + '/' + filename
         #fix unicode error
         exportLocation = exportLocation.replace('\\','/')
-        #export with metahuman settings
+        #export with blendshape settings
         mel.eval('FBXResetExport')
         mel.eval('FBXExportTangents -v 1')
         mel.eval('FBXExportSmoothingGroups -v 1')
@@ -510,42 +523,44 @@ class ToolKit():
         mel.eval('FBXExportSkeletonDefinitions -v 1')
         mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
 
-        self.unrealExport(self.vehicleFBX.text(), 'skeleton and animation')
+        self.unrealExport(self.vehicleFBX.text(),'vehicle',f'{exportLocation}.fbx')
         self.vehicleFBX.setText('')
 
-    def unrealExport(self, assetName, assetType):
+    def unrealExport(self, assetName, assetType, assetPath):
         #get variables
-        projName = self.unrealProjName_edit.text()
+        projName = self.unrealProjList_dropdown.currentText()
         assetName = assetName+'.fbx'
-        newLine = f'{assetName},{assetType}'
-
+        newLine = f'{assetName},{assetType},{assetPath}'
         #Make txt file
         if self.unreal_checkbox.checkState():
             file = projName+'.txt'
             if not os.path.exists(UNREAL_PROJECT_DIR+'/mayaProjects'):
                 os.makedirs(UNREAL_PROJECT_DIR+'/mayaProjects')
-
+            #Create File if none exists
             if not os.path.exists(UNREAL_PROJECT_DIR+'/mayaProjects/'+file):
                 f=open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'w')
                 f.close()
+            #Get lines currently in file
             f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'r+')
-            current = f.readlines()
-            current = [line.strip().split(',') for line in current]
+            lines = f.readlines()
+            lines = [line.strip().split(',') for line in lines]
             f.close()
-
-            f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'a+')
+            #Replace lines if overwriting, append if new asset
+            f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'w')
             written = False
-            #overwrite if fbx already in file
-            for i in range(len(current)):
-                if current[i][0] == assetName:
-                    current[i] = newLine
+            for i in range(len(lines)):
+                if lines[i][0] == assetName:
+                    lines[i] = newLine.split(',')
                     written = True
             if not written:
-                f.write(newLine+'\n')
+                lines.append(newLine.split(','))
+            #Update File
+            for line in lines:
+                f.write(f"{line[0]},{line[1]},{line[2]}\n")
             f.close()
 
-            warning_box = QMessageBox(QMessageBox.Information, "Unreal Export Successful", f"{assetName} has been added to your {projName} Project File.\nUse Redline Unreal Engine script to load as {assetType} in Unreal Engine.")
-            warning_box.exec_()
+            infoBox = QMessageBox(QMessageBox.Information, "Unreal Export Successful", f"{assetName} has been added to your {projName} Project File.\nUse Redline Unreal Engine script to load as {assetType} in Unreal Engine.")
+            infoBox.exec_()
 
     def save(self):
         cmds.SaveSceneAs(o=True)

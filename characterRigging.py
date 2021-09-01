@@ -80,7 +80,14 @@ class ToolKit():
         ##### Unreal Option #####
         self.unreal_checkbox = QCheckBox('Unreal Project')
         self.unrealProjName_edit = QLineEdit()
-        self.unrealProjName_edit.setPlaceholderText('Project Name')
+        self.unrealProjName_edit.setPlaceholderText('New Project')
+        self.unrealProjList_dropdown = QComboBox()
+        self.unrealProjList_dropdown.setLineEdit(self.unrealProjName_edit)
+        self.unrealProjList_dropdown.addItem('')
+        for file in glob.glob(UNREAL_PROJECT_DIR + '/mayaProjects/*'): #finds all projects and creates dropdown
+            projectMatch = re.search('/mayaProjects(.*).txt', file)
+            proj = projectMatch.group(1)[1:]
+            self.unrealProjList_dropdown.addItem(proj)
         self.unrealProjName_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Rig DropDown #####
@@ -170,8 +177,6 @@ class ToolKit():
         fileLayout.addWidget(self.chooseSkeleRig_button, 2,0)
         fileLayout.addWidget(self.chooseSkeleRig_edit, 2,1,1,3)
         fileLayout.addWidget(self.loadCharacter_button, 3,0,1,4)
-        fileLayout.addWidget(self.unreal_checkbox, 4,0)
-        fileLayout.addWidget(self.unrealProjName_edit, 4,1,1,3)
 
         fileGroup.setLayout(fileLayout)
         self.layout.addWidget(fileGroup)
@@ -212,9 +217,11 @@ class ToolKit():
         mhExport_layout.addWidget(self.metahumanBakeStart, 2,1)
         mhExport_layout.addWidget(self.metaEndLabel, 2,2)
         mhExport_layout.addWidget(self.metahumanBakeEnd, 2,3)
-        mhExport_layout.addWidget(self.metahumanFBXName, 3,0,1,2)
-        mhExport_layout.addWidget(self.exportControlRig_button, 3,2,1,2)
-        mhExport_layout.addWidget(self.generalExport_button, 4,0,1,4)
+        mhExport_layout.addWidget(self.unreal_checkbox, 3,0)
+        mhExport_layout.addWidget(self.unrealProjList_dropdown, 3,1,1,3)
+        mhExport_layout.addWidget(self.metahumanFBXName, 4,0,1,2)
+        mhExport_layout.addWidget(self.exportControlRig_button, 4,2,1,2)
+        mhExport_layout.addWidget(self.generalExport_button, 5,0,1,4)
 
         mhExport_group.setLayout(mhExport_layout)
         self.layout.addWidget(mhExport_group)
@@ -550,39 +557,41 @@ class ToolKit():
         for item in skel_list:
             self.skeleRig_dropdown.addItem(item)
 
-    def unrealExport(self, assetName, assetType):
+    def unrealExport(self, assetName, assetType, assetPath):
         #get variables
-        projName = self.unrealProjName_edit.text()
+        projName = self.unrealProjList_dropdown.currentText()
         assetName = assetName+'.fbx'
-        newLine = f'{assetName},{assetType}'
-
+        newLine = f'{assetName},{assetType},{assetPath}'
         #Make txt file
         if self.unreal_checkbox.checkState():
             file = projName+'.txt'
             if not os.path.exists(UNREAL_PROJECT_DIR+'/mayaProjects'):
                 os.makedirs(UNREAL_PROJECT_DIR+'/mayaProjects')
-
+            #Create File if none exists
             if not os.path.exists(UNREAL_PROJECT_DIR+'/mayaProjects/'+file):
                 f=open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'w')
                 f.close()
+            #Get lines currently in file
             f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'r+')
-            current = f.readlines()
-            current = [line.strip().split(',') for line in current]
+            lines = f.readlines()
+            lines = [line.strip().split(',') for line in lines]
             f.close()
-
-            f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'a+')
+            #Replace lines if overwriting, append if new asset
+            f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'w')
             written = False
-            #overwrite if fbx already in file
-            for i in range(len(current)):
-                if current[i][0] == assetName:
-                    current[i] = newLine
+            for i in range(len(lines)):
+                if lines[i][0] == assetName:
+                    lines[i] = newLine.split(',')
                     written = True
             if not written:
-                f.write(newLine+'\n')
+                lines.append(newLine.split(','))
+            #Update File
+            for line in lines:
+                f.write(f"{line[0]},{line[1]},{line[2]}\n")
             f.close()
 
-            warning_box = QMessageBox(QMessageBox.Information, "Unreal Export Successful", f"{assetName} has been added to your {projName} Project File.\nUse Redline Unreal Engine script to load as {assetType} in Unreal Engine.")
-            warning_box.exec_()
+            infoBox = QMessageBox(QMessageBox.Information, "Unreal Export Successful", f"{assetName} has been added to your {projName} Project File.\nUse Redline Unreal Engine script to load as {assetType} in Unreal Engine.")
+            infoBox.exec_()
 
 class skelePopUp(QDialog):
     #--------------------------------------------------------------------------------------------------------------
@@ -886,6 +895,8 @@ class rigExportPopUp(QDialog):
         # Set up the window
         # self.setWindowFlags(Qt.Tool)
         self.calledBy = calledBy
+        if self.calledBy.unreal_checkbox.checkState():
+            self.get_project()
         self.setFixedWidth(600)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(250, -1)
@@ -920,6 +931,25 @@ class rigExportPopUp(QDialog):
         self.anim_checkbox = QCheckBox('Joints Selected')
         self.animFBX_label = QLabel('File Name: ')
         self.animFBX_edit = QLineEdit()
+        self.animSkelPair_label = QLabel('Skeleton:')
+        self.animSkelPair_dropdown = QComboBox()
+        self.animSkelPair_dropdown.addItem('None')
+        if self.calledBy.unreal_checkbox.checkState():
+            if self.calledBy.unrealProjList_dropdown.currentText() == '':
+                warningBox = QMessageBox(QMessageBox.Warning, "Check File Name", "Please enter Unreal Project name or uncheck Unreal Project checkbox.")
+                warningBox.exec_()
+                self.calledBy.dialogs.pop(-1) #######THIS JUST THROWS ERROR TO STOP POP UP########
+            else:
+                file = f"{UNREAL_PROJECT_DIR}/mayaProjects/{self.calledBy.unrealProjList_dropdown.currentText()}.txt"
+                f = open(file,'r')
+                lines = f.readlines()
+                f.close()
+                for i in range(0,len(lines)):
+                    lines[i] = lines[i].strip()
+                    lines[i] = lines[i].split(',')
+                skels = [line[0] for line in lines if line[1]=='skeleton']
+                for skel in skels:
+                    self.animSkelPair_dropdown.addItem(skel[:-4])
         self.animFBX_edit.setPlaceholderText('FBX Name')
         self.animExport_button = QPushButton('Export Animation')
 
@@ -948,7 +978,12 @@ class rigExportPopUp(QDialog):
         animExport_layout.addWidget(self.animStop_edit,5,2,1,2)
         animExport_layout.addWidget(self.animFBX_label,6,0,1,1)
         animExport_layout.addWidget(self.animFBX_edit,6,1,1,3)
-        animExport_layout.addWidget(self.animExport_button,7,0,1,4)
+        if self.calledBy.unreal_checkbox.checkState():
+            animExport_layout.addWidget(self.animSkelPair_label, 7,0,1,1)
+            animExport_layout.addWidget(self.animSkelPair_dropdown, 7,1,1,3)
+            animExport_layout.addWidget(self.animExport_button,8,0,1,4)
+        else:
+            animExport_layout.addWidget(self.animExport_button,7,0,1,4)
         animExport_group.setLayout(animExport_layout)
 
         self.mainLayout.addWidget(skeleton_group)
@@ -965,8 +1000,8 @@ class rigExportPopUp(QDialog):
 
         elif self.skeleConfirmation_checkbox.checkState():
             #get variables
-            filename = self.skeleFileName_edit.text()
-            exportLocation = desktop_dir + '/' + filename
+            filename = f'SKEL_{self.skeleFileName_edit.text()}'
+            exportLocation = f"{desktop_dir}/{filename}"
             #fix unicode error
             exportLocation = exportLocation.replace('\\','/')
             #export with metahuman settings
@@ -980,7 +1015,8 @@ class rigExportPopUp(QDialog):
             mel.eval('FBXExportSkeletonDefinitions -v 1')
             mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
 
-            self.calledBy.unrealExport(self.skeleFileName_edit.text(),'skeleton')
+            self.calledBy.unrealExport(filename,'skeleton',f"{exportLocation}.fbx")
+            self.animSkelPair_dropdown.addItem(filename)
             self.skeleFileName_edit.setText('')
 
         else:
@@ -988,23 +1024,26 @@ class rigExportPopUp(QDialog):
             warning_box.exec_()
 
     def exportAnimation(self):
+        #Warning Boxes
         if self.animFBX_edit.text() == '':
             warning_box = QMessageBox(QMessageBox.Warning, "Check File Name", "Please enter a valid FBX file name.")
-
+            warning_box.exec_()
+        elif self.animSkelPair_dropdown.currentText() == 'None':
+            warning_box = QMessageBox(QMessageBox.Warning, "Skeleton Required", "Please select the skeleton for this animation.\nIf none are listed please create one, or check your Unreal Project name.")
+            warning_box.exec_()
         elif self.animStart_edit.text() == '' or self.animStop_edit.text() == '':
             warning_box = QMessageBox(QMessageBox.Warning, "Check Bake Frames", "Please enter a valid input for Start/Stop frames.")
             warning_box.exec_()
-
         elif not self.anim_checkbox.checkState():
             warning_box = QMessageBox(QMessageBox.Warning, "Confirm Selection", "Please confirm Joint Hierarchy is selected.")
             warning_box.exec_()
-
+        #Export Func
         else:
             #get all bones below
             selected = cmds.ls(sl=1)
             cmds.select(selected, hi=1)
             #get variables
-            filename = self.animFBX_edit.text()
+            filename = f'ANIM_{self.animFBX_edit.text()}'
             exportLocation = desktop_dir + '/' + filename
             bakeStart = int(self.animStart_edit.text())
             bakeEnd = int(self.animStop_edit.text())
@@ -1017,9 +1056,36 @@ class rigExportPopUp(QDialog):
             mel.eval(f'FBXExportBakeComplexStart -v {bakeStart}')
             mel.eval(f'FBXExportBakeComplexEnd -v {bakeEnd}')
             mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
-            self.calledBy.unrealExport(self.animFBX_edit.text(),'animation')
+            self.calledBy.unrealExport(filename,f'animation__FROMSKEL__{self.animSkelPair_dropdown.currentText()}.fbx',f"{exportLocation}.fbx")
             #clear selection
             cmds.select(deselect=True)
             self.animFBX_edit.setText('')
             self.animStart_edit.setText('')
             self.animStop_edit.setText('')
+
+    def get_project(self):
+        projName = self.calledBy.unrealProjList_dropdown.currentText()
+        error = False
+        if projName == '':
+            warning_box = QMessageBox(QMessageBox.Warning, "Check Project Name", "Please enter a valid Project name or uncheck the Unreal Project checkbox.")
+            warning_box.exec_()
+            self.calledBy.dialogs.pop(-1) #######THIS JUST THROWS ERROR TO STOP POP UP########
+            error = True
+        if not error:
+            currentProjects = []
+            for file in glob.glob(UNREAL_PROJECT_DIR + '/mayaProjects/*'): #finds all projects and creates dropdown
+                projectMatch = re.search('/mayaProjects(.*).txt', file)
+                proj = projectMatch.group(1)[1:]
+                currentProjects.append(proj)
+            if projName not in currentProjects:
+                qBox = QMessageBox(QMessageBox.Question, "Check File Name", f"Project {projName} not found.\nCreate new project?")
+                qBox.addButton(QMessageBox.Yes)
+                qBox.addButton(QMessageBox.No)
+                reply = qBox.exec_()
+                if reply == QMessageBox.Yes:
+                    f = open(f'{UNREAL_PROJECT_DIR}/mayaProjects/{projName}.txt', 'w')
+                    f.close()
+                else:
+                    self.calledBy.dialogs.pop(-1) #######THIS JUST THROWS ERROR TO STOP POP UP########
+            else: #comment above wouldn't collapse and annoyed me
+                pass

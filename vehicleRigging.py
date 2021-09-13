@@ -484,7 +484,10 @@ class ToolKit():
     def exportFBX(self):
         #Exports root joint for Unreal Engine
         rigName = self.activeRig_dropdown.currentText()
-
+        #get variables
+        filename = f"VEH_{self.vehicleFBX.text()}"
+        exportLocation = desktop_dir + '/' + filename
+        #do it
         cmds.select(rigName, hierarchy=True)
         groupList = cmds.ls(sl=True)
         cmds.select(deselect=True)
@@ -507,9 +510,12 @@ class ToolKit():
                 colonIndex = i + 1
 
         cmds.select(export)
-        #get variables
-        filename = f"VEH_{self.vehicleFBX.text()}"
-        exportLocation = desktop_dir + '/' + filename
+        cmds.hyperShade("",smn = True)
+        shaders = cmds.ls(sl = True)
+        for shader in shaders:
+            cmds.rename(shader,f'MAT_{filename[4:]}_{shader}')
+        cmds.select(deselect=True)
+        cmds.select(export)
         #fix unicode error
         exportLocation = exportLocation.replace('\\','/')
         #export with blendshape settings
@@ -523,7 +529,7 @@ class ToolKit():
         mel.eval('FBXExportSkeletonDefinitions -v 1')
         mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
 
-        self.unrealExport(self.vehicleFBX.text(),'vehicle',f'{exportLocation}.fbx')
+        self.unrealExport(filename,'vehicle',f'{exportLocation}.fbx')
         self.vehicleFBX.setText('')
 
     def unrealExport(self, assetName, assetType, assetPath):

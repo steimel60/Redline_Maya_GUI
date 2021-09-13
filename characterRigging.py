@@ -1,4 +1,4 @@
-import fileinput, os, sys, glob, re, math
+import fileinput, os, sys, glob, re, math, shutil
 import maya.OpenMayaUI as mui
 import maya.cmds as cmds
 import maya.mel as mel
@@ -85,9 +85,12 @@ class ToolKit():
         self.unrealProjList_dropdown.setLineEdit(self.unrealProjName_edit)
         self.unrealProjList_dropdown.addItem('')
         for file in glob.glob(UNREAL_PROJECT_DIR + '/mayaProjects/*'): #finds all projects and creates dropdown
-            projectMatch = re.search('/mayaProjects(.*).txt', file)
-            proj = projectMatch.group(1)[1:]
-            self.unrealProjList_dropdown.addItem(proj)
+            try:
+                projectMatch = re.search('/mayaProjects(.*).txt', file)
+                proj = projectMatch.group(1)[1:]
+                self.unrealProjList_dropdown.addItem(proj)
+            except:
+                pass
         self.unrealProjName_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Rig DropDown #####
@@ -590,8 +593,63 @@ class ToolKit():
                 f.write(f"{line[0]},{line[1]},{line[2]}\n")
             f.close()
 
+            self.get_unreal_export_folders(assetName,assetType,assetPath,projName)
+
             infoBox = QMessageBox(QMessageBox.Information, "Unreal Export Successful", f"{assetName} has been added to your {projName} Project File.\nUse Redline Unreal Engine script to load as {assetType} in Unreal Engine.")
             infoBox.exec_()
+
+    def get_unreal_export_folders(self,assetName,assetType,assetPath,projName):
+        projFolder = f'{MAYA_EXPORT_DIR}/{projName}'
+        subFolders = [f'{projFolder}/SkeletalMeshes',f'{projFolder}/Animations',f'{projFolder}/Vehicles']
+        #Check for project Folder
+        if not os.path.exists(projFolder):
+            os.makedirs(projFolder)
+            for folder in subFolders:
+                os.makedirs(folder)
+        #Check for subFolders if project does exist
+        else:
+            for folder in subFolders:
+                if not os.path.exists(folder):
+                    os.makedirs(folder)
+        #Find where to place fbx
+        if 'skeleton' in assetType:
+            targetFolder = subFolders[0]
+        elif 'animation' in assetType:
+            targetFolder = subFolders[1]
+        elif 'vehicle' in assetType:
+            targetFolder = subFolders[2]
+        shutil.copy(assetPath,targetFolder)
+
+        self.create_ur_reference_file(assetName,assetType,targetFolder,projFolder)
+
+    def create_ur_reference_file(self,assetName,assetType,assetPath,projFolder):
+        #fix unicode error
+        projFolder = projFolder.replace('\\','/')
+        assetPath = projFolder.replace('\\','/')
+        file = 'REFERENCES.txt'
+        newLine = f'{assetName},{assetType},{assetPath}/{assetName}'
+        #Create File if none exists
+        if not os.path.exists(f'{projFolder}/{file}'):
+            f=open(f'{projFolder}/{file}','w')
+            f.close()
+        #Get lines currently in file
+        f = open(f'{projFolder}/{file}','r+')
+        lines = f.readlines()
+        lines = [line.strip().split(',') for line in lines]
+        f.close()
+        #Replace lines if overwriting, append if new asset
+        f = open(f'{projFolder}/{file}','w')
+        written = False
+        for i in range(len(lines)):
+            if lines[i][0] == assetName:
+                lines[i] = newLine.split(',')
+                written = True
+        if not written:
+            lines.append(newLine.split(','))
+        #Update File
+        for line in lines:
+            f.write(f"{line[0]},{line[1]},{line[2]}\n")
+        f.close()
 
 class skelePopUp(QDialog):
     #--------------------------------------------------------------------------------------------------------------
@@ -1074,9 +1132,12 @@ class rigExportPopUp(QDialog):
         if not error:
             currentProjects = []
             for file in glob.glob(UNREAL_PROJECT_DIR + '/mayaProjects/*'): #finds all projects and creates dropdown
-                projectMatch = re.search('/mayaProjects(.*).txt', file)
-                proj = projectMatch.group(1)[1:]
-                currentProjects.append(proj)
+                try:
+                    projectMatch = re.search('/mayaProjects(.*).txt', file)
+                    proj = projectMatch.group(1)[1:]
+                    currentProjects.append(proj)
+                except:
+                    pass
             if projName not in currentProjects:
                 qBox = QMessageBox(QMessageBox.Question, "Check File Name", f"Project {projName} not found.\nCreate new project?")
                 qBox.addButton(QMessageBox.Yes)

@@ -597,12 +597,12 @@ class ToolKit():
         #create reference file
         self.create_ur_reference_file(assetName,assetType,targetFolder,projFolder)
 
-    def create_ur_reference_file(self,assetName,assetType,assetPath,projFolder):
+    def create_ur_reference_file(self,assetName,assetType,targetFolder,projFolder):
         #fix unicode error
         projFolder = projFolder.replace('\\','/')
         assetPath = projFolder.replace('\\','/')
         file = 'REFERENCES.txt'
-        newLine = f'{assetName},{assetType},{assetPath}/{assetName}'
+        newLine = f'{assetName},{assetType},{targetFolder}/{assetName}'
         #Create File if none exists
         if not os.path.exists(f'{projFolder}/{file}'):
             f=open(f'{projFolder}/{file}','w')

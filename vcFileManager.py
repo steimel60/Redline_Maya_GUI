@@ -185,6 +185,8 @@ class ToolKit():
             if 'time [ s]' in lines[i+1]:
                 vehicles.append(lines[i][0])
                 vehicleIndices.append(i)
+            if 'auto-ees' in lines[i+1]:
+                vehicleIndices.append(i)
 
         frameTotal = vehicleIndices[1] - vehicleIndices[0]
 

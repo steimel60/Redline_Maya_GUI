@@ -47,14 +47,23 @@ class ToolKit():
         self.unrealProjList_dropdown = QComboBox()
         self.unrealProjList_dropdown.setLineEdit(self.unrealProjName_edit)
         self.unrealProjList_dropdown.addItem('')
-        for file in glob.glob(UNREAL_PROJECT_DIR + '/mayaProjects/*'): #finds all projects and creates dropdown
-            try:
-                projectMatch = re.search('/mayaProjects(.*).txt', file)
-                proj = projectMatch.group(1)[1:]
-                self.unrealProjList_dropdown.addItem(proj)
-            except:
-                pass
+        contents = os.listdir(MAYA_EXPORT_DIR)
+        projects = [entry for entry in contents if os.path.isdir(f"{MAYA_EXPORT_DIR}/{entry}")]
+        for project in projects:
+            self.unrealProjList_dropdown.addItem(project)
         self.unrealProjName_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.unreal_checkbox2 = QCheckBox('Unreal Project')
+        self.unrealProjName_edit2 = QLineEdit()
+        self.unrealProjName_edit2.setPlaceholderText('New Project')
+        self.unrealProjList_dropdown2 = QComboBox()
+        self.unrealProjList_dropdown2.setLineEdit(self.unrealProjName_edit2)
+        self.unrealProjList_dropdown2.addItem('')
+        contents = os.listdir(MAYA_EXPORT_DIR)
+        projects = [entry for entry in contents if os.path.isdir(f"{MAYA_EXPORT_DIR}/{entry}")]
+        for project in projects:
+            self.unrealProjList_dropdown2.addItem(project)
+        self.unrealProjName_edit2.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Make Constraints #####
         self.pairRig2Locator_button = QPushButton('Pair Rig to Locator')
@@ -108,7 +117,7 @@ class ToolKit():
         self.wheelConstr_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Bake Button #####
-        self.bakeButton = QPushButton('Bake Root Joint and Geometry')
+        self.bakeButton = QPushButton('Bake Root Joint')
         self.bakeButton.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Bake Settings #####
@@ -128,6 +137,15 @@ class ToolKit():
         self.vehicleFBX.setPlaceholderText('FBX File Name')
 
         ##### Export FBX #####
+        #skeleton
+        self.vehicleSkeleton_label = QLabel('V_Skeleton Name: ')
+        self.vehicleSkeletonName = QLineEdit()
+        self.vehicleSkeletonName.setPlaceholderText('Skeleton Name')
+        self.vehicleSkeletonExport_button = QPushButton('Export Skeleton')
+        #animation
+        #self.updateSkeletonList_button = QPushButton('Update Skeleton List')
+        self.skeletonPair_label = QLabel('Skeleton')
+        self.skeletonPair_dropdown = QComboBox()
         self.exportFBX_button = QPushButton('Export Selected Root Joint Animation')
         self.exportFBX_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
@@ -155,10 +173,14 @@ class ToolKit():
 
         ##### Bake Joint #####
         self.bakeButton.clicked.connect(self.bake)
-        self.exportFBX_button.clicked.connect(self.exportFBX)
 
         ##### Blend Shapes #####
         self.createBlendGroup_button.clicked.connect(self.createBlendGroup)
+
+        ##### Export Buttons #####
+        self.exportFBX_button.clicked.connect(self.exportFBX)
+        self.unrealProjList_dropdown.currentTextChanged.connect(self.update_skeleton_dropdown)
+        self.vehicleSkeletonExport_button.clicked.connect(self.export_vehicle_skeleton)
 
     #Layout
     def create_layout(self):
@@ -214,6 +236,18 @@ class ToolKit():
 
         blend_group.setLayout(blend_layout)
 
+        ##### Skel Export #####
+        skelExport_group = QGroupBox("Skeleton Export")
+        skelExport_layout = QGridLayout()
+
+        skelExport_layout.addWidget(self.unreal_checkbox2, 0,0)
+        skelExport_layout.addWidget(self.unrealProjList_dropdown2, 0,1,1,2)
+        skelExport_layout.addWidget(self.vehicleSkeleton_label, 1,0)
+        skelExport_layout.addWidget(self.vehicleSkeletonName, 1,1,1,2)
+        skelExport_layout.addWidget(self.vehicleSkeletonExport_button, 2,0,1,3)
+
+        skelExport_group.setLayout(skelExport_layout)
+
         ##### Bake Section #####
         bake_group = QGroupBox("Bake Animation")
         bake_layout = QGridLayout()
@@ -232,8 +266,10 @@ class ToolKit():
 
         export_layout.addWidget(self.unreal_checkbox, 0,0)
         export_layout.addWidget(self.unrealProjList_dropdown, 0,1,1,3)
-        export_layout.addWidget(self.vehicleFBX_label, 1,0)
-        export_layout.addWidget(self.vehicleFBX, 1,1,1,3)
+        export_layout.addWidget(self.skeletonPair_label, 1,0)
+        export_layout.addWidget(self.skeletonPair_dropdown, 1,1,1,3)
+        export_layout.addWidget(self.vehicleFBX_label, 2,0)
+        export_layout.addWidget(self.vehicleFBX, 2,1,1,3)
         export_layout.addWidget(self.exportFBX_button,4,0,1,4)
 
         export_group.setLayout(export_layout)
@@ -241,6 +277,7 @@ class ToolKit():
         self.layout.addWidget(activeItems_group)
         self.layout.addWidget(vLocator_group)
         self.layout.addWidget(blend_group)
+        self.layout.addWidget(skelExport_group)
         self.layout.addWidget(bake_group)
         self.layout.addWidget(export_group)
 
@@ -462,21 +499,22 @@ class ToolKit():
             for item in groupList:
                 if item.endswith('root_jt'):
                     root = item
-                if item.endswith('_Render'):
-                    renderGroup = item
+                #if item.endswith('_Render'):
+                #    renderGroup = item
             root = cmds.ls(root)
             cmds.select(deselect=True)
-            cmds.select(renderGroup, hi=True)
-            cmds.select('*:*Chassis', hi=True, deselect=True)
-            cmds.select('*:*ParentYourMeshHere', hi=True, deselect=True)
-            cmds.select('*:*Render', hi=False, deselect=True)
-            geo = cmds.ls(sl=True)
-            blendShapes = cmds.ls('*blendShape*')
+            #cmds.select(renderGroup, hi=True)
+            #cmds.select('*:*Chassis', hi=True, deselect=True)
+            #cmds.select('*:*ParentYourMeshHere', hi=True, deselect=True)
+            #cmds.select('*:*Render', hi=False, deselect=True)
+            #geo = cmds.ls(sl=True)
+            #blendShapes = cmds.ls('*blendShape*')
 
-            bakeMe = geo + root + blendShapes
+            #bakeMe = geo + root + blendShapes
+            bakeMe = root
 
             cmds.select(bakeMe, hi=True)
-            export = cmds.ls(sl=True)
+            #export = cmds.ls(sl=True)
             cmds.select(deselect=True)
 
             cmds.bakeResults(bakeMe, hi='below', shape=True, sm=True, time=(start,stop))
@@ -484,13 +522,13 @@ class ToolKit():
             self.bakeStart_edit.setText('')
             self.bakeStop_edit.setText('')
 
-    def exportFBX(self):
+    def export_vehicle_skeleton(self):
         #Exports root joint for Unreal Engine
         rigName = self.activeRig_dropdown.currentText()
         #get variables
-        filename = f"VEH_{self.vehicleFBX.text()}"
+        filename = f"vSKEL_{self.vehicleSkeletonName.text()}"
         exportLocation = desktop_dir + '/' + filename
-        #do it
+        #select root joint and mesh
         cmds.select(rigName, hierarchy=True)
         groupList = cmds.ls(sl=True)
         cmds.select(deselect=True)
@@ -504,19 +542,19 @@ class ToolKit():
         cmds.select('*:*ParentYourMeshHere', hi=True, deselect=True)
         cmds.select('*:*Render', hi=False, deselect=True)
         geo = cmds.ls(sl=True)
-
+        #what to export
         export = root + geo
-
+        #ignore semicolon to avoid naming error
         colonIndex = 0
         for i in range(0,len(root)):
             if root[i] == ':':
                 colonIndex = i + 1
-
+        #rename shaders for unreal organization
         cmds.select(export)
         cmds.hyperShade("",smn = True)
         shaders = cmds.ls(sl = True)
         for shader in shaders:
-            cmds.rename(shader,f'MAT_{filename[4:]}_{shader}')
+            cmds.rename(shader,f'MAT_{filename[5:]}_{shader}')
         cmds.select(deselect=True)
         cmds.select(export)
         #fix unicode error
@@ -531,51 +569,94 @@ class ToolKit():
         mel.eval('FBXExportConstraints -v 1')
         mel.eval('FBXExportSkeletonDefinitions -v 1')
         mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
+        #Check if unreal project
+        self.unrealExport2(filename,'v_skeleton',f'{exportLocation}.fbx')
+        #reset text boxes
+        self.vehicleSkeletonName.setText('')
 
-        self.unrealExport(filename,'vehicle',f'{exportLocation}.fbx')
+    def exportFBX(self):
+        #Exports root joint for Unreal Engine
+        rigName = self.activeRig_dropdown.currentText()
+        #get variables
+        filename = f"vANIM_{self.vehicleFBX.text()}"
+        exportLocation = desktop_dir + '/' + filename
+        skeleton = self.skeletonPair_dropdown.currentText()
+        #do it
+        cmds.select(rigName, hierarchy=True)
+        groupList = cmds.ls(sl=True)
+        cmds.select(deselect=True)
+        for item in groupList:
+            if item.endswith('root_jt'):
+                root = item
+        root = cmds.ls(root)
+        cmds.select(deselect=True)
+        #cmds.select('*:*Render', hi=True)
+        #cmds.select('*:*Chassis', hi=True, deselect=True)
+        #cmds.select('*:*ParentYourMeshHere', hi=True, deselect=True)
+        #cmds.select('*:*Render', hi=False, deselect=True)
+        #geo = cmds.ls(sl=True)
+
+        #export = root + geo
+        export = root
+
+        colonIndex = 0
+        for i in range(0,len(root)):
+            if root[i] == ':':
+                colonIndex = i + 1
+        #rename shaders for unreal
+        cmds.select(export)
+        #cmds.hyperShade("",smn = True)
+        #shaders = cmds.ls(sl = True)
+        #for shader in shaders:
+        #    cmds.rename(shader,f'MAT_{filename[4:]}_{shader}')
+        #cmds.select(deselect=True)
+        #cmds.select(export)
+        #fix unicode error
+        exportLocation = exportLocation.replace('\\','/')
+        #export with blendshape settings
+        mel.eval('FBXResetExport')
+        #mel.eval('FBXExportTangents -v 1')
+        #mel.eval('FBXExportSmoothingGroups -v 1')
+        #mel.eval('FBXExportSmoothMesh -v 1')
+        #mel.eval('FBXExportSkins -v 1')
+        #mel.eval('FBXExportShapes -v 1')
+        mel.eval('FBXExportConstraints -v 1')
+        mel.eval('FBXExportSkeletonDefinitions -v 1')
+        mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
+
+        self.unrealExport(filename,f'v_animation__FROMSKEL__{skeleton}',f'{exportLocation}.fbx')
         self.vehicleFBX.setText('')
 
     def unrealExport(self, assetName, assetType, assetPath):
         #get variables
         projName = self.unrealProjList_dropdown.currentText()
         assetName = assetName+'.fbx'
-        newLine = f'{assetName},{assetType},{assetPath}'
         #Make txt file
         if self.unreal_checkbox.checkState():
-            file = projName+'.txt'
-            if not os.path.exists(UNREAL_PROJECT_DIR+'/mayaProjects'):
-                os.makedirs(UNREAL_PROJECT_DIR+'/mayaProjects')
-            #Create File if none exists
-            if not os.path.exists(UNREAL_PROJECT_DIR+'/mayaProjects/'+file):
-                f=open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'w')
-                f.close()
-            #Get lines currently in file
-            f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'r+')
-            lines = f.readlines()
-            lines = [line.strip().split(',') for line in lines]
-            f.close()
-            #Replace lines if overwriting, append if new asset
-            f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'w')
-            written = False
-            for i in range(len(lines)):
-                if lines[i][0] == assetName:
-                    lines[i] = newLine.split(',')
-                    written = True
-            if not written:
-                lines.append(newLine.split(','))
-            #Update File
-            for line in lines:
-                f.write(f"{line[0]},{line[1]},{line[2]}\n")
-            f.close()
-
             self.get_unreal_export_folders(assetName,assetType,assetPath,projName)
-
             infoBox = QMessageBox(QMessageBox.Information, "Unreal Export Successful", f"{assetName} has been added to your {projName} Project File.\nUse Redline Unreal Engine script to load as {assetType} in Unreal Engine.")
             infoBox.exec_()
 
+    def unrealExport2(self, assetName, assetType, assetPath):
+        #get variables
+        projName = self.unrealProjList_dropdown2.currentText()
+        assetName = assetName+'.fbx'
+        #Make txt file
+        if self.unreal_checkbox2.checkState():
+            self.get_unreal_export_folders(assetName,assetType,assetPath,projName)
+            infoBox = QMessageBox(QMessageBox.Information, "Unreal Export Successful", f"{assetName} has been added to your {projName} Project File.\nUse Redline Unreal Engine script to load as {assetType} in Unreal Engine.")
+            infoBox.exec_()
+        #update project dropdowns
+        projects = os.listdir(MAYA_EXPORT_DIR)
+        self.unrealProjList_dropdown.clear()
+        self.unrealProjList_dropdown2.clear()
+        for project in projects:
+            self.unrealProjList_dropdown.addItem(project)
+            self.unrealProjList_dropdown2.addItem(project)
+
     def get_unreal_export_folders(self,assetName,assetType,assetPath,projName):
         projFolder = f'{MAYA_EXPORT_DIR}/{projName}'
-        subFolders = [f'{projFolder}/SkeletalMeshes',f'{projFolder}/Animations',f'{projFolder}/Vehicles']
+        subFolders = [f'{projFolder}/CharacterSkeletons',f'{projFolder}/CharacterAnimations',f'{projFolder}/VehicleAnimations',f'{projFolder}/VehicleSkeletons']
         #Check for project Folder
         if not os.path.exists(projFolder):
             os.makedirs(projFolder)
@@ -587,12 +668,14 @@ class ToolKit():
                 if not os.path.exists(folder):
                     os.makedirs(folder)
         #Find where to place fbx
-        if 'skeleton' in assetType:
+        if 'c_skeleton' in assetType:
             targetFolder = subFolders[0]
-        elif 'animation' in assetType:
+        elif 'c_animation' in assetType:
             targetFolder = subFolders[1]
-        elif 'vehicle' in assetType:
+        elif 'v_animation' in assetType:
             targetFolder = subFolders[2]
+        elif 'v_skeleton' in assetType:
+            targetFolder = subFolders[3]
         shutil.copy(assetPath,targetFolder)
         #create reference file
         self.create_ur_reference_file(assetName,assetType,targetFolder,projFolder)
@@ -600,7 +683,6 @@ class ToolKit():
     def create_ur_reference_file(self,assetName,assetType,targetFolder,projFolder):
         #fix unicode error
         projFolder = projFolder.replace('\\','/')
-        assetPath = projFolder.replace('\\','/')
         file = 'REFERENCES.txt'
         newLine = f'{assetName},{assetType},{targetFolder}/{assetName}'
         #Create File if none exists
@@ -625,6 +707,14 @@ class ToolKit():
         for line in lines:
             f.write(f"{line[0]},{line[1]},{line[2]}\n")
         f.close()
+
+    def update_skeleton_dropdown(self):
+        self.skeletonPair_dropdown.clear()
+        project = self.unrealProjList_dropdown.currentText()
+        skelFolder = f'{MAYA_EXPORT_DIR}/{project}/VehicleSkeletons'
+        skeletons = os.listdir(skelFolder)
+        for skeleton in skeletons:
+            self.skeletonPair_dropdown.addItem(skeleton)
 
     def save(self):
         cmds.SaveSceneAs(o=True)

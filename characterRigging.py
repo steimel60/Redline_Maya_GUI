@@ -84,13 +84,10 @@ class ToolKit():
         self.unrealProjList_dropdown = QComboBox()
         self.unrealProjList_dropdown.setLineEdit(self.unrealProjName_edit)
         self.unrealProjList_dropdown.addItem('')
-        for file in glob.glob(UNREAL_PROJECT_DIR + '/mayaProjects/*'): #finds all projects and creates dropdown
-            try:
-                projectMatch = re.search('/mayaProjects(.*).txt', file)
-                proj = projectMatch.group(1)[1:]
-                self.unrealProjList_dropdown.addItem(proj)
-            except:
-                pass
+        contents = os.listdir(MAYA_EXPORT_DIR)
+        projects = [entry for entry in contents if os.path.isdir(f"{MAYA_EXPORT_DIR}/{entry}")]
+        for project in projects:
+            self.unrealProjList_dropdown.addItem(project)
         self.unrealProjName_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Rig DropDown #####
@@ -564,43 +561,15 @@ class ToolKit():
         #get variables
         projName = self.unrealProjList_dropdown.currentText()
         assetName = assetName+'.fbx'
-        newLine = f'{assetName},{assetType},{assetPath}'
         #Make txt file
         if self.unreal_checkbox.checkState():
-            file = projName+'.txt'
-            if not os.path.exists(UNREAL_PROJECT_DIR+'/mayaProjects'):
-                os.makedirs(UNREAL_PROJECT_DIR+'/mayaProjects')
-            #Create File if none exists
-            if not os.path.exists(UNREAL_PROJECT_DIR+'/mayaProjects/'+file):
-                f=open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'w')
-                f.close()
-            #Get lines currently in file
-            f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'r+')
-            lines = f.readlines()
-            lines = [line.strip().split(',') for line in lines]
-            f.close()
-            #Replace lines if overwriting, append if new asset
-            f = open(UNREAL_PROJECT_DIR+'/mayaProjects/'+file,'w')
-            written = False
-            for i in range(len(lines)):
-                if lines[i][0] == assetName:
-                    lines[i] = newLine.split(',')
-                    written = True
-            if not written:
-                lines.append(newLine.split(','))
-            #Update File
-            for line in lines:
-                f.write(f"{line[0]},{line[1]},{line[2]}\n")
-            f.close()
-
             self.get_unreal_export_folders(assetName,assetType,assetPath,projName)
-
             infoBox = QMessageBox(QMessageBox.Information, "Unreal Export Successful", f"{assetName} has been added to your {projName} Project File.\nUse Redline Unreal Engine script to load as {assetType} in Unreal Engine.")
             infoBox.exec_()
 
     def get_unreal_export_folders(self,assetName,assetType,assetPath,projName):
         projFolder = f'{MAYA_EXPORT_DIR}/{projName}'
-        subFolders = [f'{projFolder}/SkeletalMeshes',f'{projFolder}/Animations',f'{projFolder}/Vehicles']
+        subFolders = [f'{projFolder}/CharacterSkeletons',f'{projFolder}/CharacterAnimations',f'{projFolder}/VehicleAnimations',f'{projFolder}/VehicleSkeletons']
         #Check for project Folder
         if not os.path.exists(projFolder):
             os.makedirs(projFolder)
@@ -612,20 +581,21 @@ class ToolKit():
                 if not os.path.exists(folder):
                     os.makedirs(folder)
         #Find where to place fbx
-        if 'skeleton' in assetType:
+        if 'c_skeleton' in assetType:
             targetFolder = subFolders[0]
-        elif 'animation' in assetType:
+        elif 'c_animation' in assetType:
             targetFolder = subFolders[1]
-        elif 'vehicle' in assetType:
+        elif 'v_animation' in assetType:
             targetFolder = subFolders[2]
+        elif 'v_skeleton' in assetType:
+            targetFolder = subFolders[3]
         shutil.copy(assetPath,targetFolder)
-
+        #create reference file
         self.create_ur_reference_file(assetName,assetType,targetFolder,projFolder)
 
     def create_ur_reference_file(self,assetName,assetType,assetPath,projFolder):
         #fix unicode error
         projFolder = projFolder.replace('\\','/')
-        assetPath = projFolder.replace('\\','/')
         file = 'REFERENCES.txt'
         newLine = f'{assetName},{assetType},{assetPath}/{assetName}'
         #Create File if none exists
@@ -993,21 +963,26 @@ class rigExportPopUp(QDialog):
         self.animSkelPair_dropdown = QComboBox()
         self.animSkelPair_dropdown.addItem('None')
         if self.calledBy.unreal_checkbox.checkState():
-            if self.calledBy.unrealProjList_dropdown.currentText() == '':
+            projSelection = self.calledBy.unrealProjList_dropdown.currentText()
+            if projSelection == '':
                 warningBox = QMessageBox(QMessageBox.Warning, "Check File Name", "Please enter Unreal Project name or uncheck Unreal Project checkbox.")
                 warningBox.exec_()
                 self.calledBy.dialogs.pop(-1) #######THIS JUST THROWS ERROR TO STOP POP UP########
             else:
-                file = f"{UNREAL_PROJECT_DIR}/mayaProjects/{self.calledBy.unrealProjList_dropdown.currentText()}.txt"
-                f = open(file,'r')
-                lines = f.readlines()
-                f.close()
-                for i in range(0,len(lines)):
-                    lines[i] = lines[i].strip()
-                    lines[i] = lines[i].split(',')
-                skels = [line[0] for line in lines if line[1]=='skeleton']
-                for skel in skels:
-                    self.animSkelPair_dropdown.addItem(skel[:-4])
+                skeletonFolder = f'{MAYA_EXPORT_DIR}/{projSelection}/CharacterSkeletons'
+                skeletons = os.listdir(skeletonFolder)
+                for skeleton in skeletons:
+                    self.animSkelPair_dropdown.addItem(skeleton[:-4])
+                #file = f"{UNREAL_PROJECT_DIR}/mayaProjects/{self.calledBy.unrealProjList_dropdown.currentText()}.txt"
+                #f = open(file,'r')
+                #lines = f.readlines()
+                #f.close()
+                #for i in range(0,len(lines)):
+                #    lines[i] = lines[i].strip()
+                #    lines[i] = lines[i].split(',')
+                #skels = [line[0] for line in lines if line[1]=='skeleton']
+                #for skel in skels:
+                #    self.animSkelPair_dropdown.addItem(skel[:-4])
         self.animFBX_edit.setPlaceholderText('FBX Name')
         self.animExport_button = QPushButton('Export Animation')
 
@@ -1058,7 +1033,7 @@ class rigExportPopUp(QDialog):
 
         elif self.skeleConfirmation_checkbox.checkState():
             #get variables
-            filename = f'SKEL_{self.skeleFileName_edit.text()}'
+            filename = f'cSKEL_{self.skeleFileName_edit.text()}'
             exportLocation = f"{desktop_dir}/{filename}"
             #fix unicode error
             exportLocation = exportLocation.replace('\\','/')
@@ -1073,7 +1048,7 @@ class rigExportPopUp(QDialog):
             mel.eval('FBXExportSkeletonDefinitions -v 1')
             mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
 
-            self.calledBy.unrealExport(filename,'skeleton',f"{exportLocation}.fbx")
+            self.calledBy.unrealExport(filename,'c_skeleton',f"{exportLocation}.fbx")
             self.animSkelPair_dropdown.addItem(filename)
             self.skeleFileName_edit.setText('')
 
@@ -1101,7 +1076,7 @@ class rigExportPopUp(QDialog):
             selected = cmds.ls(sl=1)
             cmds.select(selected, hi=1)
             #get variables
-            filename = f'ANIM_{self.animFBX_edit.text()}'
+            filename = f'cANIM_{self.animFBX_edit.text()}'
             exportLocation = desktop_dir + '/' + filename
             bakeStart = int(self.animStart_edit.text())
             bakeEnd = int(self.animStop_edit.text())
@@ -1114,7 +1089,7 @@ class rigExportPopUp(QDialog):
             mel.eval(f'FBXExportBakeComplexStart -v {bakeStart}')
             mel.eval(f'FBXExportBakeComplexEnd -v {bakeEnd}')
             mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
-            self.calledBy.unrealExport(filename,f'animation__FROMSKEL__{self.animSkelPair_dropdown.currentText()}.fbx',f"{exportLocation}.fbx")
+            self.calledBy.unrealExport(filename,f'c_animation__FROMSKEL__{self.animSkelPair_dropdown.currentText()}.fbx',f"{exportLocation}.fbx")
             #clear selection
             cmds.select(deselect=True)
             self.animFBX_edit.setText('')
@@ -1130,22 +1105,18 @@ class rigExportPopUp(QDialog):
             self.calledBy.dialogs.pop(-1) #######THIS JUST THROWS ERROR TO STOP POP UP########
             error = True
         if not error:
-            currentProjects = []
-            for file in glob.glob(UNREAL_PROJECT_DIR + '/mayaProjects/*'): #finds all projects and creates dropdown
-                try:
-                    projectMatch = re.search('/mayaProjects(.*).txt', file)
-                    proj = projectMatch.group(1)[1:]
-                    currentProjects.append(proj)
-                except:
-                    pass
-            if projName not in currentProjects:
+            projects = os.listdir(MAYA_EXPORT_DIR)
+            if projName not in projects:
                 qBox = QMessageBox(QMessageBox.Question, "Check File Name", f"Project {projName} not found.\nCreate new project?")
                 qBox.addButton(QMessageBox.Yes)
                 qBox.addButton(QMessageBox.No)
                 reply = qBox.exec_()
                 if reply == QMessageBox.Yes:
-                    f = open(f'{UNREAL_PROJECT_DIR}/mayaProjects/{projName}.txt', 'w')
-                    f.close()
+                    os.makedirs(f'{MAYA_EXPORT_DIR}/{projName}')
+                    os.makedirs(f'{MAYA_EXPORT_DIR}/{projName}/VehicleSkeletons')
+                    os.makedirs(f'{MAYA_EXPORT_DIR}/{projName}/VehicleAnimations')
+                    os.makedirs(f'{MAYA_EXPORT_DIR}/{projName}/CharacterAnimations')
+                    os.makedirs(f'{MAYA_EXPORT_DIR}/{projName}/CharacterSkeletons')
                 else:
                     self.calledBy.dialogs.pop(-1) #######THIS JUST THROWS ERROR TO STOP POP UP########
             else: #comment above wouldn't collapse and annoyed me

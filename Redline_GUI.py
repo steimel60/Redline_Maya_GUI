@@ -10,7 +10,7 @@ from shiboken2 import wrapInstance
 ms_dir = os.path.expanduser("~/maya/scripts/RedlineAutomationTools")
 sys.path.append(ms_dir)
 from Settings import *
-import magicShade, pointCloud, siteTools, vcFileManager, vehicleRigging, characterRigging
+import magicShade, pointCloud, siteTools, vcFileManager, autoUACR, vehicleRigging, characterRigging
 #When adding new ToolKit also add to toolKitFiles in init function
 
 SCRIPT_NAME = "Redline Forensic Studio - Maya Tools"
@@ -31,7 +31,7 @@ class MainUI(QDialog):
         self.setWindowIcon(QIcon(icon_dir + "/RedlineLogo.png"))
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
 
-        self.toolKitFiles = [magicShade, pointCloud, siteTools, vcFileManager, vehicleRigging, characterRigging]
+        self.toolKitFiles = [magicShade, pointCloud, siteTools, vcFileManager, autoUACR, vehicleRigging, characterRigging]
         self.toolkits = [] #ToolKit instances will be saved here
         self.load_tool_kits()
         self.create_controls()
@@ -120,8 +120,8 @@ class MainUI(QDialog):
 
         ##### Cross Class Buttons #####
         #Refresh Asset Drop Downs on Load
-        self.toolkits[3].loadRig_button.clicked.connect(self.toolkits[4].refreshAssets)
-        self.toolkits[3].create_vLocator_button.clicked.connect(self.toolkits[4].refreshAssets)
+        self.toolkits[3].loadRig_button.clicked.connect(self.toolkits[5].refreshAssets)
+        self.toolkits[3].create_vLocator_button.clicked.connect(self.toolkits[5].refreshAssets)
 
     #Functions
     def save(self):

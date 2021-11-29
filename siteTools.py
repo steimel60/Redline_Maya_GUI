@@ -188,11 +188,11 @@ class ToolKit():
         y_rot = cmds.getAttr(f'{group_name}.rotateY')
         z_rot = cmds.getAttr(f'{group_name}.rotateZ')
         #Move to Z-Up Location
-        cmds.setAttr(f'{group_name}.translateX',x)
-        cmds.setAttr(f'{group_name}.translateY',-z)
+        cmds.setAttr(f'{group_name}.translateX',-z)
+        cmds.setAttr(f'{group_name}.translateY',x)
         cmds.setAttr(f'{group_name}.translateZ',y)
-        cmds.setAttr(f'{group_name}.rotateX',x_rot)
-        cmds.setAttr(f'{group_name}.rotateY',-z_rot)
+        cmds.setAttr(f'{group_name}.rotateX',-z_rot)
+        cmds.setAttr(f'{group_name}.rotateY',x_rot)
         cmds.setAttr(f'{group_name}.rotateZ',y_rot)
         #Export new location
         cmds.select(deselect=True)

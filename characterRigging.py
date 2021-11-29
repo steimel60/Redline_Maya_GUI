@@ -1061,7 +1061,7 @@ class rigExportPopUp(QDialog):
         if self.animFBX_edit.text() == '':
             warning_box = QMessageBox(QMessageBox.Warning, "Check File Name", "Please enter a valid FBX file name.")
             warning_box.exec_()
-        elif self.animSkelPair_dropdown.currentText() == 'None':
+        elif self.animSkelPair_dropdown.currentText() == 'None' and self.calledBy.unreal_checkbox.checkState():
             warning_box = QMessageBox(QMessageBox.Warning, "Skeleton Required", "Please select the skeleton for this animation.\nIf none are listed please create one, or check your Unreal Project name.")
             warning_box.exec_()
         elif self.animStart_edit.text() == '' or self.animStop_edit.text() == '':

@@ -26,7 +26,7 @@ class MainUI(MayaQWidgetDockableMixin,QDialog):
         super(MainUI, self).__init__(parent)
         # Set up the window
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.resize(250, -1)
+
         self.setWindowTitle(SCRIPT_NAME)
         self.setWindowIcon(QIcon(icon_dir + "/RedlineLogo.png"))
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
@@ -57,7 +57,7 @@ class MainUI(MayaQWidgetDockableMixin,QDialog):
 
         if not found_last_file_path:
             self.current_file = None
-        pass
+        self.resize(650, 935)
 
     #Create TookKit Instances
     def load_tool_kits(self):
@@ -66,6 +66,7 @@ class MainUI(MayaQWidgetDockableMixin,QDialog):
 
     #Buttons
     def create_controls(self):
+
         ##### Banner #####
         self.banner = QLabel()
         self.pixmap = QPixmap(icon_dir + '/banner.jpg')
@@ -75,6 +76,9 @@ class MainUI(MayaQWidgetDockableMixin,QDialog):
         self.banner.setAlignment(Qt.AlignCenter)
         ##### Tab Bar #####
         self.tabWidget = QTabWidget()
+        #self.scroll = QScrollArea()
+        #self.scroll.setWidget(self.tabWidget)
+        #self.scroll.setWidgetResizable(True)
         self.tabs = []
         for i in range(len(self.toolkits)):
             self.tabs.append(QWidget())
@@ -98,31 +102,24 @@ class MainUI(MayaQWidgetDockableMixin,QDialog):
         for i in range(len(self.tabs)):
             self.tabs[i].setLayout(self.toolkits[i].layout)
 
-        ##### Save Section #####
-        save_group = QGroupBox("Save File")
-        save_layout = QVBoxLayout()
-        save_layout.addWidget(self.save_button)
-        save_group.setLayout(save_layout)
-
         ##### Set Main Layout #####
         main_layout.addWidget(self.banner)
         main_layout.addWidget(self.tabWidget)
-        main_layout.addWidget(save_group)
-        self.setLayout(main_layout)
+        main_widget = QWidget()
+        main_widget.setLayout(main_layout)
+        self.scroll = QScrollArea()
+        self.scroll.setWidget(main_widget)
+        self.scroll.setWidgetResizable(True)
+        scroll_layout = QVBoxLayout()
+        scroll_layout.addWidget(self.scroll)
+        self.setLayout(scroll_layout)
 
     #Connections
     def make_connections(self):
-        ##### Save Group #####
-        self.save_button.clicked.connect(self.save)
-
         ##### Cross Class Buttons #####
         #Refresh Asset Drop Downs on Load
         self.toolkits[4].loadRig_button.clicked.connect(self.toolkits[5].refreshAssets)
         self.toolkits[4].create_vLocator_button.clicked.connect(self.toolkits[5].refreshAssets)
-
-    #Functions
-    def save(self):
-        cmds.SaveSceneAs(o=True)
 
 # Dev code to automatically close old windows when running
 try:

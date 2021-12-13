@@ -21,15 +21,12 @@ class ToolKit():
         ##### Point CLoud Text Bar #####
         self.choose_xyzfile_edit = QLineEdit()
         self.choose_xyzfile_edit.setPlaceholderText("XYZ File")
-        self.choose_xyzfile_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Point CLoud Folder Button #####
         self.choose_xyzfile_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
-        self.choose_xyzfile_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Load Point CLoud Button #####
         self.load_xyzfile_button = QPushButton(QIcon(icon_dir + "/load.png"), "Load Point Cloud")
-        self.load_xyzfile_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Density Dropdown #####
         self.choose_density_button = QComboBox()

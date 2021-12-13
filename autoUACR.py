@@ -14,7 +14,7 @@ def maya_main_window():
 
 class ToolKit():
     #Set Up
-    toolKitName = 'UACR'
+    toolKitName = 'Vehicle Rigging'
     def __init__(self):
         self.create_controls()
         self.make_connections()
@@ -24,6 +24,22 @@ class ToolKit():
     #Buttons
     def create_controls(self):
         self.instructionsButton = QPushButton('Open Instructions')
+        #Load Vehicle
+        self.chooseVehicleEdit = QLineEdit()
+        self.chooseVehicleEdit.setPlaceholderText("Vehicle File")
+        self.chooseVehicleEdit.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.chooseVehicleEdit.setMinimumWidth(UI_ELEMENT_WIDTH)
+
+        self.chooseVehicleButton = QPushButton(QIcon(icon_dir + "/open.png"), "")
+        self.chooseVehicleButton.setMinimumHeight(UI_ELEMENT_HEIGHT)
+
+        self.loadVehicleButton = QPushButton(QIcon(icon_dir + "/load.png"), "Load Vehicle")
+        self.loadVehicleButton.setMinimumHeight(UI_ELEMENT_HEIGHT)
+        self.loadVehicleButton.setMinimumWidth(UI_ELEMENT_WIDTH)
+
+        self.shrinkCheck = QCheckBox('Shrink Vehicle')
+        self.shrinkCheck.setChecked(True)
+
         #Input Section
         self.axleCountLabel = QLabel('Axle Count: ')
         self.axleCountEdit = QLineEdit()
@@ -43,6 +59,7 @@ class ToolKit():
         self.RRBrakeEdit = QLineEdit()
         self.RRBrakeEdit.setPlaceholderText('Brake Caliper 4 Name')
         self.brakeBoxes = [self.FLBrakeEdit, self.FRBrakeEdit, self.RLBrakeEdit, self.RRBrakeEdit]
+
         #Do Stuff Buttons
         self.autoAlignButton = QPushButton('Align Wheels')
         self.alignSteeringWheelButton = QPushButton('Align Steering Wheel')
@@ -56,6 +73,9 @@ class ToolKit():
     def make_connections(self):
         #Instructions
         self.instructionsButton.clicked.connect(self.open_instructions)
+        #Load Vehicle
+        self.chooseVehicleButton.clicked.connect(self.choose_vehicle)
+        self.loadVehicleButton.clicked.connect(self.load_vehicle)
         #Alignment
         self.autoAlignButton.clicked.connect(self.auto_align_tires)
         self.alignSteeringWheelButton.clicked.connect(self.auto_align_steeringwheel)
@@ -75,10 +95,14 @@ class ToolKit():
         #Layouts for groups inside of tab
         group1 = QGroupBox("Set Up")
         setUpGroup = QGridLayout()
-        setUpGroup.addWidget(self.instructionsButton, 0,0,1,3)
-        setUpGroup.addWidget(self.axleCountLabel, 1,0)
-        setUpGroup.addWidget(self.axleCountEdit, 1,1)
-        setUpGroup.addWidget(self.autoAlignButton, 1,2)
+        setUpGroup.addWidget(self.instructionsButton, 0,0,1,5)
+        setUpGroup.addWidget(self.chooseVehicleButton, 1,0)
+        setUpGroup.addWidget(self.chooseVehicleEdit, 1,1,1,2)
+        setUpGroup.addWidget(self.shrinkCheck, 1,3)
+        setUpGroup.addWidget(self.loadVehicleButton, 1,4)
+        setUpGroup.addWidget(self.axleCountLabel, 2,0)
+        setUpGroup.addWidget(self.axleCountEdit, 2,1)
+        setUpGroup.addWidget(self.autoAlignButton, 2,2,1,3)
         group1.setLayout(setUpGroup)
 
         group2 = QGroupBox("Optional Accessories")
@@ -424,6 +448,36 @@ class ToolKit():
         self.dialogs.append(dialog)
         dialog.show()
 
+    def choose_vehicle(self):
+        #Sets vehicle path
+        file_path = QFileDialog.getOpenFileName(None, "", vehicle_library_dir, "Vehicles (*.mb *.obj *.fbx);;All Files (*.*)")[0]
+        if file_path == "":  # If they cancel the dialog
+            return  # Then just don't open anything
+        self.chooseVehicleEdit.setText(file_path)
+
+    def load_vehicle(self):
+        # Loads choosen vehicle
+        vehicle_path = self.chooseVehicleEdit.text()
+        if os.path.isfile(vehicle_path):
+            cmds.select(allDagObjects=True)
+            prev_all_objects = cmds.ls(selection=True)
+            cmds.select(deselect=True)
+            cmds.file(vehicle_path, i=True)
+            cmds.select(allDagObjects=True)
+            new_all_objects = cmds.ls(selection=True)
+            cmds.select(deselect=True)
+            diff = [x for x in new_all_objects if x not in prev_all_objects]
+            cmds.group(diff, name="Vehicle")
+            if self.shrinkCheck.checkState():
+                cmds.scale(0.0328, 0.0328, 0.0328, absolute=True, pivot=(0, 0, 0))
+            cmds.select(deselect=True)
+            asset_match = re.search('.*/([a-zA-Z_0-9\(\)]*).*\.m[ab]', vehicle_path)
+            if asset_match != None:
+                self.asset = asset_match.group(1)
+                cmds.file(rename=self.asset)
+        else:
+            warning_box = QMessageBox(QMessageBox.Warning, "No Vehicle Found", "No vehicle file found at the specified path.")
+            warning_box.exec_()
 
 class InstructionsPopUp(QDialog):
     #--------------------------------------------------------------------------------------------------------------
@@ -449,10 +503,10 @@ class InstructionsPopUp(QDialog):
         self.label_list.append(self.main_label)
         self.steps = QLabel('''
         1. Open UACR window, choose wheels number, and click load
-        2. Change UACR_root_ctrl "Global Scale" to .03048 or to match vehicle scale
+        2. Change UACR_root_ctrl "Global Scale" to 0.0328 or to match vehicle scale
         3. Hide the chassis by clicking "CHASSIS" button on UACR window
         4. Import your vehicle
-        5. Make sure vehicle is facing Z direction and wheels are on the ground
+        5. Make sure vehicle is facing positive Z direction and wheels are on the ground
         6. Enter the number of axles your vehicle has into the axle count text box
         7. Click "Align Wheels" button
 
@@ -460,6 +514,7 @@ class InstructionsPopUp(QDialog):
 
             STEERING WHEEL SET UP
             - Seperate mesh if needed
+            - If seperated, move meshes out of transform/sub-group into Vehicle group and hide the transform
             - Copy name of steering wheel mesh into "Steering Wheel" Name text box
             - Click "Align Steering Wheel" button
             - Rotate UACR_swa_ctrl to align with steering wheel mesh

@@ -6,11 +6,12 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from shiboken2 import wrapInstance
+from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 #change path to load local files
 ms_dir = os.path.expanduser("~/maya/scripts/RedlineAutomationTools")
 sys.path.append(ms_dir)
 from Settings import *
-import magicShade, pointCloud, siteTools, vcFileManager, autoUACR, vehicleRigging, characterRigging
+import magicShade, pointCloud, siteTools, autoUACR, vcFileManager, vehicleRigging, characterRigging
 #When adding new ToolKit also add to toolKitFiles in init function
 
 SCRIPT_NAME = "Redline Forensic Studio - Maya Tools"
@@ -20,18 +21,17 @@ def maya_main_window():
     main_window_ptr = mui.MQtUtil.mainWindow()
     return wrapInstance(int(main_window_ptr), QWidget)
 
-class MainUI(QDialog):
+class MainUI(MayaQWidgetDockableMixin,QDialog):
     def __init__(self, parent=maya_main_window()):
         super(MainUI, self).__init__(parent)
         # Set up the window
-        self.setFixedWidth(600)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(250, -1)
         self.setWindowTitle(SCRIPT_NAME)
         self.setWindowIcon(QIcon(icon_dir + "/RedlineLogo.png"))
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
 
-        self.toolKitFiles = [magicShade, pointCloud, siteTools, vcFileManager, autoUACR, vehicleRigging, characterRigging]
+        self.toolKitFiles = [magicShade, pointCloud, siteTools, autoUACR, vcFileManager, vehicleRigging, characterRigging]
         self.toolkits = [] #ToolKit instances will be saved here
         self.load_tool_kits()
         self.create_controls()
@@ -66,15 +66,13 @@ class MainUI(QDialog):
 
     #Buttons
     def create_controls(self):
-        UI_ELEMENT_HEIGHT = 20
-        UI_ELEMENT_WIDTH = 150
-
         ##### Banner #####
         self.banner = QLabel()
         self.pixmap = QPixmap(icon_dir + '/banner.jpg')
         self.pixmap = self.pixmap.scaled(600, 1000, Qt.KeepAspectRatio, Qt.FastTransformation)
         self.banner.setPixmap(self.pixmap)
         self.banner.resize(self.pixmap.width(), self.pixmap.height())
+        self.banner.setAlignment(Qt.AlignCenter)
         ##### Tab Bar #####
         self.tabWidget = QTabWidget()
         self.tabs = []
@@ -84,7 +82,6 @@ class MainUI(QDialog):
 
         ##### Save Button #####
         self.save_button = QPushButton(QIcon(icon_dir + "/save_as.png"), "Save As...")
-        self.save_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
     #Layout
     def create_layout(self):
@@ -120,8 +117,8 @@ class MainUI(QDialog):
 
         ##### Cross Class Buttons #####
         #Refresh Asset Drop Downs on Load
-        self.toolkits[3].loadRig_button.clicked.connect(self.toolkits[5].refreshAssets)
-        self.toolkits[3].create_vLocator_button.clicked.connect(self.toolkits[5].refreshAssets)
+        self.toolkits[4].loadRig_button.clicked.connect(self.toolkits[5].refreshAssets)
+        self.toolkits[4].create_vLocator_button.clicked.connect(self.toolkits[5].refreshAssets)
 
     #Functions
     def save(self):
@@ -135,4 +132,4 @@ except:
 
 # Show a new instance of the UI
 ui = MainUI()
-ui.show()
+ui.show(dockable=True)

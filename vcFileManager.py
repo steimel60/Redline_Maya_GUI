@@ -20,46 +20,34 @@ class ToolKit():
     def create_controls(self):
         ##### VC Data Buttons #####
         self.choose_vcData_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
-        self.choose_vcData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.choose_vcData_edit = QLineEdit()
         self.choose_vcData_edit.setPlaceholderText("Virtual Crash Data File")
-        self.choose_vcData_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.convert_vcData_button = QPushButton("Convert VC Data")
-        self.convert_vcData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### File Management Buttons #####
         self.choose_rig_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
-        self.choose_rig_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.choose_rig_edit = QLineEdit()
         self.choose_rig_edit.setPlaceholderText("Rig File")
-        self.choose_rig_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.loadRig_button = QPushButton("Load Rig")
-        self.loadRig_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.choose_mesh_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
-        self.choose_mesh_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.choose_mesh_edit = QLineEdit()
         self.choose_mesh_edit.setPlaceholderText("Ground Proxy File")
-        self.choose_mesh_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.loadMesh_button = QPushButton("Load Ground Proxy")
-        self.loadMesh_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Vehicle Locator Buttons #####
         self.choose_vLocator_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
-        self.choose_vLocator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.choose_vLocator_edit = QLineEdit()
         self.choose_vLocator_edit.setPlaceholderText("Vehicle Locator .MOV File")
-        self.choose_vLocator_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.create_vLocator_button = QPushButton("Create Vehicle Locator")
-        self.create_vLocator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.fps_edit = QLineEdit()
         self.fps_edit.setMaximumWidth(60)

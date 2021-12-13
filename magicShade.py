@@ -35,23 +35,16 @@ class ToolKit():
 
         ##### Studio Load Button #####
         self.load_studio_button = QPushButton(QIcon(icon_dir + "/template.png"), "Load Studio")
-        self.load_studio_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.load_studio_button.setMinimumWidth(UI_ELEMENT_WIDTH)
 
         ##### Vehicle Text Bar #####
         self.choose_vehicle_edit = QLineEdit()
         self.choose_vehicle_edit.setPlaceholderText("Vehicle File")
-        self.choose_vehicle_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.choose_vehicle_edit.setMinimumWidth(UI_ELEMENT_WIDTH)
 
         ##### Vehicle Folder Button #####
         self.choose_vehicle_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
-        self.choose_vehicle_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Load Vehicle Button #####
         self.load_vehicle_button = QPushButton(QIcon(icon_dir + "/load.png"), "Load Vehicle")
-        self.load_vehicle_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.load_vehicle_button.setMinimumWidth(UI_ELEMENT_WIDTH)
 
         ##### Vehicle Specs Image #####
         self.specs_icon = QLabel()
@@ -62,22 +55,15 @@ class ToolKit():
         ##### Vehicle Specs Text Bar #####
         self.choose_vehiclespec_edit = QLineEdit()
         self.choose_vehiclespec_edit.setPlaceholderText("Vehicle Specs")
-        self.choose_vehiclespec_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.choose_vehiclespec_edit.setMinimumWidth(UI_ELEMENT_WIDTH)
 
         ##### Vehicle Specs Folder Button #####
         self.choose_vehiclespec_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
-        self.choose_vehiclespec_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        #self.choose_vehiclespec_button.setMinimumWidth(UI_ELEMENT_WIDTH)
 
         ##### Do Everything Button #####
         self.do_everything_button = QPushButton(QIcon(icon_dir + "/wizzardHat.png"),"Magic VC Button")
-        self.do_everything_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Load Specs Button #####
         self.load_vehiclespec_button = QPushButton(QIcon(icon_dir + "/load.png"), "Load Vehicle Specs")
-        self.load_vehiclespec_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
-        self.load_vehiclespec_button.setMinimumWidth(UI_ELEMENT_WIDTH)
 
         ##### Don't Scale Switch #####
         self.post_arnold_button = QCheckBox('No Scaling')
@@ -97,7 +83,6 @@ class ToolKit():
 
         ##### Apply Spellbook Button #####
         self.apply_spellbook_button = QPushButton(QIcon(icon_dir + "/cast_all.png"), "Apply Spellbook")
-        self.apply_spellbook_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Rotation Buttons #####
         self.xyz_selection = QComboBox()
@@ -105,33 +90,24 @@ class ToolKit():
         for dir in direction_list:
             self.xyz_selection.addItem(dir)
         self.left_arrow_button = QPushButton(QIcon(icon_dir + "/left"), "Rotate -90")
-        self.left_arrow_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.right_arrow_button = QPushButton(QIcon(icon_dir + "/right"), "Rotate +90")
-        self.right_arrow_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.quick_rotate_button = QPushButton("Quick VC Rotate")
-        self.quick_rotate_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.hv_rotate_button = QPushButton("Quick HV Rotate")
-        self.hv_rotate_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Scale Button #####
         self.autoScale_button = QPushButton("Auto Scale")
-        self.autoScale_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Remove Tires Button #####
         self.remove_tires_button = QPushButton(QIcon(icon_dir + "/tire.png"), "Remove Tires")
-        self.remove_tires_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Remove License Plate Button #####
         self.remove_license_plate_button = QPushButton(QIcon(icon_dir + "/license_plate.png"), "Remove License Plates")
-        self.remove_license_plate_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Make Windows Transparent Button #####
         self.make_windows_transparent_button = QPushButton(QIcon(icon_dir + "/window.png"), "Transparent Windows (Arnold Only)")
-        self.make_windows_transparent_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Export Button #####
         self.export_obj = QPushButton(QIcon(icon_dir + "/export.png"),"Export OBJ")
-        self.export_obj.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
     #Connections
     def make_connections(self):

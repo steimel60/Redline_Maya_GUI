@@ -13,7 +13,7 @@ def maya_main_window():
     return wrapInstance(int(main_window_ptr), QWidget)
 
 class ToolKit():
-    toolKitName = 'Character Rigging'
+    toolKitName = 'Character Motion'
 
     def __init__(self):
         self.create_controls()
@@ -26,33 +26,26 @@ class ToolKit():
         ##### File Load #####
         self.chooseCharacterData_edit = QLineEdit()
         self.chooseCharacterData_edit.setPlaceholderText("Character Data File")
-        self.chooseCharacterData_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.chooseCharacterData_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
-        self.chooseCharacterData_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Import Character Locators #####
         self.tPoseLocators_button = QPushButton('Import T/A Pose Locators')
-        self.tPoseLocators_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.importCharacter_button = QPushButton('Import Animation Locators')
-        self.importCharacter_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Skele Rig File #####
         self.popUp_button = QPushButton('Create Rig Pairing Template')
 
         self.chooseSkeleRig_edit = QLineEdit()
         self.chooseSkeleRig_edit.setPlaceholderText("Rig File")
-        self.chooseSkeleRig_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.chooseSkeleRig_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
-        self.chooseSkeleRig_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.refreshCharAssets_button = QPushButton('Load/Refresh SKEL Assets')
 
         ##### Load Character #####
         self.loadCharacter_button = QPushButton('Load Character')
-        self.loadCharacter_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Active Assets #####
         self.charLoc_label = QLabel()
@@ -61,7 +54,6 @@ class ToolKit():
         charLocs = cmds.ls('*Animation_Locators*')
         for cLoc in charLocs:
             self.activeCharLocs_dropdown.addItem(cLoc)
-        self.activeCharLocs_dropdown.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.idleLocs_label = QLabel()
         self.idleLocs_label.setText('Idle Locator Group: ')
@@ -69,13 +61,11 @@ class ToolKit():
         idleLocs = cmds.ls('*idle_Locators*')
         for iLoc in idleLocs:
             self.idleLocs_dropdown.addItem(iLoc)
-        self.idleLocs_dropdown.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.activeChar_label = QLabel()
         self.activeChar_label.setText('Active Character: ')
         self.activeCharacter_edit = QLineEdit()
         self.activeCharacter_edit.setPlaceholderText('Character Joint Hierarchy - Top Node')
-        self.activeCharacter_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Unreal Option #####
         self.unreal_checkbox = QCheckBox('Unreal Project')
@@ -88,7 +78,6 @@ class ToolKit():
         projects = [entry for entry in contents if os.path.isdir(f"{MAYA_EXPORT_DIR}/{entry}")]
         for project in projects:
             self.unrealProjList_dropdown.addItem(project)
-        self.unrealProjName_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Rig DropDown #####
         self.skeleRig_label = QLabel()
@@ -109,9 +98,7 @@ class ToolKit():
 
         ##### Pair to Locators #####
         self.charRig2Loc_button = QPushButton('Pair Character to Locators')
-        self.charRig2Loc_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.add_motion_button = QPushButton('Pair Idle Locators to Animated Locators')
-        self.add_motion_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### General Export #####
         self.generalExport_button = QPushButton('Non-Metahuman Export')
@@ -135,7 +122,6 @@ class ToolKit():
         for joint in bodyJoints:
             self.bodyJoints_dropdown.addItem(joint)
             self.activeJoints.append(joint)
-        self.bodyJoints_dropdown.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.selectControlRig_button = QPushButton('Select Control Rig')
         self.exportControlRig_button = QPushButton('Export Control Rig')
 
@@ -217,11 +203,11 @@ class ToolKit():
         mhExport_layout.addWidget(self.metahumanBakeStart, 2,1)
         mhExport_layout.addWidget(self.metaEndLabel, 2,2)
         mhExport_layout.addWidget(self.metahumanBakeEnd, 2,3)
-        mhExport_layout.addWidget(self.unreal_checkbox, 3,0)
-        mhExport_layout.addWidget(self.unrealProjList_dropdown, 3,1,1,3)
-        mhExport_layout.addWidget(self.metahumanFBXName, 4,0,1,2)
-        mhExport_layout.addWidget(self.exportControlRig_button, 4,2,1,2)
-        mhExport_layout.addWidget(self.generalExport_button, 5,0,1,4)
+        #mhExport_layout.addWidget(self.unreal_checkbox, 3,0)
+        #mhExport_layout.addWidget(self.unrealProjList_dropdown, 3,1,1,3)
+        mhExport_layout.addWidget(self.metahumanFBXName, 3,0,1,2)
+        mhExport_layout.addWidget(self.exportControlRig_button, 3,2,1,2)
+        mhExport_layout.addWidget(self.generalExport_button, 4,0,1,4)
 
         mhExport_group.setLayout(mhExport_layout)
         self.layout.addWidget(mhExport_group)
@@ -518,7 +504,7 @@ class ToolKit():
             mel.eval(f'FBXExportBakeComplexEnd -v {bakeEnd}')
             mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
 
-            self.unrealExport(self.metahumanFBXName.text(), 'MHControlRig')
+            #self.unrealExport(self.metahumanFBXName.text(), 'MHControlRig')
             self.metahumanFBXName.setText('')
             self.metahumanBakeStart.setText('')
             self.metahumanBakeEnd.setText('')
@@ -556,70 +542,6 @@ class ToolKit():
             self.activeCharLocs_dropdown.addItem(cLoc)
         for item in skel_list:
             self.skeleRig_dropdown.addItem(item)
-
-    def unrealExport(self, assetName, assetType, assetPath):
-        #get variables
-        projName = self.unrealProjList_dropdown.currentText()
-        assetName = assetName+'.fbx'
-        #Make txt file
-        if self.unreal_checkbox.checkState():
-            self.get_unreal_export_folders(assetName,assetType,assetPath,projName)
-            infoBox = QMessageBox(QMessageBox.Information, "Unreal Export Successful", f"{assetName} has been added to your {projName} Project File.\nUse Redline Unreal Engine script to load as {assetType} in Unreal Engine.")
-            infoBox.exec_()
-
-    def get_unreal_export_folders(self,assetName,assetType,assetPath,projName):
-        projFolder = f'{MAYA_EXPORT_DIR}/{projName}'
-        subFolders = [f'{projFolder}/CharacterSkeletons',f'{projFolder}/CharacterAnimations',f'{projFolder}/VehicleAnimations',f'{projFolder}/VehicleSkeletons']
-        #Check for project Folder
-        if not os.path.exists(projFolder):
-            os.makedirs(projFolder)
-            for folder in subFolders:
-                os.makedirs(folder)
-        #Check for subFolders if project does exist
-        else:
-            for folder in subFolders:
-                if not os.path.exists(folder):
-                    os.makedirs(folder)
-        #Find where to place fbx
-        if 'c_skeleton' in assetType:
-            targetFolder = subFolders[0]
-        elif 'c_animation' in assetType:
-            targetFolder = subFolders[1]
-        elif 'v_animation' in assetType:
-            targetFolder = subFolders[2]
-        elif 'v_skeleton' in assetType:
-            targetFolder = subFolders[3]
-        shutil.copy(assetPath,targetFolder)
-        #create reference file
-        self.create_ur_reference_file(assetName,assetType,targetFolder,projFolder)
-
-    def create_ur_reference_file(self,assetName,assetType,assetPath,projFolder):
-        #fix unicode error
-        projFolder = projFolder.replace('\\','/')
-        file = 'REFERENCES.txt'
-        newLine = f'{assetName},{assetType},{assetPath}/{assetName}'
-        #Create File if none exists
-        if not os.path.exists(f'{projFolder}/{file}'):
-            f=open(f'{projFolder}/{file}','w')
-            f.close()
-        #Get lines currently in file
-        f = open(f'{projFolder}/{file}','r+')
-        lines = f.readlines()
-        lines = [line.strip().split(',') for line in lines]
-        f.close()
-        #Replace lines if overwriting, append if new asset
-        f = open(f'{projFolder}/{file}','w')
-        written = False
-        for i in range(len(lines)):
-            if lines[i][0] == assetName:
-                lines[i] = newLine.split(',')
-                written = True
-        if not written:
-            lines.append(newLine.split(','))
-        #Update File
-        for line in lines:
-            f.write(f"{line[0]},{line[1]},{line[2]}\n")
-        f.close()
 
 class skelePopUp(QDialog):
     #--------------------------------------------------------------------------------------------------------------
@@ -672,64 +594,49 @@ class skelePopUp(QDialog):
         ##### New File Name Line #####
         self.newFileName = QLineEdit()
         self.newFileName.setPlaceholderText('Rig Name')
-        self.newFileName.setMinimumHeight(UI_ELEMENT_HEIGHT)
         ##### Simple Layout #####
         self.headLabel = QLabel()
         self.headLabel.setText('Head Joint: ')
         self.head_edit = QLineEdit()
-        self.head_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.neckLabel = QLabel()
         self.neckLabel.setText('Neck Joint: ')
         self.neck_edit = QLineEdit()
-        self.neck_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.torsoJointLabel = QLabel()
         self.torsoJointLabel.setText('Torso Joint: ')
         self.torsoJoint_edit = QLineEdit()
-        self.torsoJoint_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.rightUpperArmLabel = QLabel()
         self.rightUpperArmLabel.setText('Right Upper Arm Joint: ')
         self.rightUpperArm_edit = QLineEdit()
-        self.rightUpperArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.rightLowerArmLabel = QLabel()
         self.rightLowerArmLabel.setText('Right Lower Arm Joint: ')
         self.rightLowerArm_edit = QLineEdit()
-        self.rightLowerArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.leftUpperArmLabel = QLabel()
         self.leftUpperArmLabel.setText('Left Upper Arm Joint: ')
         self.leftUpperArm_edit = QLineEdit()
-        self.leftUpperArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.leftLowerArmLabel = QLabel()
         self.leftLowerArmLabel.setText('Left Lower Arm Joint: ')
         self.leftLowerArm_edit = QLineEdit()
-        self.leftLowerArm_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.hipLabel = QLabel()
         self.hipLabel.setText('Hip Joint: ')
         self.hip_edit = QLineEdit()
-        self.hip_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.rightFemurLabel = QLabel()
         self.rightFemurLabel.setText('Right Femur Joint: ')
         self.rightFemur_edit = QLineEdit()
-        self.rightFemur_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.rightLowerLegLabel = QLabel()
         self.rightLowerLegLabel.setText('Right Lower Leg Joint: ')
         self.rightLowerLeg_edit = QLineEdit()
-        self.rightLowerLeg_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.rightFootLabel = QLabel()
         self.rightFootLabel.setText('Right Foot Joint: ')
         self.rightFoot_edit = QLineEdit()
-        self.rightFoot_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.LeftFemurLabel = QLabel()
         self.LeftFemurLabel.setText('Left Femur Joint: ')
         self.LeftFemur_edit = QLineEdit()
-        self.LeftFemur_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.leftLowerLegLabel = QLabel()
         self.leftLowerLegLabel.setText('Left Lower Leg Joint: ')
         self.leftLowerLeg_edit = QLineEdit()
-        self.leftLowerLeg_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
         self.leftFootLabel = QLabel()
         self.leftFootLabel.setText('Left Foot Joint: ')
         self.leftFoot_edit = QLineEdit()
-        self.leftFoot_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         self.all_edits = [self.LeftFemur_edit, self.rightFemur_edit, self.leftFoot_edit, self.rightFoot_edit,
         self.head_edit, self.hip_edit, self.leftLowerArm_edit, self.leftUpperArm_edit, self.leftLowerLeg_edit,

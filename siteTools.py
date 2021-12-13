@@ -22,11 +22,9 @@ class ToolKit():
         ##### XYZ Text Bar #####
         self.choose_locator_edit = QLineEdit()
         self.choose_locator_edit.setPlaceholderText("Locator File")
-        self.choose_locator_edit.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### XYZ Folder Button #####
         self.choose_locator_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
-        self.choose_locator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Settings Buttons #####
         self.headersIncludedCheckBox = QCheckBox('Headers Included')
@@ -65,11 +63,9 @@ class ToolKit():
 
         ##### Load XYZ Button #####
         self.load_locator_button = QPushButton(QIcon(icon_dir + "/load.png"), "Load Locators")
-        self.load_locator_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
         ##### Cable Creation Buttons #####
         self.open_cable_button = QPushButton("Open Cable Creator")
-        self.open_cable_button.setMinimumHeight(UI_ELEMENT_HEIGHT)
 
     #Connections
     def make_connections(self):

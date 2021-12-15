@@ -26,22 +26,17 @@ class ToolKit():
         ##### File Load #####
         self.chooseCharacterData_edit = QLineEdit()
         self.chooseCharacterData_edit.setPlaceholderText("Character Data File")
-
         self.chooseCharacterData_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
 
         ##### Import Character Locators #####
         self.tPoseLocators_button = QPushButton('Import T/A Pose Locators')
-
         self.importCharacter_button = QPushButton('Import Animation Locators')
 
         ##### Skele Rig File #####
         self.popUp_button = QPushButton('Create Rig Pairing Template')
-
         self.chooseSkeleRig_edit = QLineEdit()
         self.chooseSkeleRig_edit.setPlaceholderText("Rig File")
-
         self.chooseSkeleRig_button = QPushButton(QIcon(icon_dir + "/open.png"), "")
-
         self.refreshCharAssets_button = QPushButton('Load/Refresh SKEL Assets')
 
         ##### Load Character #####
@@ -54,30 +49,16 @@ class ToolKit():
         charLocs = cmds.ls('*Animation_Locators*')
         for cLoc in charLocs:
             self.activeCharLocs_dropdown.addItem(cLoc)
-
         self.idleLocs_label = QLabel()
         self.idleLocs_label.setText('Idle Locator Group: ')
         self.idleLocs_dropdown = QComboBox()
         idleLocs = cmds.ls('*idle_Locators*')
         for iLoc in idleLocs:
             self.idleLocs_dropdown.addItem(iLoc)
-
         self.activeChar_label = QLabel()
         self.activeChar_label.setText('Active Character: ')
         self.activeCharacter_edit = QLineEdit()
         self.activeCharacter_edit.setPlaceholderText('Character Joint Hierarchy - Top Node')
-
-        ##### Unreal Option #####
-        self.unreal_checkbox = QCheckBox('Unreal Project')
-        self.unrealProjName_edit = QLineEdit()
-        self.unrealProjName_edit.setPlaceholderText('New Project')
-        self.unrealProjList_dropdown = QComboBox()
-        self.unrealProjList_dropdown.setLineEdit(self.unrealProjName_edit)
-        self.unrealProjList_dropdown.addItem('')
-        contents = os.listdir(MAYA_EXPORT_DIR)
-        projects = [entry for entry in contents if os.path.isdir(f"{MAYA_EXPORT_DIR}/{entry}")]
-        for project in projects:
-            self.unrealProjList_dropdown.addItem(project)
 
         ##### Rig DropDown #####
         self.skeleRig_label = QLabel()
@@ -106,15 +87,12 @@ class ToolKit():
         ##### Export Metahuman #####
         self.metahumanFBXName = QLineEdit()
         self.metahumanFBXName.setPlaceholderText('FBX File Name')
-
         self.metaStartLabel = QLabel('Bake Start: ')
         self.metahumanBakeStart = QLineEdit()
         self.metahumanBakeStart.setPlaceholderText('Start Frame')
-
         self.metaEndLabel = QLabel('Bake Start: ')
         self.metahumanBakeEnd = QLineEdit()
         self.metahumanBakeEnd.setPlaceholderText('End Frame')
-
         self.bodyJoints_label = QLabel('Control Rig: ')
         self.bodyJoints_dropdown = QComboBox()
         bodyJoints = cmds.ls('*Body_joints*')
@@ -123,7 +101,13 @@ class ToolKit():
             self.bodyJoints_dropdown.addItem(joint)
             self.activeJoints.append(joint)
         self.selectControlRig_button = QPushButton('Select Control Rig')
-        self.exportControlRig_button = QPushButton('Export Control Rig')
+        self.exportControlRig_button = QPushButton('Export Selection')
+        self.facialControls_dropdown = QComboBox()
+        self.facialControls_label = QLabel('Facial Controls: ')
+        self.facialControls = cmds.ls('*:*:FacialControls*','*:FacialControls*','*FacialControls*')
+        for controls in self.facialControls:
+            self.facialControls_dropdown.addItem(controls)
+        self.selectFacialControls_button = QPushButton('Select Facial Controls')
 
     #Connections
     def make_connections(self):
@@ -147,6 +131,7 @@ class ToolKit():
 
         ##### Metahuman Export #####
         self.selectControlRig_button.clicked.connect(self.selectControRig)
+        self.selectFacialControls_button.clicked.connect(self.selectFacialControls)
         self.exportControlRig_button.clicked.connect(self.metahumanExport)
 
     #Layout
@@ -196,15 +181,16 @@ class ToolKit():
         mhExport_group = QGroupBox("Metahuman Export")
         mhExport_layout = QGridLayout()
 
-        mhExport_layout.addWidget(self.bodyJoints_label, 0,0)
-        mhExport_layout.addWidget(self.bodyJoints_dropdown, 0,1,1,3)
-        mhExport_layout.addWidget(self.selectControlRig_button, 1,0,1,4)
-        mhExport_layout.addWidget(self.metaStartLabel, 2,0)
-        mhExport_layout.addWidget(self.metahumanBakeStart, 2,1)
-        mhExport_layout.addWidget(self.metaEndLabel, 2,2)
-        mhExport_layout.addWidget(self.metahumanBakeEnd, 2,3)
-        #mhExport_layout.addWidget(self.unreal_checkbox, 3,0)
-        #mhExport_layout.addWidget(self.unrealProjList_dropdown, 3,1,1,3)
+        mhExport_layout.addWidget(self.metaStartLabel, 0,0)
+        mhExport_layout.addWidget(self.metahumanBakeStart, 0,1)
+        mhExport_layout.addWidget(self.metaEndLabel, 0,2)
+        mhExport_layout.addWidget(self.metahumanBakeEnd, 0,3)
+        mhExport_layout.addWidget(self.bodyJoints_label, 1,0)
+        mhExport_layout.addWidget(self.bodyJoints_dropdown, 1,1)
+        mhExport_layout.addWidget(self.facialControls_label, 1,2)
+        mhExport_layout.addWidget(self.facialControls_dropdown, 1,3)
+        mhExport_layout.addWidget(self.selectControlRig_button, 2,0,1,2)
+        mhExport_layout.addWidget(self.selectFacialControls_button, 2,2,1,2)
         mhExport_layout.addWidget(self.metahumanFBXName, 3,0,1,2)
         mhExport_layout.addWidget(self.exportControlRig_button, 3,2,1,2)
         mhExport_layout.addWidget(self.generalExport_button, 4,0,1,4)
@@ -236,6 +222,11 @@ class ToolKit():
             if joint not in self.activeJoints:
                 self.bodyJoints_dropdown.addItem(joint)
                 self.activeJoints.append(joint)
+
+        faceControls = cmds.ls('*:*:FacialControls*','*:FacialControls*','*FacialControls*')
+        for controls in faceControls:
+            if controls not in self.facialControls:
+                self.facialControls_dropdown.addItem(controls)
 
         self.chooseSkeleRig_edit.setText('')
 
@@ -480,6 +471,10 @@ class ToolKit():
         rig = self.bodyJoints_dropdown.currentText()
         cmds.select(rig, r=True)
 
+    def selectFacialControls(self):
+        faceControls = self.facialControls_dropdown.currentText()
+        cmds.select(faceControls, r=True)
+
     def metahumanExport(self):
         if self.metahumanFBXName.text() == '':
             warning_box = QMessageBox(QMessageBox.Warning, "Check File Name", "Please enter a valid FBX file name.")
@@ -504,10 +499,7 @@ class ToolKit():
             mel.eval(f'FBXExportBakeComplexEnd -v {bakeEnd}')
             mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
 
-            #self.unrealExport(self.metahumanFBXName.text(), 'MHControlRig')
             self.metahumanFBXName.setText('')
-            self.metahumanBakeStart.setText('')
-            self.metahumanBakeEnd.setText('')
 
     def popUp(self):
         dialog = skelePopUp()
@@ -830,8 +822,6 @@ class rigExportPopUp(QDialog):
         # Set up the window
         # self.setWindowFlags(Qt.Tool)
         self.calledBy = calledBy
-        if self.calledBy.unreal_checkbox.checkState():
-            self.get_project()
         self.setFixedWidth(600)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(250, -1)
@@ -869,27 +859,6 @@ class rigExportPopUp(QDialog):
         self.animSkelPair_label = QLabel('Skeleton:')
         self.animSkelPair_dropdown = QComboBox()
         self.animSkelPair_dropdown.addItem('None')
-        if self.calledBy.unreal_checkbox.checkState():
-            projSelection = self.calledBy.unrealProjList_dropdown.currentText()
-            if projSelection == '':
-                warningBox = QMessageBox(QMessageBox.Warning, "Check File Name", "Please enter Unreal Project name or uncheck Unreal Project checkbox.")
-                warningBox.exec_()
-                self.calledBy.dialogs.pop(-1) #######THIS JUST THROWS ERROR TO STOP POP UP########
-            else:
-                skeletonFolder = f'{MAYA_EXPORT_DIR}/{projSelection}/CharacterSkeletons'
-                skeletons = os.listdir(skeletonFolder)
-                for skeleton in skeletons:
-                    self.animSkelPair_dropdown.addItem(skeleton[:-4])
-                #file = f"{UNREAL_PROJECT_DIR}/mayaProjects/{self.calledBy.unrealProjList_dropdown.currentText()}.txt"
-                #f = open(file,'r')
-                #lines = f.readlines()
-                #f.close()
-                #for i in range(0,len(lines)):
-                #    lines[i] = lines[i].strip()
-                #    lines[i] = lines[i].split(',')
-                #skels = [line[0] for line in lines if line[1]=='skeleton']
-                #for skel in skels:
-                #    self.animSkelPair_dropdown.addItem(skel[:-4])
         self.animFBX_edit.setPlaceholderText('FBX Name')
         self.animExport_button = QPushButton('Export Animation')
 
@@ -918,12 +887,7 @@ class rigExportPopUp(QDialog):
         animExport_layout.addWidget(self.animStop_edit,5,2,1,2)
         animExport_layout.addWidget(self.animFBX_label,6,0,1,1)
         animExport_layout.addWidget(self.animFBX_edit,6,1,1,3)
-        if self.calledBy.unreal_checkbox.checkState():
-            animExport_layout.addWidget(self.animSkelPair_label, 7,0,1,1)
-            animExport_layout.addWidget(self.animSkelPair_dropdown, 7,1,1,3)
-            animExport_layout.addWidget(self.animExport_button,8,0,1,4)
-        else:
-            animExport_layout.addWidget(self.animExport_button,7,0,1,4)
+        animExport_layout.addWidget(self.animExport_button,7,0,1,4)
         animExport_group.setLayout(animExport_layout)
 
         self.mainLayout.addWidget(skeleton_group)
@@ -968,9 +932,6 @@ class rigExportPopUp(QDialog):
         if self.animFBX_edit.text() == '':
             warning_box = QMessageBox(QMessageBox.Warning, "Check File Name", "Please enter a valid FBX file name.")
             warning_box.exec_()
-        elif self.animSkelPair_dropdown.currentText() == 'None' and self.calledBy.unreal_checkbox.checkState():
-            warning_box = QMessageBox(QMessageBox.Warning, "Skeleton Required", "Please select the skeleton for this animation.\nIf none are listed please create one, or check your Unreal Project name.")
-            warning_box.exec_()
         elif self.animStart_edit.text() == '' or self.animStop_edit.text() == '':
             warning_box = QMessageBox(QMessageBox.Warning, "Check Bake Frames", "Please enter a valid input for Start/Stop frames.")
             warning_box.exec_()
@@ -1002,29 +963,3 @@ class rigExportPopUp(QDialog):
             self.animFBX_edit.setText('')
             self.animStart_edit.setText('')
             self.animStop_edit.setText('')
-
-    def get_project(self):
-        projName = self.calledBy.unrealProjList_dropdown.currentText()
-        error = False
-        if projName == '':
-            warning_box = QMessageBox(QMessageBox.Warning, "Check Project Name", "Please enter a valid Project name or uncheck the Unreal Project checkbox.")
-            warning_box.exec_()
-            self.calledBy.dialogs.pop(-1) #######THIS JUST THROWS ERROR TO STOP POP UP########
-            error = True
-        if not error:
-            projects = os.listdir(MAYA_EXPORT_DIR)
-            if projName not in projects:
-                qBox = QMessageBox(QMessageBox.Question, "Check File Name", f"Project {projName} not found.\nCreate new project?")
-                qBox.addButton(QMessageBox.Yes)
-                qBox.addButton(QMessageBox.No)
-                reply = qBox.exec_()
-                if reply == QMessageBox.Yes:
-                    os.makedirs(f'{MAYA_EXPORT_DIR}/{projName}')
-                    os.makedirs(f'{MAYA_EXPORT_DIR}/{projName}/VehicleSkeletons')
-                    os.makedirs(f'{MAYA_EXPORT_DIR}/{projName}/VehicleAnimations')
-                    os.makedirs(f'{MAYA_EXPORT_DIR}/{projName}/CharacterAnimations')
-                    os.makedirs(f'{MAYA_EXPORT_DIR}/{projName}/CharacterSkeletons')
-                else:
-                    self.calledBy.dialogs.pop(-1) #######THIS JUST THROWS ERROR TO STOP POP UP########
-            else: #comment above wouldn't collapse and annoyed me
-                pass

@@ -75,10 +75,7 @@ class MainUI(MayaQWidgetDockableMixin,QDialog):
         self.banner.resize(self.pixmap.width(), self.pixmap.height())
         self.banner.setAlignment(Qt.AlignCenter)
         ##### Tab Bar #####
-        self.tabWidget = QTabWidget()
-        #self.scroll = QScrollArea()
-        #self.scroll.setWidget(self.tabWidget)
-        #self.scroll.setWidgetResizable(True)
+        self.tabWidget = QTabWidget() 
         self.tabs = []
         for i in range(len(self.toolkits)):
             self.tabs.append(QWidget())

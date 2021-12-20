@@ -513,8 +513,8 @@ class InstructionsPopUp(QDialog):
         OPTIONAL
 
             STEERING WHEEL SET UP
-            - Seperate mesh if needed
-            - If seperated, move meshes out of transform/sub-group into Vehicle group and hide the transform
+            - Separate mesh if needed
+            - If separated, move meshes out of transform/sub-group into Vehicle group and hide the transform
             - Copy name of steering wheel mesh into "Steering Wheel" Name text box
             - Click "Align Steering Wheel" button
             - Rotate UACR_swa_ctrl to align with steering wheel mesh

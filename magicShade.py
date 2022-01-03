@@ -265,7 +265,7 @@ class ToolKit():
             cmds.select(deselect=True)
 
             diff = [x for x in new_all_objects if x not in prev_all_objects]
-            group = cmds.group(diff, name="Vehiclespecs")
+            group = cmds.group(diff, name="Vspecs")
             cmds.move(0,0,0,group,rpr=True)
             cmds.rotate(90,90,0)
             cmds.select(deselect=True)

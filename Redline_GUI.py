@@ -26,14 +26,16 @@ class MainUI(MayaQWidgetDockableMixin,QDialog):
         super(MainUI, self).__init__(parent)
         # Set up the window
         self.setAttribute(Qt.WA_DeleteOnClose)
-
         self.setWindowTitle(SCRIPT_NAME)
         self.setWindowIcon(QIcon(icon_dir + "/RedlineLogo.png"))
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
 
+        #Load toolkit files
         self.toolKitFiles = [magicShade, pointCloud, siteTools, autoUACR, vcFileManager, vehicleRigging, characterRigging]
         self.toolkits = [] #ToolKit instances will be saved here
         self.load_tool_kits()
+
+        #Create GUI
         self.create_controls()
         self.create_layout()
         self.make_connections()
@@ -50,7 +52,6 @@ class MainUI(MayaQWidgetDockableMixin,QDialog):
                     if line.startswith(last_file_pref + "="):  # If we find the last-opened file line in prefs
                         last_file_path = line[len(last_file_pref) + 1:]  # Get the last-opened file path
                         if os.path.isfile(last_file_path):  # If the path we get exists
-                            #self.choose_spellbook_edit.setText(last_file_path)  # Open the last-opened file
                             found_last_file_path = True
                             break
                 f.close()
@@ -66,7 +67,6 @@ class MainUI(MayaQWidgetDockableMixin,QDialog):
 
     #Buttons
     def create_controls(self):
-
         ##### Banner #####
         self.banner = QLabel()
         self.pixmap = QPixmap(icon_dir + '/banner.jpg')
@@ -75,38 +75,35 @@ class MainUI(MayaQWidgetDockableMixin,QDialog):
         self.banner.resize(self.pixmap.width(), self.pixmap.height())
         self.banner.setAlignment(Qt.AlignCenter)
         ##### Tab Bar #####
-        self.tabWidget = QTabWidget() 
+        self.tabWidget = QTabWidget()
         self.tabs = []
         for i in range(len(self.toolkits)):
             self.tabs.append(QWidget())
             self.tabWidget.addTab(self.tabs[i], self.toolkits[i].toolKitName)
-
         ##### Save Button #####
         self.save_button = QPushButton(QIcon(icon_dir + "/save_as.png"), "Save As...")
 
     #Layout
     def create_layout(self):
         main_layout = QVBoxLayout()
-
+        ##### Set GUI style #####
         self.setStyleSheet("""QTabWidget {background-color: rgb(100,102,117);}
                             QPushButton {background-color: rgb(87,87,87);}
                             QGroupBox {background-color: rgb(72,71,76);}
                             QComboBox {background-color: rgb(87,87,87); }
                             QComboBox QAbstractItemView {background-color: rgb(72,71,76); selection-background-color : rgb(100,102,117)}
                             """)
-
         ##### Load ToolKit Layouts #####
         for i in range(len(self.tabs)):
             self.tabs[i].setLayout(self.toolkits[i].layout)
-
         ##### Set Main Layout #####
         main_layout.addWidget(self.banner)
         main_layout.addWidget(self.tabWidget)
         main_widget = QWidget()
         main_widget.setLayout(main_layout)
-        self.scroll = QScrollArea()
-        self.scroll.setWidget(main_widget)
-        self.scroll.setWidgetResizable(True)
+        self.scroll = QScrollArea() #Making scroll area for resizable window
+        self.scroll.setWidget(main_widget) #Add scroll area to main widget
+        self.scroll.setWidgetResizable(True) #Window size adjustable
         scroll_layout = QVBoxLayout()
         scroll_layout.addWidget(self.scroll)
         self.setLayout(scroll_layout)

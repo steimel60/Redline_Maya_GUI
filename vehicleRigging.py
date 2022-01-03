@@ -38,29 +38,6 @@ class ToolKit():
         for rig in rigs:
             self.activeRig_dropdown.addItem(rig)
 
-        ##### Unreal Option #####
-        self.unreal_checkbox = QCheckBox('Unreal Project')
-        self.unrealProjName_edit = QLineEdit()
-        self.unrealProjName_edit.setPlaceholderText('New Project')
-        self.unrealProjList_dropdown = QComboBox()
-        self.unrealProjList_dropdown.setLineEdit(self.unrealProjName_edit)
-        self.unrealProjList_dropdown.addItem('')
-        contents = os.listdir(MAYA_EXPORT_DIR)
-        projects = [entry for entry in contents if os.path.isdir(f"{MAYA_EXPORT_DIR}/{entry}")]
-        for project in projects:
-            self.unrealProjList_dropdown.addItem(project)
-
-        self.unreal_checkbox2 = QCheckBox('Unreal Project')
-        self.unrealProjName_edit2 = QLineEdit()
-        self.unrealProjName_edit2.setPlaceholderText('New Project')
-        self.unrealProjList_dropdown2 = QComboBox()
-        self.unrealProjList_dropdown2.setLineEdit(self.unrealProjName_edit2)
-        self.unrealProjList_dropdown2.addItem('')
-        contents = os.listdir(MAYA_EXPORT_DIR)
-        projects = [entry for entry in contents if os.path.isdir(f"{MAYA_EXPORT_DIR}/{entry}")]
-        for project in projects:
-            self.unrealProjList_dropdown2.addItem(project)
-
         ##### Make Constraints #####
         self.pairRig2Locator_button = QPushButton('Pair Rig to Locator')
 
@@ -147,12 +124,8 @@ class ToolKit():
         ##### Bake Joint #####
         self.bakeButton.clicked.connect(self.bake)
 
-        ##### Blend Shapes #####
-        self.createBlendGroup_button.clicked.connect(self.createBlendGroup)
-
         ##### Export Buttons #####
         self.exportFBX_button.clicked.connect(self.exportFBX)
-        self.unrealProjList_dropdown.currentTextChanged.connect(self.update_skeleton_dropdown)
         self.vehicleSkeletonExport_button.clicked.connect(self.export_vehicle_skeleton)
 
     #Layout
@@ -203,8 +176,6 @@ class ToolKit():
         skelExport_group = QGroupBox("Skeleton Export")
         skelExport_layout = QGridLayout()
 
-        #skelExport_layout.addWidget(self.unreal_checkbox2, 0,0)
-        #skelExport_layout.addWidget(self.unrealProjList_dropdown2, 0,1,1,2)
         skelExport_layout.addWidget(self.vehicleSkeleton_label, 0,0)
         skelExport_layout.addWidget(self.vehicleSkeletonName, 0,1,1,2)
         skelExport_layout.addWidget(self.vehicleSkeletonExport_button, 1,0,1,3)
@@ -227,13 +198,9 @@ class ToolKit():
         export_group = QGroupBox("Export Group")
         export_layout = QGridLayout()
 
-        #export_layout.addWidget(self.unreal_checkbox, 0,0)
-        #export_layout.addWidget(self.unrealProjList_dropdown, 0,1,1,3)
-        export_layout.addWidget(self.skeletonPair_label, 0,0)
-        export_layout.addWidget(self.skeletonPair_dropdown, 0,1,1,3)
-        export_layout.addWidget(self.vehicleFBX_label, 1,0)
-        export_layout.addWidget(self.vehicleFBX, 1,1,1,3)
-        export_layout.addWidget(self.exportFBX_button,2,0,1,4)
+        export_layout.addWidget(self.vehicleFBX_label, 0,0)
+        export_layout.addWidget(self.vehicleFBX, 0,1,1,3)
+        export_layout.addWidget(self.exportFBX_button, 1,0,1,4)
 
         export_group.setLayout(export_layout)
         #Add groups to tab
@@ -248,12 +215,10 @@ class ToolKit():
         #Clear dropboxes
         self.activeRig_dropdown.clear()
         self.activeLocator_dropdown.clear()
-
         #Get all items in scene
         allRigs = cmds.ls('*_TopNode*')
         allRigs.extend(cmds.ls('*:*_TopNode*'))
         allLocs = cmds.ls('*_Locator')
-
         #Add items to dropdown
         for rig in allRigs:
             self.activeRig_dropdown.addItem(rig)
@@ -264,7 +229,7 @@ class ToolKit():
         #Constrain rig to vehicle locator
         locName = self.activeLocator_dropdown.currentText()
         rigName = self.activeRig_dropdown.currentText()
-
+        #Find root and drive control
         cmds.select(rigName, hierarchy=True)
         groupList = cmds.ls(sl=True)
         cmds.select(deselect=True)
@@ -273,74 +238,76 @@ class ToolKit():
                 root = item
             if item.endswith('driveControl'):
                 dc = item
+        #Constrain root control to locator for location
         rootconst = cmds.parentConstraint(locName, root)
-
-        cmds.delete(rootconst)
+        cmds.delete(rootconst) #delete constraint
         cmds.select(root)
-        cmds.rotate(0,0,0)
+        cmds.rotate(0,0,0) #set to 0 rotation
         cmds.select(deselect=True)
+        #Constrain drive control to locator
         constraint = cmds.parentConstraint(locName, dc)
         self.parentX.setText('90')
         self.parentY.setText('0')
         self.parentZ.setText('90')
-
+        #Match locator steer data to drivecontrol
         cmds.connectAttr(locName+'.steer',dc+'.steer')
-
+        #Find root joint
         cmds.select(rigName, hierarchy=True)
         groupList = cmds.ls(sl=True)
         cmds.select(deselect=True)
         for item in groupList:
             if item.endswith('root_jt'):
                 rootJoint = item
-
+        #Add brake data to root joint
         cmds.select(rootJoint)
         cmds.addAttr(ln='brake', at='float', k=True)
         cmds.connectAttr(f'{locName}.brake',f'{rootJoint}.brake')
         cmds.select(deselect=True)
-
+        #rotate on constraint
         self.rotateOnConst()
 
     def pairLight2Brakes(self):
         #Pair lights to MOV data
         rigName = self.activeRig_dropdown.currentText()
         locName = self.activeLocator_dropdown.currentText()
-
+        #Find root joint
         cmds.select(rigName, hierarchy=True)
         groupList = cmds.ls(sl=True)
         cmds.select(deselect=True)
         for item in groupList:
             if item.endswith('root_jt'):
                 root = item
-
+        #light name and intensity
         light = self.lightName_edit.text()
         intensity = self.lightIntensity.text()
-
+        #Pair light intensity to brake boolean
         cmds.expression(s=f'{light}.intensity = {root}.brake * {intensity};')
+        #Reset textboxes
         self.lightName_edit.setText('')
         self.lightIntensity.setText('')
 
     def rotateOnConst(self):
         #Rotate rig on parent constraint
         rigName = self.activeRig_dropdown.currentText()
-
+        #Find drive control
         cmds.select(rigName, hierarchy=True)
         groupList = cmds.ls(sl=True)
         cmds.select(deselect=True)
         for item in groupList:
             if item.endswith('driveControl'):
                 dc = item
-
+        #Find parent constraint
         cmds.select(dc, hierarchy=True)
         groupList = cmds.ls(sl=True)
         cmds.select(deselect=True)
         for item in groupList:
             if 'parentConstraint' in item:
                 const = item
-
+        #Rotation Boxes
         rotX = self.parentX.text()
         rotY = self.parentY.text()
         rotZ = self.parentZ.text()
-
+        #Empty box catch
         if rotX == '':
             rotX = cmds.getAttr(const + '.target[0].targetOffsetRotateX')
             self.parentX.setText(str(rotX))
@@ -350,11 +317,11 @@ class ToolKit():
         if rotZ == '':
             rotZ = cmds.getAttr(const + '.target[0].targetOffsetRotateZ')
             self.parentZ.setText(str(rotZ))
-
+        #Str to Float
         rotX = float(rotX)
         rotY = float(rotY)
         rotZ = float(rotZ)
-
+        #Adjust rotation
         if self.parentX.text() != '':
             cmds.setAttr(const + '.target[0].targetOffsetRotateX', rotX)
         if self.parentY.text() != '':
@@ -365,25 +332,25 @@ class ToolKit():
     def cgAdjustOffset(self):
         #Adjust CoG offset
         rigName = self.activeRig_dropdown.currentText()
-
+        #Find drive control
         cmds.select(rigName, hierarchy=True)
         groupList = cmds.ls(sl=True)
         cmds.select(deselect=True)
         for item in groupList:
             if item.endswith('driveControl'):
                 dc = item
-
+        #Find parent constraint
         cmds.select(dc, hierarchy=True)
         groupList = cmds.ls(sl=True)
         cmds.select(deselect=True)
         for item in groupList:
             if 'parentConstraint' in item:
                 const = item
-
+        #Offset Textboxes
         xOffset = self.cgXOffset_edit.text()
         yOffset = self.cgYOffset_edit.text()
         height = self.cgHeight_edit.text()
-
+        #Catch blank boxes
         if xOffset == '':
             xOffset = cmds.getAttr(const + '.target[0].targetOffsetTranslateX')
             self.cgXOffset_edit.setText(str(xOffset))
@@ -393,11 +360,11 @@ class ToolKit():
         if height == '':
             height = cmds.getAttr(const + '.target[0].targetOffsetTranslateZ')
             self.cgHeight_edit.setText(str(height))
-
+        #str to float
         xOffset = float(xOffset)
         yOffset = float(yOffset)
         height = float(height)
-
+        #Adjust Offset
         cmds.setAttr(const + '.target[0].targetOffsetTranslateX', xOffset)
         cmds.setAttr(const + '.target[0].targetOffsetTranslateY', yOffset)
         cmds.setAttr(const + '.target[0].targetOffsetTranslateZ', height)
@@ -405,45 +372,12 @@ class ToolKit():
     def wheelConst(self):
         #constrain wheels to mesh
         site = self.siteName_edit.text()
-
         mesh = cmds.ls(site, r=True)
         wheelCtrls = cmds.ls('*wheel_ctrl', r=True)
-
         for ctrl in wheelCtrls:
             cmds.geometryConstraint(mesh[0],ctrl)
-
+        #Reset textboxes
         self.siteName_edit.setText('')
-
-    def createBlendGroup(self):
-        #Connect blend shape to root joint for Unreal export
-        blendNode = self.blendNode_edit.text()
-        groupName = self.blendGroupName_edit.text()
-        rigName = self.activeRig_dropdown.currentText()
-
-        cmds.select(rigName, hierarchy=True)
-        groupList = cmds.ls(sl=True)
-        cmds.select(deselect=True)
-        for item in groupList:
-            if item.endswith('root_jt'):
-                rootJoint = item
-
-        attrs = cmds.listAttr(blendNode, m=True)
-        presets = ['message', 'caching', 'frozen', 'isHistoricallyInteresting', 'nodeState', 'binMembership', 'input', 'output', 'originalGeometry', 'envelopeWeightsList', 'envelope', 'function', 'fchild', 'map64BitIndices', 'topologyCheck', 'origin', 'baseOrigin', 'baseOriginX', 'baseOriginY', 'baseOriginZ', 'targetOrigin', 'targetOriginX', 'targetOriginY', 'targetOriginZ', 'parallelBlender', 'useTargetCompWeights', 'supportNegativeWeights', 'paintWeights', 'offsetDeformer', 'offsetX', 'offsetY', 'offsetZ', 'localVertexFrame', 'midLayerId', 'midLayerParent', 'nextNode', 'parentDirectory', 'targetDirectory', 'deformationOrder', 'attributeAliasList']
-
-        cmds.select(rootJoint)
-        cmds.addAttr(ln=groupName, dv=0, minValue=0, maxValue=1, k=True)
-
-        for attr in attrs:
-            is_preset = False
-            for preset in presets:
-                if preset in attr:
-                    is_preset = True
-            if not is_preset:
-                shape = attr
-                cmds.expression(s=f'{blendNode}.{shape} = {rootJoint}.{groupName}')
-
-        self.blendNode_edit.setText('')
-        self.blendGroupName_edit.setText('')
 
     def bake(self):
         if self.bakeStart_edit.text() == '' or self.bakeStop_edit.text() == '':
@@ -454,33 +388,19 @@ class ToolKit():
             start = self.bakeStart_edit.text()
             stop = self.bakeStop_edit.text()
             rigName = self.activeRig_dropdown.currentText()
-
+            #Select Root Joint
             cmds.select(rigName, hierarchy=True)
             groupList = cmds.ls(sl=True)
             cmds.select(deselect=True)
             for item in groupList:
                 if item.endswith('root_jt'):
                     root = item
-                #if item.endswith('_Render'):
-                #    renderGroup = item
             root = cmds.ls(root)
             cmds.select(deselect=True)
-            #cmds.select(renderGroup, hi=True)
-            #cmds.select('*:*Chassis', hi=True, deselect=True)
-            #cmds.select('*:*ParentYourMeshHere', hi=True, deselect=True)
-            #cmds.select('*:*Render', hi=False, deselect=True)
-            #geo = cmds.ls(sl=True)
-            #blendShapes = cmds.ls('*blendShape*')
-
-            #bakeMe = geo + root + blendShapes
-            bakeMe = root
-
-            cmds.select(bakeMe, hi=True)
-            #export = cmds.ls(sl=True)
+            cmds.select(root, hi=True)
             cmds.select(deselect=True)
-
-            cmds.bakeResults(bakeMe, hi='below', shape=True, sm=True, time=(start,stop))
-
+            cmds.bakeResults(root, hi='below', shape=True, sm=True, time=(start,stop))
+            #Reset textboxes
             self.bakeStart_edit.setText('')
             self.bakeStop_edit.setText('')
 
@@ -553,7 +473,7 @@ class ToolKit():
         root = cmds.ls(root)
         cmds.select(deselect=True)
         export = root
-
+        #Catch colon in name
         colonIndex = 0
         for i in range(0,len(root)):
             if root[i] == ':':
@@ -567,17 +487,8 @@ class ToolKit():
         mel.eval('FBXExportConstraints -v 1')
         mel.eval('FBXExportSkeletonDefinitions -v 1')
         mel.eval(f'FBXExport -f "{exportLocation}.fbx" -s')
-
-        self.unrealExport(filename,f'v_animation__FROMSKEL__{skeleton}',f'{exportLocation}.fbx')
+        #Reset textboxes
         self.vehicleFBX.setText('')
-
-    def update_skeleton_dropdown(self):
-        self.skeletonPair_dropdown.clear()
-        project = self.unrealProjList_dropdown.currentText()
-        skelFolder = f'{MAYA_EXPORT_DIR}/{project}/VehicleSkeletons'
-        skeletons = os.listdir(skelFolder)
-        for skeleton in skeletons:
-            self.skeletonPair_dropdown.addItem(skeleton)
 
     def save(self):
         cmds.SaveSceneAs(o=True)
